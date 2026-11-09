@@ -23,3 +23,8 @@ art/anim-spike/scratch/
 # T0 terrain spike: raw generations and scratch
 art/terrain-spike/raw/
 art/terrain-spike/_*.png
+
+# T1 terrain: raw generations and scratch screenshots stay local
+art/terrain/raw/
+art/terrain/work/
+art/terrain/concepts/*.png

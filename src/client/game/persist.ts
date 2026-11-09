@@ -7,8 +7,8 @@ export const SETTINGS_KEY = 'px-settings'
 export const MOUSE3_KEY = 'px-mouse-3btn'
 
 export type Speed = 'normal' | 'fast' | 'instant'
-export interface Settings { speed: Speed; lite: boolean; mute: boolean; volume: number }
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', lite: false, mute: false, volume: 0.6 }
+export interface Settings { speed: Speed; lite: boolean; mute: boolean; volume: number; rain: boolean }
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', lite: false, mute: false, volume: 0.6, rain: true }
 
 function storage(): Storage | null {
   try { return typeof localStorage === 'undefined' ? null : localStorage } catch { return null }
@@ -23,6 +23,7 @@ export function loadSettings(): Settings {
       speed: j.speed === 'fast' || j.speed === 'instant' ? j.speed : 'normal',
       lite: !!j.lite,
       mute: !!j.mute,
+      rain: j.rain !== false,
       volume: typeof j.volume === 'number' && j.volume >= 0 && j.volume <= 1 ? j.volume : DEFAULT_SETTINGS.volume,
     }
   } catch { return { ...DEFAULT_SETTINGS } }

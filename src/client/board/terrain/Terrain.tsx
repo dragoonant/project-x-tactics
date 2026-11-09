@@ -2,16 +2,26 @@
 // pools, rubble, exit / extraction / escape markings. Instanced meshes, no shadows: a phone budget.
 import { useFrame, useThree } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { AdditiveBlending, BoxGeometry, Color, CylinderGeometry, InstancedMesh, Matrix4, MeshStandardMaterial, Object3D, SphereGeometry, type PointLight, type PerspectiveCamera } from 'three'
-import { query } from '../../engine'
-import type { State, Tile } from '../../engine'
-import { visibleMask } from '../game/vision'
-import { focus, wake } from '../game/presentation'
-import { boardApi } from './CameraRig'
-import { hash2, tx, tz } from './layout'
-import { glowTexture, groundTexture, wallTexture } from './textures'
-import type { TerrainAssets } from '../game/terrainAssets'
+import { AdditiveBlending, BoxGeometry, MeshBasicMaterial, Color, CylinderGeometry, InstancedMesh, Matrix4, MeshStandardMaterial, Object3D, SphereGeometry, type PointLight, type PerspectiveCamera } from 'three'
+import { query } from '../../../engine'
+import type { State, Tile } from '../../../engine'
+import { visibleMask } from '../../game/vision'
+import { focus, wake } from '../../game/presentation'
+import { useStore } from '../../game/store'
+import { boardApi } from '../CameraRig'
+import { hash2, tx, tz } from '../layout'
+import { glowTexture, groundTexture, wallTexture } from '../textures'
+import type { TerrainAssets } from './assets'
 import { PropField, V2C, indoorMask, makeV2Mats } from './terrainV2'
+import { Dressing, type DressApi } from './dressing'
+import { Rain, Steam, exitNear, steamWorld, useWetEnv, ventSpots, type SteamSpot } from './mood'
+import { pickVariant } from './variants'
+
+/** Low tier: a phone-sized screen or the Lite setting. Set dressing (pipes, cables, boxes, steam) and rain go first. */
+export function useLowTier(): boolean {
+  const lite = useStore((s) => s.settings.lite)
+  return lite || (typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) < 600)
+}
 
 const WALL_H = 1.5
 const LOW_H = 0.22
@@ -68,15 +78,42 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
     lampDead: new MeshStandardMaterial({ color: '#40342a', roughness: 0.8 }),
     mark: new MeshStandardMaterial({ color: '#43e08a', emissive: '#27d070', emissiveIntensity: 1.4, roughness: 0.6 }),
     red: new MeshStandardMaterial({ color: '#ff3b2f', emissive: '#ff2a1e', emissiveIntensity: 1.6 }),
+    strip: new MeshBasicMaterial({ toneMapped: false }),
   }), [])
 
   // terrain v2 (?terrain=v2): PBR surfaces with world-space UVs, Hunyuan props for the kinds the manifest replaces
   const v2 = useMemo(() => (assets ? makeV2Mats(assets) : null), [assets])
+  const low = useLowTier()
+  const rainOn = useStore((s) => s.settings.rain)
+  const env = useWetEnv(!!assets && !low)
+  useLayoutEffect(() => {
+    if (!v2) return
+    v2.street.envMap = env
+    v2.street.envMapIntensity = 0.55
+    v2.street.needsUpdate = true
+  }, [v2, env])
   const indoor = useMemo(() => (assets ? indoorMask(state) : null),
     // walls and doors never move; open / closed does not change which side of a wall a tile is on
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [assets, state.map.id])
   const propKinds = assets?.propsByObject ?? {}
+  const wallBox = propKinds['@wallbox']?.[0] ?? null
+  const steam = useMemo<SteamSpot[]>(() => {
+    if (!assets) return []
+    const out: SteamSpot[] = ventSpots(w, h, (x, y) => exitNear(state, x, y)).map((v) => steamWorld(v, w, h, BOUNDARY_H + 0.95))
+    // the noodle cart's pot (a prop variant chosen by tile, so this follows the same hash as the prop field)
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (state.map.tiles[y * w + x]!.o !== 'halfCover') continue
+      const def = propKinds.halfCover ? pickVariant(propKinds.halfCover, x, y, !!indoor?.[y * w + x]) : null
+      if (def?.slug === 'noodle-cart') out.push({ x: tx(x, w), y: 0.78, z: tz(y, h) })
+    }
+    return out
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assets, sig, w, h, indoor])
+  const dress = useRef<DressApi | null>(null)
+  const doorFrame = useRef<InstancedMesh>(null)
+  const doorStrip = useRef<InstancedMesh>(null)
+  const lintel = useRef<InstancedMesh>(null)
   const ground = useRef<InstancedMesh>(null)
   const groundIn = useRef<InstancedMesh>(null)
   const fence = useRef<InstancedMesh>(null)
@@ -188,7 +225,7 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
       m.setMatrixAt(i, dummy.matrix)
       if (color) { tmpColor.set(color).multiplyScalar(shade); m.setColorAt(i, tmpColor) }
     }
-    const cnt = { stall: 0, crate: 0, dump: 0, lid: 0, rub: 0, pole: 0, head: 0, dead: 0, dc: 0, do: 0, mark: 0 }
+    const cnt = { stall: 0, crate: 0, dump: 0, lid: 0, rub: 0, pole: 0, head: 0, dead: 0, dc: 0, do: 0, mark: 0, df: 0, ds: 0, lt: 0 }
     const crateColors = ['#c98a2b', '#8f5d2e', '#4f7a58', '#a64b3c']
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const t = state.map.tiles[y * w + x]!
@@ -200,7 +237,7 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
       } else if (t.o === 'fullCover' && !propKinds.fullCover) {
         put(dumpBody.current, cnt.dump++, X, 0.52, Z, 0.92, 1.04, 0.82, 0, '#2f5a45', sh)
         put(dumpLid.current, cnt.lid++, X, 1.09, Z, 0.98, 0.1, 0.88, 0, '#1f3b2e', sh)
-      } else if (t.o === 'rubble') {
+      } else if (t.o === 'rubble' && !propKinds.rubble) {
         for (let k = 0; k < 3; k++) {
           const ox = (hash2(x, y, 20 + k) - 0.5) * 0.55, oz = (hash2(x, y, 30 + k) - 0.5) * 0.55
           const sz = 0.26 + hash2(x, y, 40 + k) * 0.22
@@ -214,6 +251,17 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
         const ew = isWallAt(state, x - 1, y) && isWallAt(state, x + 1, y)
         if (!t.open) put(doorsClosed.current, cnt.dc++, X, 0.62, Z, ew ? 0.98 : 0.2, 1.24, ew ? 0.2 : 0.98, 0, v2 ? '#ffffff' : '#c47a2c', sh)
         else put(doorsOpen.current, cnt.do++, ew ? X - 0.44 : X, 0.62, ew ? Z + 0.3 : Z - 0.44, ew ? 0.1 : 0.62, 1.24, ew ? 0.62 : 0.1, 0, v2 ? '#ffffff' : '#c47a2c', sh)
+        if (v2) {
+          // a door reads as a door at a glance: hazard-amber jambs and lintel, a brick lintel block above, and a light strip on both
+          // faces (amber = shut, monitor green = open). Unlit colour only: the strip is a marker, not a light pool.
+          const amber = '#d49a14'
+          put(doorFrame.current, cnt.df++, ew ? X - 0.47 : X, 0.67, ew ? Z : Z - 0.47, ew ? 0.1 : 0.34, 1.34, ew ? 0.34 : 0.1, 0, amber, sh)
+          put(doorFrame.current, cnt.df++, ew ? X + 0.47 : X, 0.67, ew ? Z : Z + 0.47, ew ? 0.1 : 0.34, 1.34, ew ? 0.34 : 0.1, 0, amber, sh)
+          put(doorFrame.current, cnt.df++, X, 1.29, Z, ew ? 1.04 : 0.34, 0.1, ew ? 0.34 : 1.04, 0, amber, sh)
+          put(lintel.current, cnt.lt++, X, 1.4, Z, 1, 0.2, 1, 0, '#8b6a5a', sh)
+          const sc = t.open ? '#43e08a' : '#ffb000'
+          for (const sgn of [-1, 1]) put(doorStrip.current, cnt.ds++, ew ? X : X + sgn * 0.515, 1.36, ew ? Z + sgn * 0.515 : Z, ew ? 0.78 : 0.04, 0.06, ew ? 0.04 : 0.78, 0, sc, sh)
+        }
       }
       if (t.k === 'exit') {
         // an arrow bar pointing out of the map
@@ -222,7 +270,7 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
         put(marks.current, cnt.mark++, X + (x === 0 ? -0.2 : x === w - 1 ? 0.2 : 0), 0.012, Z + (y === 0 ? -0.2 : y === h - 1 ? 0.2 : 0), horizontal ? 0.4 : 0.16, 0.02, horizontal ? 0.16 : 0.4, 0)
       }
     }
-    for (const [m, c] of [[stallBase.current, cnt.stall], [stallCrate.current, cnt.crate], [dumpBody.current, cnt.dump], [dumpLid.current, cnt.lid], [rubble.current, cnt.rub], [poles.current, cnt.pole], [heads.current, cnt.head], [doorsClosed.current, cnt.dc], [doorsOpen.current, cnt.do], [marks.current, cnt.mark]] as [InstancedMesh | null, number][]) {
+    for (const [m, c] of [[stallBase.current, cnt.stall], [stallCrate.current, cnt.crate], [dumpBody.current, cnt.dump], [dumpLid.current, cnt.lid], [rubble.current, cnt.rub], [poles.current, cnt.pole], [heads.current, cnt.head], [doorsClosed.current, cnt.dc], [doorsOpen.current, cnt.do], [marks.current, cnt.mark], [doorFrame.current, cnt.df], [doorStrip.current, cnt.ds], [lintel.current, cnt.lt]] as [InstancedMesh | null, number][]) {
       if (!m) continue
       m.count = c
       m.instanceMatrix.needsUpdate = true
@@ -296,6 +344,7 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
         dummy.rotation.set(0, 0, 0)
         dummy.updateMatrix()
         m.setMatrixAt(i, dummy.matrix)
+        dress.current?.apply(i, factors.current[i]!)
         changed = true
       }
     }
@@ -310,7 +359,13 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
       <instancedMesh ref={walls} args={[geo.box, v2 ? v2.brick : mats.wall, Math.max(1, wallList.length)]} frustumCulled={false} />
       {v2 && <instancedMesh ref={fence} args={[geo.box, v2.fence, Math.max(1, wallList.length)]} frustumCulled={false} />}
       {v2 && <instancedMesh ref={kerb} args={[geo.box, v2.kerb, Math.max(1, wallList.length)]} frustumCulled={false} />}
-      {v2 && assets && <PropField state={state} assets={assets} seen={seen} lit={lit} sig={sig} />}
+      {v2 && assets && <PropField state={state} assets={assets} seen={seen} lit={lit} sig={sig} indoor={indoor} />}
+      {v2 && assets && <Dressing state={state} indoor={indoor} walls={wallList} box={wallBox} seen={seen} api={dress} factors={factors} low={low} />}
+      {v2 && <instancedMesh ref={doorFrame} args={[geo.box, mats.plain, 64]} frustumCulled={false} />}
+      {v2 && <instancedMesh ref={doorStrip} args={[geo.box, mats.strip, 64]} frustumCulled={false} />}
+      {v2 && <instancedMesh ref={lintel} args={[geo.box, v2.brick, 24]} frustumCulled={false} />}
+      {v2 && !low && steam.length > 0 && <Steam spots={steam} />}
+      {v2 && !low && rainOn && <Rain w={w} h={h} />}
       <instancedMesh ref={stallBase} args={[geo.box, mats.plain, cap]} frustumCulled={false} />
       <instancedMesh ref={stallCrate} args={[geo.box, mats.plain, cap]} frustumCulled={false} />
       <instancedMesh ref={dumpBody} args={[geo.box, mats.metal, cap]} frustumCulled={false} />
@@ -325,7 +380,7 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={glowTexture()} transparent depthWrite={false} blending={AdditiveBlending} opacity={0.9} />
       </instancedMesh>
-      <Van state={state} />
+      {!(v2 && propKinds['@escape']) && <Van state={state} />}
       <ZoneFrame state={state} />
     </group>
   )

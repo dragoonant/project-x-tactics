@@ -1,11 +1,13 @@
-// Screenshot driver for the T0 review. usage:
-//   node tools/terrain/shot.mjs <url> <out.png> [--w 1440] [--h 900] [--cam x,z,az,pol,dist] [--select s2] [--hover x,y] [--stats out.json]
+// Screenshot driver for the T0/T1 review. usage:
+//   node tools/terrain/shot.mjs <url> <out.png> [--w 1440] [--h 900] [--cam x,z,az,pol,dist] [--select s2] [--hover x,y] [--stats out.json] [--bare (start screen, no fog)] [--nohud]
 // Same seed (1) and camera for before / after. Writes renderer.info draw calls and an average frame time (headless: relative only).
 import { chromium } from '@playwright/test'
 import fs from 'node:fs'
 const args = process.argv.slice(2)
 const opt = (n, d) => { const i = args.indexOf('--' + n); return i >= 0 ? args.splice(i, 2)[1] : d }
 const w = +opt('w', 1440), h = +opt('h', 900), cam = opt('cam', ''), sel = opt('select', ''), hover = opt('hover', ''), stats = opt('stats', ''), seed = +opt('seed', 1)
+const bare = args.includes('--bare'), nohud = args.includes('--nohud')
+for (const f of ['--bare', '--nohud']) { const i = args.indexOf(f); if (i >= 0) args.splice(i, 1) }
 const phone = w < 600
 const [url, out] = args
 const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
@@ -16,9 +18,15 @@ p.on('pageerror', (e) => console.log('pageerror', e.message))
 await p.goto(url)
 await p.waitForSelector('[data-testid=new-op]:not([disabled])', { timeout: 120000 })
 await p.evaluate(() => window.__px.setSpeed('instant'))
-await p.evaluate((sd) => window.__px.start(['recruit', 'enforcer', 'bulwark', 'recon'], sd), seed).catch(() => {})
-if (!(await p.evaluate(() => window.__px.screen())).startsWith('play')) { await p.click('[data-testid=new-op]') }
+if (bare) {
+  // start screen with the whole map visible (no fog): review shots of the dressing
+  await p.addStyleTag({ content: '[data-testid=start-screen]{display:none!important} .board-wrap.dim canvas{opacity:1!important}' })
+} else {
+  await p.evaluate((sd) => window.__px.start(['recruit', 'enforcer', 'bulwark', 'recon'], sd), seed).catch(() => {})
+  if (!(await p.evaluate(() => window.__px.screen())).startsWith('play')) { await p.click('[data-testid=new-op]') }
+}
 await p.waitForFunction(() => window.__px.camera() !== null && window.__pxBoard, null, { timeout: 30000 }).catch(async () => console.log('wait failed', await p.evaluate(() => ({ keys: Object.keys(window).filter((k) => k.startsWith('__')), screen: window.__px.screen(), cam: window.__px.camera(), models: window.__px.models() }))))
+if (nohud) await p.addStyleTag({ content: '[data-testid=hud]{display:none!important}' })
 await p.waitForTimeout(1200)
 if (cam) {
   const [x, z, az, pol, dist] = cam.split(',').map(Number)

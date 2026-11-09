@@ -1,0 +1,16 @@
+{
+  "style": "Studio photograph of a hand-painted tabletop miniature scenery piece, matte realistic paint with edge highlights, dry-brushed grime and rust streaks, sodium-orange and rust colour palette against dark steel and weathered wood, fine panel lines and rivets, single object centred on a plain white background, soft studio lighting, three-quarter view from slightly above, no base, no ground, no figures, wordless with no lettering, no signs with writing and no logos",
+  "props": {
+    "market-stall-b": { "concept": "A compact market stall about as wide as it is deep, a sloped faded teal-green canvas awning on two steel poles over a battered metal counter, plastic bins of produce and a few cardboard boxes on the counter" },
+    "crates-stack": { "concept": "A square stack of weathered wooden shipping crates, two crates on the bottom and one on top at a slight angle, rope handles, about waist high, nearly square in plan" },
+    "oil-barrels": { "concept": "A tight cluster of four rusty steel oil drums standing upright side by side in a square group, dented, hazard-amber stripe on one drum, about waist high" },
+    "concrete-barrier": { "concept": "A short wide concrete road barrier block with chipped corners and a faded black and amber hazard stripe, two blocks side by side forming a nearly square piece, knee to waist high" },
+    "noodle-cart": { "concept": "A small street food noodle cart on two wheels, a steel counter with a big steaming pot and stacked bowls, a small sloped canvas canopy in faded red, compact and nearly square in plan" },
+    "concrete-pillar": { "concept": "A square reinforced concrete pillar with a thick base and a wider capital at the top, chipped, stained and cracked, rebar showing at one corner, a yellow and black hazard band near the base, tall and solid" },
+    "vending-machine": { "concept": "A tall street vending machine with a dark glass front showing rows of bottles, an unlit blank panel on top, a coin slot and a pick-up flap, dented grey-blue steel body, rust at the bottom, compact in plan" },
+    "shipping-crates": { "concept": "Two corrugated steel shipping containers stacked in a compact square pile, the top one turned crosswise, faded green and rust red paint with no markings, tall and solid, nearly square in plan" },
+    "escape-van": { "concept": "A compact boxy white panel van seen from the rear three-quarter, nearly as wide as it is long, dark tinted windows, a red tail-light bar, amber roof beacon, dented and dirty, short wheelbase" },
+    "rubble-pile": { "concept": "A low heap of broken concrete slabs, bricks and bent rebar, dusty grey and rust, jagged chunks piled in a compact mound, nearly square in plan" },
+    "power-box": { "concept": "A grey steel electrical cabinet with a louvred door, a bundle of conduit pipes going up from the top, a few cables, rust and grime, small and boxy" }
+  }
+}

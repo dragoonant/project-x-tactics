@@ -16,7 +16,7 @@ import { FxLayer, Volumes } from './Effects'
 import { Figures, Ghosts } from './Figures'
 import { tx, tz, worldToTile } from './layout'
 import { HoverOverlay, TileMarks, useHoverUnit } from './Overlays'
-import { Terrain } from './Terrain'
+import { Terrain } from './terrain/Terrain'
 import { TERRAIN_V2, preloadTerrain } from '../game/terrainAssets'
 
 let preview: { state: State; fog: State } | null = null

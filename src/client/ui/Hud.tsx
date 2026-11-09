@@ -217,6 +217,7 @@ function SettingsPanel(): React.JSX.Element {
         <div>Animation speed</div>
         <div className="seg">{(['normal', 'fast', 'instant'] as const).map((k) => <button key={k} className={s.speed === k ? 'on' : ''} onClick={() => updateSettings({ speed: k })} data-speed={k}>{k.toUpperCase()}</button>)}</div>
         <label>Lite (no scanlines or glitch)<input type="checkbox" checked={s.lite} onChange={(e) => updateSettings({ lite: e.target.checked })} /></label>
+        <label>Rain (never on Low: phones and Lite)<input type="checkbox" checked={s.rain} onChange={(e) => updateSettings({ rain: e.target.checked })} data-testid="rain-toggle" /></label>
         <label>Mute<input type="checkbox" checked={s.mute} onChange={(e) => updateSettings({ mute: e.target.checked })} /></label>
         <label>Volume<input type="range" min={0} max={1} step={0.05} value={s.volume} onChange={(e) => updateSettings({ volume: Number(e.target.value) })} /></label>
         {audio === 'no' && <div className="warn" data-testid="audio-missing">audio not found</div>}
