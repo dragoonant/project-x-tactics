@@ -139,7 +139,7 @@ describe('SAV save envelope', () => {
     }
   })
 
-  it('SAV-2 deserialize(serialize(s)) deep-equals s, and replaying setup + actions reproduces s', () => {
+  it('SAV-2 INV-5 deserialize(serialize(s)) deep-equals s, and replaying setup + actions reproduces s', () => {
     let s = bust(['recruit', 'enforcer', 'chem', 'vox', 'recon'], 21)
     for (let i = 0; i < 150 && !s.outcome; i++) s = act(s, randomAction(s, 0, undefined, 0.08)).s
     const d = deserialize(serialize(s))
