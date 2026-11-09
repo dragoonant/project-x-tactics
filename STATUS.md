@@ -1,33 +1,37 @@
 # Status
 
-**Milestone:** M2 done (the playable 3D board). M1 (engine, data, tests, tools) is done; M3 (syndicate AI) landed separately, see its report. Next: publish as an Artifact, M4 art and audio, M5 tools and polish.
+**Milestone:** M1 to M4 done, plus the art rollout (rigged and animated figures, real terrain). The playtest is published as a private claude.ai Artifact (`npm run build:artifact`). Next: owner playtest round 1, then M5 tools and polish.
 
 ## What exists
-- `docs/spec/10-rules.md`: the rules spec with ids and 26 rulings.
-- `src/engine/`: the pure rules engine. Movement, line of sight with peeking, light and fog, directional cover, hit and graze rolls, damage and Resolve, surrender, ripple, arrest and flight, overwatch, hunker, suppression, noise, Alarm and reinforcement waves, gas, civilians, destructible cover, downed troopers, all 7 classes' abilities, mission end, save envelope, random-legal-action policy for the syndicate.
-- `src/data/`: `tuning.json`, `units.json`, `weapons.json`, `enemies.json`, `maps/bust-01.json`, schemas.
-- `tests/`: Vitest suites named by rule id, a golden turn with forced dice, map checks for bust-01.
-- `tools/`: `validate-data`, `sim` (random games with invariants), `action-fuzz`.
-- `src/debug/` plus `debug.html`: the M1 top-down debug page with Step random, Run to end, New seed, seed field and event log.
-- `src/client/` plus `index.html`: **the game** (M2). One persistent R3F canvas with the Night Market, bodycam HUD, start screen (Continue, squad picker, seed), End Turn with an animated syndicate phase, incident-report end screen, autosave and Continue, optional model and audio manifests, `window.__px` test hook. Details in `docs/status/M2-REPORT.md`.
-- `tests/e2e/`: Playwright specs for smoke, rules 8, 22, 24, 25, 27, touch, turn flow, models, audio and a full game. `tests/client/`: unit tests for the pure client helpers.
+- `docs/spec/10-rules.md`: the rules spec with ids and rulings. `docs/spec/30-figures-anim.md`: the frozen asset contract for figures, clips, items and terrain.
+- `src/engine/`: the pure rules engine (movement, line of sight with peeking, light and fog, directional cover, hit and graze, damage and Resolve, surrender, arrest and flight, overwatch, suppression, noise, Alarm and reinforcements, gas, civilians, destructible cover, downed troopers, all 7 classes' abilities, save envelope).
+- `src/ai/`: the syndicate utility AI (M3), reading only `view()`.
+- `src/data/`: `tuning.json`, units, weapons, enemies, `maps/bust-01.json`, schemas.
+- `src/client/`: the game. R3F Night Market, bodycam HUD, start screen with Continue and squad picker, autosave, audio, `window.__px` test hook.
+  - `src/client/anim/`: the animation director. It plays clips from `public/assets/anim/manifest.json` and falls back to the static figure per kind.
+  - `src/client/board/terrain/`: terrain v2 (default; `?terrain=v1` for the old boxes).
+- `public/assets/`: 17 static figures (`models/`), 16 rigged figures with 17 clips and 14 items (`anim/`), terrain textures and 14 props (`terrain/`), 20 SFX and 5 music tracks (`audio/`, listen at `sounds.html`).
+- `src/lab/` plus `figure-lab.html`: plays every clip of every rigged figure.
+- `src/debug/` plus `debug.html`: the M1 top-down debug page.
+- `tests/`: Vitest suites named by rule id plus client helpers; `tests/e2e/`: Playwright specs.
+- `tools/`: `validate-data`, `sim`, `action-fuzz`, `ai-bench`, `pack-artifact.mjs` (GLB to `.gltf.json` for the Artifact host), `anim/` (the rigging pipeline).
 
 ## How to run
 ```
 npm install
 npm run dev                       # the game at http://localhost:5173 (debug page at /debug.html)
-npm run e2e                       # Playwright (PW_PORT, default 5281)
-npm test                          # engine + data tests
+npm test
 npm run typecheck
 npm run validate:data
-npm run sim -- --games 200        # invariants after every step
-npm run fuzz -- --steps 20000     # legal and malformed actions
-npm run build
+npm run sim -- --games 200
+npm run fuzz -- --steps 20000
+npm run e2e                       # Playwright (PW_PORT, default 5281)
+npm run build:artifact            # dist/ for the claude.ai Artifact
 ```
-Results of the last full runs are in `docs/status/M1-REPORT.md` and `docs/status/M2-REPORT.md`.
+Reports: `docs/status/M1-REPORT.md`, `M2-REPORT.md`, `M3-REPORT.md`, `ASSETS-REPORT.md`, `A0-REPORT.md`, `A1-REPORT.md`, `A3-REPORT.md`, `T0-REPORT.md`, `T1-REPORT.md`. Calls made on the owner's behalf: `docs/DECISIONS-LOG.md`.
 
 ## What is next
-- **Publish** `dist/` as a private claude.ai Artifact with its files (`base: './'` is set; checked from a deep path).
-- **M4 art and audio:** drop `public/assets/models/manifest.json` (GLBs, optional `yaw` / `height`) and `public/assets/audio/manifest.json`; the client picks them up at build time. Wire the real SFX ids (see the M2 report).
-- **M5 tools and polish:** tuning panel, roll-level combat log, device frame-rate check on a phone.
-- Known gaps are listed in the M1 and M2 reports.
+- **Playtest round 1** by the owner (Copy report from the end screen).
+- **Art follow-ups:** items in the figures' paint style, the Enforcer's baton and backpack, a clearer `point` for Recon and Fixer, the Arbiter pick (`art/contact/arbiter.png`).
+- **M5:** tuning panel, roll-level combat log, seeded replays, Copy report polish.
+- **v2:** the Arbiter (`docs/PROTOTYPE-PLAN.md` section 11).

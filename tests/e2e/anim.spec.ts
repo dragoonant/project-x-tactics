@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test'
 import { beginGame, openStart, watchErrors } from './helpers'
 
-// A3: skeletal animation on the board (spec 30). The Enforcer is the rigged figure in public/assets/anim today; every other kind stays
-// on its static model until A1 ships more. `window.__px.anim(unitId)` is the clip a rig plays now (null: no rig), `animSeen` every clip it has played.
+// A3: skeletal animation on the board (spec 30). Every figure kind in public/assets/anim plays clips; a kind missing from it stays
+// on its static model (the fallback tests below fake that with a routed manifest). `window.__px.anim(unitId)` is the clip a rig plays now (null: no rig), `animSeen` every clip it has played.
 
 test('a rigged Enforcer fires when attacking, then returns to a standing clip', async ({ page }) => {
   const errs = watchErrors(page)
@@ -10,7 +10,7 @@ test('a rigged Enforcer fires when attacking, then returns to a standing clip', 
   await beginGame(page, 'normal')
   expect(await page.evaluate(() => window.__px.rigKinds())).toContain('enforcer')
   expect(['idle', 'cover']).toContain(await page.evaluate(() => window.__px.anim('s2')))
-  expect(await page.evaluate(() => window.__px.anim('s1'))).toBeNull() // the Recruit has no rig yet: static model
+  expect(['idle', 'cover']).toContain(await page.evaluate(() => window.__px.anim('s1'))) // the Recruit is rigged too (A1)
 
   // attack: aim then fire (an aim shorter than one slow frame may be skipped, a fire never is)
   const att = await page.evaluate(() => window.__px.legal().find((a: any) => a.unit === 's2' && a.type === 'attack'))
@@ -19,11 +19,13 @@ test('a rigged Enforcer fires when attacking, then returns to a standing clip', 
   await page.waitForFunction(() => window.__px.animSeen('s2').includes('fire'), null, { timeout: 30_000 })
   await page.waitForFunction(() => !window.__px.busy(), null, { timeout: 30_000 })
   await page.waitForFunction(() => ['idle', 'cover'].includes(window.__px.anim('s2') ?? ''), null, { timeout: 15_000 })
-  expect(await page.evaluate(() => window.__px.animSeen('s2'))).toEqual(expect.arrayContaining(['idle', 'fire']))
+  const seenA = await page.evaluate(() => window.__px.animSeen('s2'))
+  expect(seenA).toContain('fire')
+  expect(seenA.some((c: string) => c === 'idle' || c === 'cover')).toBe(true)
   expect(errs).toEqual([])
 })
 
-test('a rigged Enforcer walks while moving (the dash falls back to walk: run is not in the manifest) and returns to a standing clip', async ({ page }) => {
+test('a rigged Enforcer walks or runs while moving and returns to a standing clip', async ({ page }) => {
   const errs = watchErrors(page)
   await openStart(page)
   await beginGame(page, 'normal')
@@ -36,10 +38,12 @@ test('a rigged Enforcer walks while moving (the dash falls back to walk: run is 
   })
   expect(mv).toBeTruthy()
   await page.evaluate((a) => { void window.__px.dispatch(a) }, mv)
-  await page.waitForFunction(() => window.__px.anim('s2') === 'walk', null, { timeout: 30_000 })
+  await page.waitForFunction(() => ['walk', 'run'].includes(window.__px.anim('s2') ?? ''), null, { timeout: 30_000 })
   await page.waitForFunction(() => !window.__px.busy(), null, { timeout: 30_000 })
   await page.waitForFunction(() => ['idle', 'cover'].includes(window.__px.anim('s2') ?? ''), null, { timeout: 15_000 })
-  expect(await page.evaluate(() => window.__px.animSeen('s2'))).toEqual(expect.arrayContaining(['idle', 'walk']))
+  const seenM = await page.evaluate(() => window.__px.animSeen('s2'))
+  expect(seenM.some((c: string) => c === 'walk' || c === 'run')).toBe(true)
+  expect(seenM.some((c: string) => c === 'idle' || c === 'cover')).toBe(true)
   expect(errs).toEqual([])
 })
 

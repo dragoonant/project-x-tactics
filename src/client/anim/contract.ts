@@ -49,12 +49,15 @@ export function poseFallback(want: ClipName, resolved: ClipName | null): 'none' 
 // ---- attachments (spec 30 section 3)
 export const MELEE_ITEMS: ReadonlySet<string> = new Set(['maul'])
 export const POINT_ITEMS: ReadonlySet<string> = new Set(['handset'])
+/** Clips posed with empty hands (hands up, behind the back, on the ground, over the head): every held item is hidden. */
+export const EMPTY_HAND_CLIPS: ReadonlySet<string> = new Set(['surrender', 'cuffed', 'downed', 'cower'])
 
 /**
  * Which attachments are visible while `clip` plays. `maul` replaces the right-hand weapon during melee and bash, `handset` shows only during
  * point; every other attachment (weapon, shield, case, injector, baton) is always shown.
  */
 export function visibleAttachments(atts: readonly { id: string; bone: string }[], clip: ClipName | null): boolean[] {
+  if (clip && EMPTY_HAND_CLIPS.has(clip)) return atts.map(() => false)
   const melee = clip === 'melee' || clip === 'bash'
   const hasMaul = atts.some((a) => MELEE_ITEMS.has(a.id))
   const maulBone = atts.find((a) => MELEE_ITEMS.has(a.id))?.bone

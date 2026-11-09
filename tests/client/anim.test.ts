@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CLIPS, FALLBACK, LOOPING, parseAnimManifest, poseFallback, resolveClip, visibleAttachments, type ClipName } from '../../src/client/anim/contract'
+import { CLIPS, EMPTY_HAND_CLIPS, FALLBACK, LOOPING, parseAnimManifest, poseFallback, resolveClip, visibleAttachments, type ClipName } from '../../src/client/anim/contract'
 import { CLIP_SOURCES, abilityClip, aimsFirst, attackClip, baseClip, damageClip, hasCoverNear, moveMode } from '../../src/client/anim/mapping'
 import { cueActive, playCue, startCue, cues } from '../../src/client/anim/cues'
 
@@ -64,9 +64,14 @@ describe('contract: item swaps (spec 30 section 3)', () => {
     expect(visibleAttachments(vox, 'idle')).toEqual([true, false])
     expect(visibleAttachments(vox, 'point')).toEqual([true, true])
   })
-  it('a figure without swap items keeps every item always', () => {
+  it('a figure without swap items keeps every item in every clip posed with a grip', () => {
     const recon = [{ id: 'pistol', bone: 'hand_r' }, { id: 'baton', bone: 'hand_l' }]
-    for (const c of CLIPS) expect(visibleAttachments(recon, c).every(Boolean)).toBe(true)
+    for (const c of CLIPS.filter((x) => !EMPTY_HAND_CLIPS.has(x))) expect(visibleAttachments(recon, c).every(Boolean)).toBe(true)
+  })
+  it('surrender, cuffed, downed and cower hide every held item (the poses have empty hands)', () => {
+    const bagman = [{ id: 'pistol', bone: 'hand_r' }, { id: 'case', bone: 'hand_l' }]
+    for (const c of ['surrender', 'cuffed', 'downed', 'cower'] as ClipName[]) expect(visibleAttachments(bagman, c)).toEqual([false, false])
+    expect(visibleAttachments(bagman, 'run')).toEqual([true, true])
   })
 })
 
