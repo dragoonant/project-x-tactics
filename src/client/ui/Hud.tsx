@@ -82,7 +82,7 @@ function Ticker(): React.JSX.Element {
     <div className="ticker panel pa" data-testid="ticker-panel">
       <h4>TELEMETRY</h4>
       <div className="lines" ref={ref} data-testid="ticker">
-        {lines.slice(-40).map((l) => <div key={l.id} className={`ln ${l.tone}`}><small>R{l.round}</small>{l.text}</div>)}
+        {lines.slice(-40).map((l) => <div key={l.id} className={`ln t-${l.tone}`}><small>R{l.round}</small>{l.text}</div>)}
       </div>
     </div>
   )
@@ -98,6 +98,7 @@ function UnitCard({ state, unit }: { state: State; unit: Unit }): React.JSX.Elem
       <h4>{unit.side === 'squad' ? 'TROOPER' : unit.side === 'syndicate' ? 'HOSTILE' : 'CIVILIAN'}</h4>
       <div className="body">
         <div className="nm">{title}<small>{unit.side === 'squad' ? unit.name : unit.id.toUpperCase()}</small></div>
+        <div className="phone-line">HP {unit.hp}/{unit.maxHp}{unit.maxResolve > 0 ? ` / RES ${unit.resolve}/${unit.maxResolve}` : ''}</div>
         <div className="kv"><span>HEALTH</span><b>{unit.hp} / {unit.maxHp}</b></div>
         <div className={`bar ${hpClass(unit)}`}><i style={{ width: `${(unit.hp / Math.max(1, unit.maxHp)) * 100}%` }} /></div>
         {unit.maxResolve > 0 && <><div className="kv"><span>RESOLVE</span><b>{unit.resolve} / {unit.maxResolve}</b></div><div className="bar res"><i style={{ width: `${(unit.resolve / unit.maxResolve) * 100}%` }} /></div></>}
@@ -120,7 +121,7 @@ function TargetPanel({ state, sel, enemy }: { state: State; sel: Unit; enemy: Un
   if (!p) return null
   const b = p.breakdown
   const cls = b.chance >= 60 ? '' : b.chance >= 35 ? 'mid' : 'low'
-  const rng = (r: [number, number]): string => (r[0] === r[1] ? `${r[0]}` : `${r[0]}-${r[1]}`)
+  const rng = (r: [number, number]): string => { const lo = Math.min(r[0], r[1]), hi = Math.max(r[0], r[1]); return lo === hi ? `${lo}` : `${lo}-${hi}` }
   return (
     <div className="target panel" data-testid="target-panel">
       <h4>TARGET LOCK / {enemy.name.toUpperCase()} {enemy.id.toUpperCase()}</h4>

@@ -16,12 +16,13 @@ class AudioDirector {
   private buffers = new Map<string, AudioBuffer | null>()
   private bgm: HTMLAudioElement | null = null
   private bgmKey = ''
-  private lastCombat = 0
+  private lastCombat = -1e9
   private unlocked = false
   onFound: (f: Found) => void = () => { /* set by the store */ }
 
   async init(): Promise<void> {
     try {
+      if (typeof __PX_MANIFESTS__ !== 'undefined' && !__PX_MANIFESTS__.audio) throw new Error('this build ships no audio manifest')
       const url = new URL('assets/audio/manifest.json', document.baseURI).toString()
       const r = await fetch(url, { cache: 'no-cache' })
       const ct = r.headers.get('content-type') ?? ''

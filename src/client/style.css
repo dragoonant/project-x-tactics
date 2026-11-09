@@ -80,15 +80,16 @@ body.lite .rec-dot { animation: none; }
 .ticker { overflow: hidden; }
 .ticker .lines { padding: 6px 9px; display: flex; flex-direction: column; gap: 3px; max-height: 190px; overflow-y: auto; font-size: 11px; line-height: 1.35; }
 .ticker .ln { color: var(--text); opacity: 0.85; }
-.ticker .ln.info { color: #aab8b1; }
-.ticker .ln.hit { color: #ffb08a; }
-.ticker .ln.warn { color: var(--amber); }
-.ticker .ln.alarm { color: var(--red); }
-.ticker .ln.good { color: var(--green); }
-.ticker .ln.phase { color: var(--blue); letter-spacing: 0.12em; }
+.ticker .ln.t-info { color: #aab8b1; }
+.ticker .ln.t-hit { color: #ffb08a; }
+.ticker .ln.t-warn { color: var(--amber); }
+.ticker .ln.t-alarm { color: var(--red); }
+.ticker .ln.t-good { color: var(--green); }
+.ticker .ln.t-phase { color: var(--blue); letter-spacing: 0.12em; }
 .ticker .ln small { color: var(--dim); margin-right: 6px; }
 
 .hovercard { padding: 0 0 7px; }
+.phone-line { display: none; }
 .hovercard .body { padding: 7px 10px 0; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
 .hovercard .nm { color: #fff; font-size: 14px; letter-spacing: 0.04em; }
 .hovercard .nm small { color: var(--dim); margin-left: 6px; font-size: 11px; }
@@ -200,13 +201,20 @@ body.lite .rec-dot { animation: none; }
 /* ---------------------------------------------------------------- phone layouts */
 @media (max-width: 899px) {
   html, body { font-size: 12px; }
-  .topright { left: 8px; right: 8px; top: auto; bottom: auto; width: auto; position: absolute; top: 74px; flex-direction: row; align-items: flex-start; }
+  .topright { position: absolute; left: 8px; right: 8px; top: 74px; width: auto; flex-direction: column; gap: 4px; }
   .topleft { left: 8px; top: 8px; right: 8px; flex-direction: row; flex-wrap: wrap; gap: 4px 12px; align-items: center; padding: 5px 8px; }
   .topleft .stamp { font-size: 12px; }
-  .alarm { flex: 1; padding: 5px 8px 7px; }
+  .alarm { flex: none; padding: 5px 8px 7px; }
+  .hovercard .kv, .hovercard .bar, .hovercard h4 { display: none; }
+  .hovercard .phone-line { display: block; color: var(--dim); }
+  .hovercard .body { padding: 4px 8px; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+  .hovercard { padding: 0; }
+  .target .rows { display: none; }
+  .target .big { padding: 4px 8px 0; }
+  .target .big b { font-size: 18px; }
+  .target .flag { padding: 2px 8px 4px; }
+  .target h4 { padding: 3px 8px; }
   .ticker.collapsed { display: none; }
-  .hovercard { display: none; }
-  .hovercard.show-phone { display: block; position: absolute; right: 0; top: 54px; width: 190px; }
   .ticker .lines { max-height: 120px; }
   .gear { right: 8px; top: auto; bottom: auto; position: absolute; top: 12px; z-index: 47; }
   .gear.shifted { right: 8px; }
@@ -226,6 +234,7 @@ body.lite .rec-dot { animation: none; }
 }
 @media (max-width: 899px) and (orientation: landscape) {
   .topright { top: 44px; left: auto; width: 250px; }
+  .hovercard .body, .target .big { font-size: 11px; }
   .topleft { right: auto; flex-wrap: nowrap; }
   .bottom .abdesc { display: none; }
   .row2 { flex-direction: row; align-items: center; }

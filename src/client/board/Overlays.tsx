@@ -204,7 +204,7 @@ export function HoverOverlay({ state }: { state: State }): React.JSX.Element | n
             <div className="readout">
               <b>HIT {data.prev.breakdown.chance}%</b>
               <span>GRAZE {data.prev.breakdown.grazeChance}%</span>
-              <span>RES {data.prev.resolve.hit[0] === data.prev.resolve.hit[1] ? data.prev.resolve.hit[0] : `${data.prev.resolve.hit[0]}-${data.prev.resolve.hit[1]}`}</span>
+              <span>RES {Math.min(...data.prev.resolve.hit) === Math.max(...data.prev.resolve.hit) ? data.prev.resolve.hit[0] : `${Math.min(...data.prev.resolve.hit)}-${Math.max(...data.prev.resolve.hit)}`}</span>
               {data.prev.flanked && <em>FLANK</em>}
             </div>
           </Html>

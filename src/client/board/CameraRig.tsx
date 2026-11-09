@@ -51,8 +51,9 @@ export function CameraRig({ w, h }: { w: number; h: number }): null {
   useEffect(() => {
     const cam = camera as PerspectiveCamera
     const ins = insetsFor(size.width, size.height)
-    const fit = fitBoard(cam.fov, size.width, size.height, ins, 0, POL_DEFAULT, w, h)
-    ctl.setFit(fit.dist, fit.shiftX, fit.shiftY, { x: w / 2, z: h / 2 })
+    const pol = size.width < 900 && size.height > size.width ? 0.5 : POL_DEFAULT // phone portrait: more overhead, so the board fills more of the tall screen
+    const fit = fitBoard(cam.fov, size.width, size.height, ins, 0, pol, w, h)
+    ctl.setFit(fit.dist, fit.shiftX, fit.shiftY, { x: w / 2, z: h / 2 }, pol)
   }, [ctl, camera, size.width, size.height, w, h])
 
   useFrame((_, dt) => { if (ctl.update(Math.min(dt, 0.1))) invalidate() })

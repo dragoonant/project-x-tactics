@@ -53,8 +53,8 @@ function StandIn({ u }: { u: Unit }): React.JSX.Element {
   )
 }
 
-function Model({ kind }: { kind: string }): React.JSX.Element | null {
-  const m = modelFor(kind)
+function Model({ kind, variant }: { kind: string; variant: string | null }): React.JSX.Element | null {
+  const m = modelFor(kind, variant)
   const obj = useMemo(() => (m ? m.scene.clone(true) : null), [m])
   if (!m || !obj) return null
   return <group rotation={[0, m.yaw, 0]}><primitive object={obj} /></group>
@@ -109,7 +109,7 @@ function FigureImpl({ unit, w, h, selected, hovered }: { unit: Unit; w: number; 
   const ref = useRef<Group>(null)
   const inner = useRef<Group>(null)
   const yaw = useRef(Math.atan2(unit.facing.x, unit.facing.y))
-  const m = modelFor(unit.kind)
+  const m = modelFor(unit.kind, unit.weapon)
   const lying = unit.status === 'downed' || unit.status === 'dead' || unit.status === 'stabilized'
   const kneel = unit.status === 'surrendered' || unit.status === 'cuffed'
 
@@ -144,7 +144,7 @@ function FigureImpl({ unit, w, h, selected, hovered }: { unit: Unit; w: number; 
     <group ref={ref} position={[tx(unit.x, w), 0, tz(unit.y, h)]}>
       <group ref={inner} rotation={[0, yaw.current, 0]}>
         <group rotation={lying ? [-Math.PI / 2 + 0.1, 0, 0] : [0, 0, 0]} position={lying ? [0, 0.16, 0.18] : [0, 0, 0]} scale={kneel ? [1, 0.74, 1] : [1, 1, 1]}>
-          {m ? <Model kind={unit.kind} /> : <StandIn u={unit} />}
+          {m ? <Model kind={unit.kind} variant={unit.weapon} /> : <StandIn u={unit} />}
         </group>
       </group>
       {selected && (

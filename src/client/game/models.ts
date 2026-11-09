@@ -20,7 +20,10 @@ export function normalizeKind(k: string): string {
 }
 
 const loaded = new Map<string, LoadedModel>()
-export function modelFor(kind: string): LoadedModel | null { return loaded.get(kind) ?? null }
+/** A model for a unit kind; a loadout variant (thug-club, thug-pistol) wins over the plain kind. */
+export function modelFor(kind: string, variant?: string | null): LoadedModel | null {
+  return (variant ? loaded.get(`${kind}-${variant}`) : undefined) ?? loaded.get(kind) ?? null
+}
 export function loadedKinds(): string[] { return [...loaded.keys()] }
 
 function baseUrl(): string {
@@ -88,6 +91,7 @@ export function preloadModels(onProgress: (p: Progress) => void): Promise<Progre
   started = (async () => {
     let manifest: Map<string, ModelEntry>
     try {
+      if (typeof __PX_MANIFESTS__ !== 'undefined' && !__PX_MANIFESTS__.models) throw new Error('this build ships no model manifest')
       const r = await fetch(new URL('assets/models/manifest.json', document.baseURI).toString(), { cache: 'no-cache' })
       const ct = r.headers.get('content-type') ?? ''
       if (!r.ok || /text\/html/.test(ct)) manifest = new Map()

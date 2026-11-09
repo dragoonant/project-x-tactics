@@ -111,7 +111,7 @@ export function Board(): React.JSX.Element {
   useEffect(() => { boardApi.controller?.reset() }, [screen === 'play' ? state.setup.seed : -1, screen === 'start'])
   useEffect(() => {
     const el = document.querySelector('.board-wrap canvas')
-    const leave = (): void => { setHover(null); focus.hover = null }
+    const leave = (e: Event): void => { if ((e as PointerEvent).pointerType !== 'mouse') return; setHover(null); focus.hover = null }
     el?.addEventListener('pointerleave', leave)
     return () => el?.removeEventListener('pointerleave', leave)
   }, [])

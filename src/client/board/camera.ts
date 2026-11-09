@@ -66,6 +66,7 @@ export class CameraController {
   lim = { x: 11, z: 11 }
   interactive = true
   mouse3 = false
+  polDefault = POL_DEFAULT
   /** Set when a left button drag panned the map (test and debug aid). */
   private goal: { x: number; z: number; az: number; dist: number } | null = null
   private pointers = new Map<number, Tracked>()
@@ -97,8 +98,10 @@ export class CameraController {
     wake(120)
   }
 
-  setFit(overview: number, shiftX: number, shiftY: number, lim: { x: number; z: number }): void {
+  setFit(overview: number, shiftX: number, shiftY: number, lim: { x: number; z: number }, pol = POL_DEFAULT): void {
     const atOverview = Math.abs(this.view.dist - this.overview) < 0.5
+    if (atOverview && Math.abs(this.view.pol - this.polDefault) < 0.01) this.view.pol = pol
+    this.polDefault = pol
     this.overview = overview
     this.shiftX = shiftX
     this.shiftY = shiftY
@@ -109,11 +112,11 @@ export class CameraController {
   }
 
   reset(): void {
-    this.view = { x: 0, z: 0, az: this.view.az, pol: POL_DEFAULT, dist: this.overview }
+    this.view = { x: 0, z: 0, az: this.view.az, pol: this.polDefault, dist: this.overview }
     this.goal = null
     this.apply()
   }
-  flyHome(): void { this.goal = { x: 0, z: 0, az: this.view.az, dist: this.overview }; this.view.pol = POL_DEFAULT; wake(900) }
+  flyHome(): void { this.goal = { x: 0, z: 0, az: this.view.az, dist: this.overview }; this.view.pol = this.polDefault; wake(900) }
   flyTo(x: number, z: number, dist?: number): void {
     this.goal = { x: clamp(x, -this.lim.x, this.lim.x), z: clamp(z, -this.lim.z, this.lim.z), az: this.view.az, dist: dist ?? this.view.dist }
     wake(900)
