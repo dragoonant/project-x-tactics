@@ -24,7 +24,9 @@ export const squadBot: Policy = (s) => {
 /** Distance field to what the squad wants: the Bagman while he is loose, then the extraction zone. */
 function makeGoal(s: State): Int16Array | null {
   const bag = s.units.find((u) => u.kind === 'bagman' && (u.status === 'active' || u.status === 'surrendered'))
-  const targets = bag ? [{ x: bag.x, y: bag.y }] : s.map.extraction.map((p) => ({ x: p.x, y: p.y }))
+  // VAR-2: in a raid the goal is the cache until it is seized or burned.
+  const cache = s.raid && !s.raid.seized && !s.raid.burned ? s.raid.cache : null
+  const targets = cache ? [{ x: cache.x, y: cache.y }] : bag ? [{ x: bag.x, y: bag.y }] : s.map.extraction.map((p) => ({ x: p.x, y: p.y }))
   return targets.length ? distField(s, targets) : null
 }
 

@@ -2,8 +2,8 @@
   "tuning": {
     "start": { "funding": 120, "intel": 0, "evidence": 0 },
     "week": { "max": 40, "missions": 1 },
-    "order": { "max": 5, "start": 3, "win": 1, "partial": 0, "loss": 1, "casualty": 1, "ignored": 1, "retake": 2 },
-    "incidents": { "base": 2, "thirdChance": 50, "raidChance": 25 },
+    "order": { "max": 5, "start": 3, "win": 1, "partial": 0, "loss": 1, "casualty": 1, "ignored": 1, "retake": 2, "recover": 1, "recoverTo": 3 },
+    "incidents": { "base": 2, "thirdChance": 50, "raidChance": 15 },
     "difficulty": { "base": 1, "perTakeover": 3, "spread": 1, "retake": 1, "kingpin": 5, "max": 5 },
     "takeover": { "segments": 12, "start": 0, "everyWeeks": 2, "scheduled": 1, "fall": 2, "raid": 1, "retake": 1, "kingpinFail": 1, "countdown": 3 },
     "funding": { "periodWeeks": 4, "base": 20, "perOrder": 5 },
@@ -17,7 +17,7 @@
     "promotion": { "rank": 2 },
     "auto": {
       "base": 10, "perRank": 2, "specialty": 3,
-      "diffBase": 24, "perDiff": 6, "raid": 0,
+      "diffBase": 34, "perDiff": 7, "raid": 0,
       "center": 50, "scale": 2, "min": 5, "max": 95, "partialBand": 15,
       "death": { "win": 0, "partial": 3, "loss": 10 },
       "injury": { "win": 10, "partial": 25, "loss": 40 },
@@ -26,7 +26,7 @@
       "evidence": { "win": 3, "partial": 0, "loss": 0 },
       "arrests": { "win": 3, "partial": 1, "loss": 0 }
     },
-    "kingpin": { "intel": 40 }
+    "kingpin": { "intel": 110 }
   },
   "districts": [
     { "id": "docks", "name": "Saltwater Docks", "patron": "logistics corp", "modifier": "rain" },

@@ -25,7 +25,7 @@ Source documents: [GAME-DESIGN.md](../GAME-DESIGN.md) sections 3.1–3.2, 4.9, 5
 - **WEEK-1** The campaign runs in weeks from week 1. Phases: `week` (the city map: incidents are open, the roster can be managed), `deployed` (a tactical mission is running), `over`.
 - **WEEK-2** One mission per week (`week.missions`, 1): once an incident is resolved (auto-resolve or a mission report), no other incident can be taken until the next week.
 - **WEEK-3** Management actions (promote, recruit, treat) are legal at any time in the `week` phase, before or after the week's mission.
-- **WEEK-4** `endWeek` resolves, in order: (1) ignored incidents (INC-5); (2) injuries tick (ROST-4); (3) the scheduled Takeover advance (TAKE-2); (4) the final countdown (TAKE-5); (5) Funding (FUND-2); (6) unless the campaign is over, the week number goes up by 1 and the new week's incidents spawn (INC-1).
+- **WEEK-4** `endWeek` resolves, in order: (1) ignored incidents (INC-5); (2) injuries tick (ROST-4); (3) the scheduled Takeover advance (TAKE-2); (4) the final countdown (TAKE-5); (5) in a Funding week, patrol recovery (DIST-6) and then Funding (FUND-2); (6) unless the campaign is over, the week number goes up by 1 and the new week's incidents spawn (INC-1).
 - **WEEK-5** Stall cap: if the week number would pass `week.max` (40), the campaign is lost ("the case went cold"); the sim reports it as a stall.
 
 ## 2. Districts and Order (DIST)
@@ -35,11 +35,12 @@ Source documents: [GAME-DESIGN.md](../GAME-DESIGN.md) sections 3.1–3.2, 4.9, 5
 - **DIST-3** A fallen district's Order stays 0 and changes only by a retake (DIST-5).
 - **DIST-4** A district whose Order reaches 0 **falls** at once: the Takeover +`takeover.fall` (2), it pays no Funding, and its incidents carry the `turf` modifier (an extra Gunman).
 - **DIST-5** **Retake:** while any district has fallen, one Retake incident spawns each week in a fallen district (the lowest district index first). Winning it restores the district at Order `order.retake` (2) and pushes the Takeover back `takeover.retake` (1). A partial or a loss changes nothing for the district.
+- **DIST-6** **Patrols:** at the end of every week whose number is a multiple of `funding.periodWeeks` (4), each standing district under Order `order.recoverTo` (3) gains `order.recover` (1), up to that value.
 
 ## 3. Incidents (INC)
 
 - **INC-1** At the start of each week, `incidents.base` (2) incidents spawn, plus 1 more if a d100 roll is under `incidents.thirdChance` (50). Each goes to a different standing (not fallen) district, chosen uniformly; with fewer standing districts, fewer incidents spawn.
-- **INC-2** Each regular incident is a **raid** if a d100 roll is under `incidents.raidChance` (25), else a **bust**.
+- **INC-2** Each regular incident is a **raid** if a d100 roll is under `incidents.raidChance` (15), else a **bust**.
 - **INC-3** Retake (DIST-5) and Kingpin (END-2) incidents come on top of INC-1's count. A Retake is a raid; the Kingpin is a bust.
 - **INC-4** Difficulty 1–`difficulty.max` (5) = `difficulty.base` (1) + floor(Takeover / `difficulty.perTakeover` (3)) + a roll of 0–`difficulty.spread` (1); a Retake adds `difficulty.retake` (1); the Kingpin is `difficulty.kingpin` (5). Clamped to 1–max.
 - **INC-5** Every regular incident still open when the week ends is **ignored**: its district loses Order (DIST-2). Ignored Retake and Kingpin incidents cost nothing.
@@ -90,7 +91,7 @@ Source documents: [GAME-DESIGN.md](../GAME-DESIGN.md) sections 3.1–3.2, 4.9, 5
 
 - **AUTO-1** `autoResolve { incident, squad }` has the same preconditions as `deploy` (OPS-1) and resolves the incident at once.
 - **AUTO-2** **Squad strength** = the sum over the squad of `auto.base` (10) + `auto.perRank` (2) × rank + `auto.specialty` (3) for a specialist.
-- **AUTO-3** **Threshold** = `auto.diffBase` (24) + `auto.perDiff` (6) × difficulty + `auto.raid` (0) for raids. **Win chance** = `auto.center` (50) + (strength − threshold) × `auto.scale` (2), clamped to `auto.min`–`auto.max` (5–95). Roll d100: under the win chance → win; under win chance + `auto.partialBand` (15) → partial; otherwise loss. The event carries the full breakdown.
+- **AUTO-3** **Threshold** = `auto.diffBase` (34) + `auto.perDiff` (7) × difficulty + `auto.raid` (0) for raids. **Win chance** = `auto.center` (50) + (strength − threshold) × `auto.scale` (2), clamped to `auto.min`–`auto.max` (5–95). Roll d100: under the win chance → win; under win chance + `auto.partialBand` (15) → partial; otherwise loss. The event carries the full breakdown.
 - **AUTO-4** **Casualties:** each deployed trooper rolls d100: under `auto.death.<outcome>` (win 0, partial 3, loss 10) → dead; else a second d100 under `auto.injury.<outcome>` (10, 25, 40) → downed (ROST-4).
 - **AUTO-5** **Rewards:** arrests `auto.arrests.<outcome>` (3, 1, 0), credited one at a time to the surviving troopers in squad order; a bust yields Intel `auto.intel.<outcome>` (6, 2, 0), a raid yields Evidence `auto.evidence.<outcome>` (3, 0, 0) and Intel equal to its arrests; one civilian casualty if a d100 roll is under `auto.casualty.<outcome>` (5, 15, 30).
 
@@ -103,7 +104,7 @@ Source documents: [GAME-DESIGN.md](../GAME-DESIGN.md) sections 3.1–3.2, 4.9, 5
 ## 11. Campaign end (END)
 
 - **END-1** `state.outcome` is `null`, `won` or `lost`.
-- **END-2** The **Kingpin** unlocks when Intel reaches `kingpin.intel` (40): from then on a Kingpin incident spawns every week until it is won (the Kingpin's bagman carries the ledger that closes the case).
+- **END-2** The **Kingpin** unlocks when Intel reaches `kingpin.intel` (110): from then on a Kingpin incident spawns every week until it is won (the Kingpin's bagman carries the ledger that closes the case).
 - **END-3** **Lost** when the final countdown reaches 0 (TAKE-5) or at the stall cap (WEEK-5).
 - **END-4** **Won** when a Kingpin mission ends in a win (a partial does not count). The end is checked after every step; afterwards no action is legal.
 - **END-5** `campaignQuery.summary`: outcome, weeks, the Takeover at the end (segments and percent), missions (auto-resolved and deployed; wins, partials, losses), districts fallen, troopers lost, promotions, Intel, Evidence, Funding.
@@ -129,3 +130,4 @@ Source documents: [GAME-DESIGN.md](../GAME-DESIGN.md) sections 3.1–3.2, 4.9, 5
 - **R-8** OPS-5 | Abort is a loss with no harm to the squad | It is the only way out of a deployed mission without playing it (and the UI's "withdraw"); harm needs the tactical state, which an abort may not have.
 - **R-9** WEEK-2 | A Kingpin or Retake incident uses the week's one mission like any other | One squad, one mission a week (design 5.1).
 - **R-10** FUND-2 | A fallen district contributes nothing to Funding, and Order counts at its value at the end of the week | "Order sets that district's Funding each month."
+- **R-11** DIST-6 | Added a monthly patrol recovery that the design does not list | With 2-3 incidents a week and one mission, about 1.5 incidents go ignored every week; without a way back, the sim had 4 of 6 districts falling in every campaign, average player included. Recovery up to the starting Order keeps neglect costly (a district hit twice in a month still drops) without making every campaign a collapse. Sim result in `docs/status/S1-REPORT.md`.

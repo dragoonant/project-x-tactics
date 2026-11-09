@@ -432,7 +432,7 @@ describe('MSN mission: Bust', () => {
     expect(sum).toMatchObject({ rounds: 5, peakAlarm: 7, civilianCasualties: 1, troopersDowned: 2, troopersDead: 1, seed: 77, intel: 1 + 2 + 2 + 5 })
     expect(sum.enemies.gunman).toMatchObject({ arrests: 0, kills: 1, escapes: 1 })
     expect(sum.enemies.thug!.arrests).toBe(1)
-    expect(Object.keys(sum).sort()).toEqual(['civilianCasualties', 'civiliansSafe', 'enemies', 'intel', 'outcome', 'peakAlarm', 'rounds', 'seed', 'troopersDead', 'troopersDowned'])
+    expect(Object.keys(sum).sort()).toEqual(['civilianCasualties', 'civiliansSafe', 'enemies', 'evidence', 'intel', 'objective', 'outcome', 'peakAlarm', 'rounds', 'seed', 'troopersDead', 'troopersDowned'])
   })
 })
 

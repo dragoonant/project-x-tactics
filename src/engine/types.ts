@@ -78,7 +78,14 @@ export interface Setup {
   mapData?: MapData
   /** Test hook: forced rolls consumed first (copied into state.forcedRolls). */
   forcedRolls?: number[]
+  /** VAR-2: mission objective (default 'bust'). */
+  objective?: 'bust' | 'raid'
+  /** VAR-2: the evidence cache tile of a raid. */
+  cache?: Pt
 }
+
+/** VAR-2: present only in raids. */
+export interface RaidState { cache: Pt; seized: boolean; burned: boolean }
 export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] }
 
 export interface LastSeen { x: number; y: number; round: number }
@@ -106,6 +113,8 @@ export interface State {
   log: Action[]
   nextIds: { e: number; c: number }
   steps: number
+  /** VAR-2: the raid's cache (absent in a bust). */
+  raid?: RaidState
 }
 
 export type Action =
