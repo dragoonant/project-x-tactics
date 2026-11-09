@@ -66,7 +66,8 @@ export function preview(s: State, attackerId: string, targetId: string, ability?
   return {
     breakdown: bd,
     damage: { hit, graze },
-    resolve: { hit: [resFor(hit[0]), resFor(hit[1])], graze: [resFor(graze[0]), resFor(graze[1])], miss: t.maxResolve > 0 ? tn(s, 'resolve.shotAt') : 0 },
+    // Low and high damage can swap which end deals more Resolve (the wounded doubling), so report [min, max].
+    resolve: { hit: span(resFor(hit[0]), resFor(hit[1])), graze: span(resFor(graze[0]), resFor(graze[1])), miss: t.maxResolve > 0 ? tn(s, 'resolve.shotAt') : 0 },
     flanked: flank,
     kills: t.hp - hit[1] <= 0,
     surrenders: t.maxResolve > 0 && t.hp - hit[1] > 0 && t.resolve - resFor(hit[1]) <= 0,
@@ -133,4 +134,8 @@ export const query = {
     const o = unitById(s, observerId), t = unitById(s, targetId)
     return !!o && !!t && sideSees(s, o.side, t)
   },
+}
+
+function span(a: number, b: number): [number, number] {
+  return a <= b ? [a, b] : [b, a]
 }
