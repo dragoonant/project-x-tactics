@@ -1,15 +1,24 @@
 // Headless seeded games: both sides pick random legal actions. Checks INV-1..6 after every step.
-// Usage: npm run sim -- --games 200 [--seed 1] [--squad 4]
+// Usage: npm run sim -- --games 200 [--seed 1] [--squad 4] [--syn ai] [--squadbot greedy]
+// Defaults (both sides random) are unchanged; --syn ai plays the syndicate with the utility AI, --squadbot greedy plays the squad with the greedy bot.
 import { isDeepStrictEqual } from 'node:util'
 import { createGame, step, randomAction, checkInvariants, serialize, deserialize, replay, summarize, legalActions } from '../src/engine'
 import { CLASSES, TUNING } from '../src/data'
-import type { State } from '../src/engine'
+import type { Action, State } from '../src/engine'
+import { syndicatePolicy } from '../src/ai'
+import { squadBot } from '../src/ai/squad-bot'
 
 function flag(name: string, def: number): number {
   const i = process.argv.indexOf(`--${name}`)
   return i >= 0 ? Number(process.argv[i + 1]) : def
 }
 
+function sflag(name: string): string | null {
+  const i = process.argv.indexOf(`--${name}`)
+  return i >= 0 ? (process.argv[i + 1] ?? null) : null
+}
+const useAi = sflag('syn') === 'ai'
+const useBot = sflag('squadbot') === 'greedy'
 const games = flag('games', 200)
 const firstSeed = flag('seed', 1)
 const squadSize = flag('squad', 4)
@@ -37,7 +46,8 @@ for (let g = 0; g < games; g++) {
   const fail = (what: string): void => { failures.push({ seed, step: n, what }); failed = true }
   while (!s.outcome && s.round <= maxRounds && !failed) {
     const legal = legalActions(s)
-    const a = randomAction(s, 0, legal, endChance)
+    const a: Action = s.phase === 'syndicate' && useAi ? syndicatePolicy(s) : s.phase === 'squad' && useBot ? squadBot(s) : randomAction(s, 0, legal, endChance)
+    if ((useAi || useBot) && !legal.some((l) => JSON.stringify(l) === JSON.stringify(a))) fail(`policy returned an action outside legalActions: ${JSON.stringify(a)}`)
     const r = step(s, a)
     n++
     if (!r.ok) { rejected++; fail(`step rejected a legal action ${JSON.stringify(a)}: ${r.reason}`); break }
