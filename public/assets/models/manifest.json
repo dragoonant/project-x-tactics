@@ -1,0 +1,87 @@
+{
+  "bagman": {
+    "file": "bagman.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "bulwark": {
+    "file": "bulwark.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "chem-trooper": {
+    "file": "chem-trooper.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "civilian-a": {
+    "file": "civilian-a.glb",
+    "heightInches": 1.7,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "civilian-b": {
+    "file": "civilian-b.glb",
+    "heightInches": 1.7,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "civilian-c": {
+    "file": "civilian-c.glb",
+    "heightInches": 1.7,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "enforcer": {
+    "file": "enforcer.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "fixer": {
+    "file": "fixer.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "gunman": {
+    "file": "gunman.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "heavy": {
+    "file": "heavy.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "k9-unit": {
+    "file": "k9-unit.glb",
+    "heightInches": 1.1,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. Quadruped; height is shoulder-to-head of the cut figure. Check ?gallery for facing (yaw) before wiring."
+  },
+  "marksman": {
+    "file": "marksman.glb",
+    "heightInches": 1.4,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. Kneeling pose, so shorter than the standing figures."
+  },
+  "recon": {
+    "file": "recon.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "recruit": {
+    "file": "recruit.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "thug-club": {
+    "file": "thug-club.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "thug-pistol": {
+    "file": "thug-pistol.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  },
+  "vox-operator": {
+    "file": "vox-operator.glb",
+    "heightInches": 1.8,
+    "notes": "No base; feet at y=0, origin at bottom centre, front +Z, 1 unit = 1 inch. "
+  }
+}

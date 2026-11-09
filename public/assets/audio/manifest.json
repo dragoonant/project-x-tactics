@@ -1,0 +1,31 @@
+{
+  "sfx": {
+    "rifle": "sfx/rifle.ogg",
+    "shotgun": "sfx/shotgun.ogg",
+    "revolver": "sfx/revolver.ogg",
+    "pistol": "sfx/pistol.ogg",
+    "long-rifle-suppressed": "sfx/long-rifle-suppressed.ogg",
+    "smg": "sfx/smg.ogg",
+    "lmg-burst": "sfx/lmg-burst.ogg",
+    "baton-hit": "sfx/baton-hit.ogg",
+    "maul-shock": "sfx/maul-shock.ogg",
+    "shield-bash": "sfx/shield-bash.ogg",
+    "cuffs": "sfx/cuffs.ogg",
+    "frag-explosion": "sfx/frag-explosion.ogg",
+    "gas-grenade-hiss": "sfx/gas-grenade-hiss.ogg",
+    "door-breach": "sfx/door-breach.ogg",
+    "radio-chatter-short": "sfx/radio-chatter-short.ogg",
+    "footsteps-armoured": "sfx/footsteps-armoured.ogg",
+    "bullet-ricochet-miss": "sfx/bullet-ricochet-miss.ogg",
+    "alarm-siren-distant": "sfx/alarm-siren-distant.ogg",
+    "ui-select": "sfx/ui-select.ogg",
+    "ui-confirm": "sfx/ui-confirm.ogg"
+  },
+  "music": {
+    "calm": "music/calm.ogg",
+    "tense": "music/tense.ogg",
+    "combat": "music/combat.ogg",
+    "victory": "music/victory.ogg",
+    "defeat": "music/defeat.ogg"
+  }
+}

@@ -18,8 +18,8 @@ const r = await (await fetch(API + '/api/jobs', { method: 'POST', headers: { 'co
   body: JSON.stringify({ model: 'klein', mode: 'edit', prompt, images: [data], aspect: '4:3', megapixels: 1, batch: n, seed }) })).json();
 if (!r.id) { console.log('submit failed', JSON.stringify(r)); process.exit(1); }
 let j;
-for (;;) { await new Promise((s) => setTimeout(s, 3000)); j = await (await fetch(`${API}/api/jobs/${r.id}`)).json(); if (['completed', 'failed', 'cancelled'].includes(j.status)) break; }
-if (j.status !== 'completed') { console.log(slug, j.status, j.error); process.exit(1); }
+for (;;) { await new Promise((s) => setTimeout(s, 3000)); j = await (await fetch(`${API}/api/jobs/${r.id}`)).json(); if (['done', 'completed', 'failed', 'cancelled', 'error'].includes(j.status)) break; }
+if (!['done', 'completed'].includes(j.status)) { console.log(slug, j.status, j.error); process.exit(1); }
 let k = fs.readdirSync(dir).filter((f) => /^cand_\d+\.png$/.test(f)).length;
 for (const im of j.images) {
   const b = Buffer.from(await (await fetch(`${API}/files/${r.id}/${im}`)).arrayBuffer());

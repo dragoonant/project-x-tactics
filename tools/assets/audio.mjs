@@ -17,8 +17,8 @@ for (const id of args.length ? args : Object.keys(jobs)) {
     : { mode: 'music', prompt: e.p, lyrics: '[Instrumental]', duration: e.d, steps: 8, bpm: e.bpm, key: 'D minor', timesig: '4', batch: 2, seed };
   const r = await (await fetch(API + '/api/jobs', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })).json();
   if (!r.id) { console.log(id, 'submit failed', JSON.stringify(r)); continue; }
-  let j; for (;;) { await new Promise((s) => setTimeout(s, 3000)); j = await (await fetch(`${API}/api/jobs/${r.id}`)).json(); if (['completed', 'failed', 'cancelled'].includes(j.status)) break; }
-  if (j.status !== 'completed') { console.log(id, j.status, j.error); continue; }
+  let j; for (;;) { await new Promise((s) => setTimeout(s, 3000)); j = await (await fetch(`${API}/api/jobs/${r.id}`)).json(); if (['done', 'completed', 'failed', 'cancelled', 'error'].includes(j.status)) break; }
+  if (!['done', 'completed'].includes(j.status)) { console.log(id, j.status, j.error); continue; }
   const files = j.audios || j.files || [];
   let k = 0;
   for (const f of files) { const name = typeof f === 'string' ? f : f.name || f.file; if (!/\.(flac|wav|mp3)$/.test(name)) continue;

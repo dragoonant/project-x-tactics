@@ -11,3 +11,6 @@ docs/sources/
 Tokens.txt
 tokens.txt*
 .claude/settings.local.json
+art/raw/
+art/concepts/*/
+!art/concepts/arbiter/
