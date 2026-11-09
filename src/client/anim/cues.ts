@@ -13,7 +13,7 @@ export const holds = new Map<string, { status: string }>()
 /** Test and perf hooks: the clip each rig is playing now, every clip it has played since the game began, and per-frame counters. */
 export const playing = new Map<string, string>()
 export const playedEver = new Map<string, Set<string>>()
-export const animStats = { frames: 0, rigs: 0, visible: 0, updated: 0, skippedOffscreen: 0, skippedFrozen: 0 }
+export const animStats = { ms: 0, frames: 0, rigs: 0, visible: 0, updated: 0, skippedOffscreen: 0, skippedFrozen: 0 }
 
 let seq = 1
 export function playCue(unit: string, clip: ClipName, ms: number, scale = 1, face?: Pt): void {

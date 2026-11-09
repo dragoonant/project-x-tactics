@@ -13,7 +13,7 @@ export interface Px {
   anim(unitId: string): string | null
   animSeen(unitId: string): string[]
   rigKinds(): string[]
-  animStats(): { frames: number; rigs: number; visible: number; updated: number; skippedOffscreen: number; skippedFrozen: number }
+  animStats(): { ms: number; frames: number; rigs: number; visible: number; updated: number; skippedOffscreen: number; skippedFrozen: number }
   legal(): any[]
   dispatch(a: unknown): Promise<boolean>
   endTurn(): Promise<void>

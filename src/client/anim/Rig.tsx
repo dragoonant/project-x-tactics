@@ -123,7 +123,7 @@ export function RigModel({ unit, rig, lite }: { unit: Unit; rig: RigAsset; lite:
     return () => { mixer.stopAllAction(); mixer.uncacheRoot(root) }
   }, [root, mixer])
 
-  useFrame((_, dt) => {
+  const tick = (dt: number): void => {
     const u = unitRef.current
     const S = st.current
     const g = pose.current
@@ -220,7 +220,8 @@ export function RigModel({ unit, rig, lite }: { unit: Unit; rig: RigAsset; lite:
     S.acc = 0
     animStats.updated++
     wake(60)
-  })
+  }
+  useFrame((_, dt) => { const t0 = performance.now(); tick(dt); animStats.ms += performance.now() - t0 }) // animStats.ms: the rigs' own CPU time (perf.md)
 
   return <group ref={pose}><primitive object={root} scale={rig.scale} /></group>
 }
