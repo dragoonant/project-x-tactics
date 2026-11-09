@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "unit": "1 world unit = 1 tile",
+  "textures": {
+    "asphalt": {
+      "color": "textures/asphalt_color.webp",
+      "normal": "textures/asphalt_normal.webp",
+      "rough": "textures/asphalt_rough.webp",
+      "tileSize": 4,
+      "metalness": 0.05,
+      "normalScale": 0.8,
+      "use": "street floor tiles"
+    },
+    "tilefloor": {
+      "color": "textures/tilefloor_color.webp",
+      "normal": "textures/tilefloor_normal.webp",
+      "rough": "textures/tilefloor_rough.webp",
+      "tileSize": 3,
+      "metalness": 0.05,
+      "normalScale": 0.8,
+      "use": "floor tiles enclosed by walls and doors (the bar and back rooms)"
+    },
+    "brick": {
+      "color": "textures/brick_color.webp",
+      "normal": "textures/brick_normal.webp",
+      "rough": "textures/brick_rough.webp",
+      "tileSize": 2,
+      "metalness": 0,
+      "normalScale": 1,
+      "use": "wall runs"
+    },
+    "corrugated": {
+      "color": "textures/corrugated_color.webp",
+      "normal": "textures/corrugated_normal.webp",
+      "rough": "textures/corrugated_rough.webp",
+      "tileSize": 2,
+      "metalness": 0.25,
+      "normalScale": 1,
+      "use": "outer boundary hoarding"
+    },
+    "steeldoor": {
+      "color": "textures/steeldoor_color.webp",
+      "normal": "textures/steeldoor_normal.webp",
+      "rough": "textures/steeldoor_rough.webp",
+      "tileSize": 1,
+      "metalness": 0.35,
+      "normalScale": 0.8,
+      "use": "doors, one panel per box face (geometry UVs)"
+    }
+  },
+  "props": {
+    "street-lamp": {
+      "file": "props/street-lamp.glb",
+      "replaces": "lamp",
+      "footprint": [
+        0.6,
+        0.6
+      ],
+      "height": 2.4,
+      "fit": "height",
+      "note": "fits by height; the arm overhangs the tile edge, the base stays inside the tile"
+    }
+  }
+}

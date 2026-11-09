@@ -26,6 +26,8 @@ export function CameraRig({ w, h }: { w: number; h: number }): null {
 
   useEffect(() => {
     loop.invalidate = invalidate
+    // review / test access (T0 screenshots): camera controller and a forced redraw
+    Object.assign(window, { __pxBoard: boardApi, __pxWake: invalidate })
     return () => { loop.invalidate = null }
   }, [invalidate])
 

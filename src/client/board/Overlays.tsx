@@ -7,6 +7,7 @@ import { Color, DoubleSide, InstancedMesh, MeshBasicMaterial, Object3D } from 't
 import { query } from '../../engine'
 import type { Pt, State, Unit } from '../../engine'
 import { useStore } from '../game/store'
+import { TERRAIN_V2 } from '../game/terrainAssets'
 import { armedTargets, legalFor, reachFor, withUnitAt } from '../game/tap'
 import { tx, tz } from './layout'
 
@@ -65,7 +66,7 @@ export function TileMarks({ state }: { state: State }): React.JSX.Element {
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, w * h]} frustumCulled={false} raycast={noRay} renderOrder={2}>
       <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial transparent opacity={0.4} depthWrite={false} toneMapped={false} />
+      <meshBasicMaterial transparent opacity={TERRAIN_V2 ? 0.26 : 0.4} depthWrite={false} toneMapped={false} />
     </instancedMesh>
   )
 }

@@ -2,7 +2,7 @@
 // screen shows the Night Market behind it; a running game or the end screen shows the live state.
 // Picking (rule 25): pointer handlers live ONLY on the tile pick surface below; figures, rings, bars and effects have none.
 import { Canvas, type ThreeEvent } from '@react-three/fiber'
-import { Suspense, useEffect, useMemo, useRef } from 'react'
+import { Suspense, use, useEffect, useMemo, useRef } from 'react'
 import type { PointLight } from 'three'
 import { MAPS } from '../../data'
 import { createGame, view } from '../../engine'
@@ -17,6 +17,7 @@ import { Figures, Ghosts } from './Figures'
 import { tx, tz, worldToTile } from './layout'
 import { HoverOverlay, TileMarks, useHoverUnit } from './Overlays'
 import { Terrain } from './Terrain'
+import { TERRAIN_V2, preloadTerrain } from '../game/terrainAssets'
 
 let preview: { state: State; fog: State } | null = null
 function previewGame(): { state: State; fog: State } {
@@ -70,6 +71,12 @@ function PickSurface({ w, h }: { w: number; h: number }): React.JSX.Element {
   )
 }
 
+/** Terrain v2 suspends until its assets are loaded (null fallback, rule 26); with the flag off this is a plain Terrain. */
+function TerrainGate(props: { state: State; fogOn: boolean; lamps: { x: number; y: number }[]; lights: React.MutableRefObject<(PointLight | null)[]> }): React.JSX.Element {
+  const assets = TERRAIN_V2 ? use(preloadTerrain()) : null
+  return <Terrain {...props} assets={assets} />
+}
+
 function Scene({ state, fog, fogOn }: { state: State; fog: State; fogOn: boolean }): React.JSX.Element {
   const { w, h } = state.map
   const selected = useStore((s) => s.selected)
@@ -86,7 +93,7 @@ function Scene({ state, fog, fogOn }: { state: State; fog: State; fogOn: boolean
     <Suspense fallback={null}>
       <CameraRig w={w} h={h} />
       <Lights state={state} lamps={lamps} refs={lights} />
-      <Terrain state={state} fogOn={fogOn} lamps={lamps} lights={lights} />
+      <Suspense fallback={null}><TerrainGate state={state} fogOn={fogOn} lamps={lamps} lights={lights} /></Suspense>
       <Figures units={fog.units} w={w} h={h} selected={selected} hovered={hoverId} />
       <Ghosts state={state} fog={fog} />
       {fogOn && <TileMarks state={state} />}
@@ -123,7 +130,7 @@ export function Board(): React.JSX.Element {
         dpr={lite || phone ? 1 : [1, 1.75]}
         gl={{ antialias: !phone, powerPreference: 'high-performance', alpha: false, stencil: false }}
         camera={{ fov: 38, near: 0.5, far: 400, position: [0, 24, 24] }}
-        onCreated={({ gl, scene }) => { gl.setClearColor('#05070a') }}
+        onCreated={({ gl }) => { gl.setClearColor('#05070a'); (window as unknown as { __pxGl?: unknown }).__pxGl = gl }}
       >
         <fogExp2 attach="fog" args={['#06080c', 0.011]} />
         <Scene state={state} fog={fog} fogOn={screen !== 'start'} />

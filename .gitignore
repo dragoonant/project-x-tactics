@@ -15,3 +15,7 @@ art/raw/
 art/concepts/*/
 !art/concepts/arbiter/
 !art/concepts/arbiter-gemini/
+
+# T0 terrain spike: raw generations and scratch
+art/terrain-spike/raw/
+art/terrain-spike/_*.png
