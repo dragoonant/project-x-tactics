@@ -205,6 +205,17 @@ Common to all troopers: **Move**, **Overwatch** (OW), **Hunker** (HNK), **Cuff**
 - **MSN-5** The game ends as soon as an outcome holds (checked after every step). At the end, downed troopers that haven't died survive; cuffed enemies are secured; surrendered but uncuffed ones are lost.
 - **MSN-6** `query.summary(state)`: outcome, rounds, peak Alarm, per enemy type arrests/kills/escapes, intel (`intel.*`: Thug 1, Gunman 1, Fixer 2, Heavy 2, Bagman 5, for cuffed only), civilian casualties, troopers downed/dead, seed.
 
+## 18.1 Mission variants (VAR)
+
+The campaign (spec 20, OPS-2/OPS-3) deploys into variants of the Night Market. A variant is plain setup data; with none of these fields a game is the plain Bust above.
+
+- **VAR-1** `setup.mapData` carries a variant map (enemy mix, lamps, civilians changed from `bust-01`; it keeps the id `bust-01` so the client draws the Night Market) and `setup.tuning` the variant's tuning overrides. Both ride in the save envelope (SAV-1).
+- **VAR-2** `setup.objective` is `'bust'` (default: MSN-2..4) or `'raid'`. A raid needs `setup.cache`, a passable floor tile; `state.raid = { cache, seized, burned }` exists only in raids.
+- **VAR-3** **Seize:** after every squad action, if the cache is neither seized nor burned and an active trooper stands within `raid.seizeRadius` (1, square) of the cache tile, the cache is **seized** (event).
+- **VAR-4** **Burn:** after every step, if the cache is not seized and Alarm has reached `raid.burnAlarm` (7), the syndicate **burns** it (event). Seizing is checked first.
+- **VAR-5** **Raid outcome** (instead of MSN-2..4): loss if no able trooper remains; win if the cache is seized and either every able trooper stands in the extraction zone or no active enemy remains; partial ("evidence lost") if the cache burned and the same second clause holds.
+- **VAR-6** `query.summary` adds `objective` and `evidence`: `raid.evidence` (3) for a seized cache in a raid, else 0.
+
 ## 19. Save (SAV)
 
 - **SAV-1** `serialize(state)` returns the versioned envelope `{ v: 1, setup, seed, actions, state }`; `deserialize` restores the snapshot and rejects an unknown version or malformed envelope with a reason (never throws).
@@ -247,3 +258,5 @@ Common to all troopers: **Move**, **Overwatch** (OW), **Hunker** (HNK), **Cuff**
 - **R-24** OW-1 | Only an armed unit with a ranged weapon can set Overwatch or Long Watch | A Thug with a club has nothing to fire.
 - **R-25** ABL-ENF-1 | Breach needs the Enforcer orthogonally adjacent to the closed door and fires at the nearest active enemy (ties by unit id) that the Enforcer now sees; it is loud even when nothing is seen | A door's orthogonal side is the only side you can stand on; NOI-3 lists Breach as loud.
 - **R-26** FOG-3 | `view()` empties the member list of unaware groups for the opposing side and drops its RNG state and log | Hidden information must not leak through the view.
+- **R-27** VAR-3 | Seizing needs no action: standing next to (or on) the cache after any squad action secures it | A cuffed prisoner left on the cache tile would otherwise block it for good; reaching it under fire is the test.
+- **R-28** VAR-1 | A variant keeps the map id `bust-01` and only changes units, lamps and civilians, never walls or cover | The client's terrain and props are drawn for `bust-01`; a lamp missing from the variant shows as a dead lamp.

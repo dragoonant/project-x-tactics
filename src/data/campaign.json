@@ -1,0 +1,64 @@
+{
+  "tuning": {
+    "start": { "funding": 120, "intel": 0, "evidence": 0 },
+    "week": { "max": 40, "missions": 1 },
+    "order": { "max": 5, "start": 3, "win": 1, "partial": 0, "loss": 1, "casualty": 1, "ignored": 1, "retake": 2 },
+    "incidents": { "base": 2, "thirdChance": 50, "raidChance": 25 },
+    "difficulty": { "base": 1, "perTakeover": 3, "spread": 1, "retake": 1, "kingpin": 5, "max": 5 },
+    "takeover": { "segments": 12, "start": 0, "everyWeeks": 2, "scheduled": 1, "fall": 2, "raid": 1, "retake": 1, "kingpinFail": 1, "countdown": 3 },
+    "funding": { "periodWeeks": 4, "base": 20, "perOrder": 5 },
+    "roster": { "start": 6, "max": 10 },
+    "squad": { "size": 4 },
+    "recruit": { "cost": 40 },
+    "treat": { "cost": 30 },
+    "injury": { "downed": 3, "wounded": 1, "woundedPct": 50 },
+    "xp": { "mission": 1, "win": 1, "arrest": 1 },
+    "rank": { "r1": 2, "r2": 5, "r3": 9, "r4": 14, "max": 4 },
+    "promotion": { "rank": 2 },
+    "auto": {
+      "base": 10, "perRank": 2, "specialty": 3,
+      "diffBase": 24, "perDiff": 6, "raid": 0,
+      "center": 50, "scale": 2, "min": 5, "max": 95, "partialBand": 15,
+      "death": { "win": 0, "partial": 3, "loss": 10 },
+      "injury": { "win": 10, "partial": 25, "loss": 40 },
+      "casualty": { "win": 5, "partial": 15, "loss": 30 },
+      "intel": { "win": 6, "partial": 2, "loss": 0 },
+      "evidence": { "win": 3, "partial": 0, "loss": 0 },
+      "arrests": { "win": 3, "partial": 1, "loss": 0 }
+    },
+    "kingpin": { "intel": 40 }
+  },
+  "districts": [
+    { "id": "docks", "name": "Saltwater Docks", "patron": "logistics corp", "modifier": "rain" },
+    { "id": "foundry", "name": "Cinder Foundry", "patron": "manufacturing corp", "modifier": "furnace" },
+    { "id": "spire", "name": "Glass Spire", "patron": "finance corp", "modifier": "corpAlarm" },
+    { "id": "market", "name": "Night Market", "patron": "biotech corp", "modifier": "crowd" },
+    { "id": "stacks", "name": "The Stacks", "patron": "biotech corp", "modifier": "flicker" },
+    { "id": "undercity", "name": "Undercity", "patron": "logistics corp", "modifier": "blackout" }
+  ],
+  "modifiers": {
+    "rain": { "label": "Rain and fog", "text": "Units on dark tiles are seen only from 1 tile away.", "tuning": { "light": { "darkSightRange": 1 } } },
+    "furnace": { "label": "Furnace crew", "text": "An extra Heavy works the market floor.", "extra": [{ "group": "patrol", "type": "heavy" }] },
+    "corpAlarm": { "label": "Corporate alarms", "text": "Private alarm grid: the first Alarm threshold is 3.", "tuning": { "alarm": { "t1": 3 } } },
+    "crowd": { "label": "Crowded stalls", "text": "3 more civilians in the market.", "civilians": 3 },
+    "flicker": { "label": "Failing grid", "text": "2 street lamps are out.", "lampsOut": 2 },
+    "blackout": { "label": "Blackout", "text": "3 street lamps are out.", "lampsOut": 3 },
+    "turf": { "label": "Syndicate turf", "text": "The district has fallen: an extra Gunman guards the bar.", "extra": [{ "group": "bar", "type": "gunman" }] }
+  },
+  "difficulty": {
+    "1": { "text": "Light crew: the Heavy is a pistol Thug.", "swap": [{ "group": "patrol", "index": 2, "type": "thug", "loadout": "pistol" }] },
+    "2": { "text": "Standard crew." },
+    "3": { "text": "Reinforced: an extra Gunman in the bar.", "extra": [{ "group": "bar", "type": "gunman" }] },
+    "4": { "text": "Heavy crew: an extra Gunman and a Heavy in the back room.", "extra": [{ "group": "bar", "type": "gunman" }, { "group": "backroom", "type": "heavy" }] },
+    "5": { "text": "Fortified: extra Gunmen and a Heavy, and the patrol is already alert.", "extra": [{ "group": "bar", "type": "gunman" }, { "group": "backroom", "type": "heavy" }, { "group": "patrol", "type": "gunman" }], "aware": ["patrol"] }
+  },
+  "slots": {
+    "patrol": [{ "x": 11, "y": 14 }, { "x": 14, "y": 15 }, { "x": 9, "y": 12 }],
+    "bar": [{ "x": 10, "y": 4 }, { "x": 14, "y": 7 }, { "x": 10, "y": 6 }],
+    "backroom": [{ "x": 6, "y": 7 }, { "x": 8, "y": 6 }, { "x": 5, "y": 4 }],
+    "civilians": [{ "x": 3, "y": 10 }, { "x": 18, "y": 12 }, { "x": 8, "y": 16 }, { "x": 12, "y": 18 }]
+  },
+  "raid": { "guard": "gunman", "caches": [{ "x": 8, "y": 4 }, { "x": 14, "y": 6 }, { "x": 17, "y": 4 }] },
+  "names": ["Vance", "Okafor", "Reyes", "Lindqvist", "Hale", "Moreau", "Tanaka", "Brandt", "Achebe", "Sorensen", "Quill", "Navarro", "Petrov", "Ines", "Kade", "Mbeki", "Rook", "Halloran", "Strand", "Volkov"],
+  "specialties": ["enforcer", "bulwark", "marksman", "vox", "chem", "recon"]
+}

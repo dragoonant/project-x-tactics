@@ -13,6 +13,8 @@
     "validate:data": "tsx tools/validate-data.ts",
     "sim": "tsx tools/sim.ts",
     "fuzz": "tsx tools/action-fuzz.ts",
+    "sim:campaign": "tsx tools/campaign-sim.ts",
+    "fuzz:campaign": "tsx tools/campaign-fuzz.ts",
     "bench:ai": "tsx tools/ai-bench.ts",
     "e2e": "playwright test"
   },

@@ -31,5 +31,6 @@
   "destruct": { "halfHp": 2, "fullHp": 4 },
   "rally": { "range": 5 },
   "intel": { "thug": 1, "gunman": 1, "fixer": 2, "heavy": 2, "bagman": 5 },
+  "raid": { "burnAlarm": 7, "evidence": 3, "seizeRadius": 1 },
   "sim": { "maxRounds": 40, "saveCheckEvery": 25 }
 }
