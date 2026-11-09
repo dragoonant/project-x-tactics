@@ -10,6 +10,7 @@ test('a full game at Instant speed reaches the end screen, then Copy report / Re
   const errs = watchErrors(page)
   await openStart(page)
   await beginGame(page, 'instant')
+  expect(await page.evaluate(() => window.__px.rigKinds())).toContain('enforcer') // the rigged figures are in play
   const res = await page.evaluate(() => window.__px.autoplay(5000))
   expect(res.screen).toBe('end')
   await expect(page.getByTestId('end-screen')).toBeVisible()

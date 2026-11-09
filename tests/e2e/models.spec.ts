@@ -8,6 +8,8 @@ test('rule 26: models listed in the manifest preload before New Operation is ena
   await page.route('**/assets/models/manifest.json', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify({ models: { recruit: 'recruit.glb', enforcer: { file: 'enforcer.glb' }, gunman: 'does-not-exist.glb' } }) }),
   )
+  // the rigged-figure manifest is faked empty so the count below is the static one (3)
+  await page.route('**/assets/anim/manifest.json', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: 1, figures: {}, items: {} }) }))
   await page.goto('/')
   await expect(page.getByTestId('start-screen')).toBeVisible()
   const btn = page.getByTestId('new-op')
