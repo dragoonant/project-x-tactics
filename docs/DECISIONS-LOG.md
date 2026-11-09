@@ -1,0 +1,10 @@
+# Decisions made on the owner's behalf
+
+The owner said on 2026-11-08: "I'm going to be away for a little bit - make logical decisions on my behalf, show me what decisions you made." Every call made without asking goes here, newest last, with the reason. Any of them can be reversed.
+
+| # | Decision | Why | How to reverse |
+|---|---|---|---|
+| A1 | The existing GitHub repo `dragoonant/project-x` (public, created 2026-11-09 00:05 UTC with only an auto-generated commit) was switched to **private** as you approved, but GitHub reports it **disabled** and refuses pushes (HTTP 403). The code went to a new private repo instead: **`dragoonant/project-x-tactics`**. The disabled repo was left as it is (private, untouched otherwise). | A disabled repo can't be pushed to; GitHub support or the repo's settings page has to re-enable it. A new name kept the push "private, pushed after each milestone" without waiting. | Once `project-x` is re-enabled, `git remote set-url origin https://github.com/dragoonant/project-x.git && git push -u --force origin main`, then delete `project-x-tactics`. |
+| A2 | The new knowledge-base repo is named **`3d-game-generation`** (private, `dragoonant/3d-game-generation`). | Your words: "a separate repo for 3d game generation". | Rename on GitHub and locally. |
+| A3 | The 3D board uses the KB's proven stack (React Three Fiber, three.js, Vite, TypeScript strict, Vitest, Playwright), replacing the earlier 2D canvas plan. | "An isometric map like XCOM and Chaos Gate" is a 3D camera view, and every 3D sibling in tabletop-kb is built on this stack. | — |
+| A4 | The spec (`docs/spec/10-rules.md`) settles details the plan left open: 8-direction movement with no corner cutting, XCOM-style peeking around full cover, cover by side, only squad actions raise Alarm, enemies' own fire does not, unaware groups hold position (no patrols in v1), Marksman gets squadsight. All are logged as rulings R-1 to R-3 or in the spec text. | Needed for a one-pass engine build. | Change the rule in the spec; tests follow the rule ids. |
