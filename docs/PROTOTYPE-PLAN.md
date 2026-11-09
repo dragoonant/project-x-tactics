@@ -21,8 +21,9 @@ The first playtest should answer:
 | Topic | Decision |
 |---|---|
 | Board | **3D isometric-style board like XCOM / Chaos Gate**: three.js through React Three Fiber, angled camera that zooms, rotates and pans (rev 2; replaces the 2D canvas plan) |
-| Figures | 3D figures generated from the concept art with the local Hunyuan pipeline (`tabletop-kb/local-ai-studios.md`); static meshes with weapons fused in, no skeletal animation (KB rule 15) |
-| Hosting | Published as a private claude.ai Artifact (opens on any browser, phone included; shareable later) |
+| Figures | 3D figures generated from the concept art with the local Hunyuan pipeline (`tabletop-kb/local-ai-studios.md`); static meshes with weapons fused in, no skeletal animation (KB rule 15); **no bases**: figures stand directly on the tiles (owner, 2026-11-08) |
+| Hosting | Published as a private claude.ai Artifact (opens on any browser, phone included; shareable later). Code in a private GitHub repo, pushed after each milestone (owner, 2026-11-08) |
+| Interface | "Bodycam feed" presentation concept (4.1) |
 | Hit model | Percent + graze (see 5.2) |
 | Units | Recruit + 6 specialties. K9, mech, APC and the Arbiter wait for a later build |
 | Mission | One handcrafted **Bust** map |
@@ -94,7 +95,8 @@ project-x/
 - Dark tiles are shaded; gas tiles show a cloud; destroyed cover shows rubble.
 
 ### 4.1 Presentation concept (rule 21)
-Default, pending the owner's yes: **"Precinct dispatch"**. The HUD reads as a police dispatch terminal: amber-on-black hazard palette, a condensed stencil typeface, the event feed as a scrolling dispatch log with radio call-signs, unit cards as duty-roster tags, the end screen as an incident report with a case number.
+**"Bodycam feed"** (owner's choice, 2026-11-08). The HUD is framed as a live feed from the troopers' helmet cams and an overwatch drone: scanlines and slight lens vignette, a running timestamp and round counter in the corner, a REC marker, target brackets around the hovered enemy with the hit/graze readout beside them, unit cards as camera-channel tabs (one per trooper, call-sign and vitals), the event feed as a radio/telemetry ticker, and signal-loss glitch transitions between phases. The end screen is an evidence-log export of the feed. Palette: near-black, hazard amber, sodium orange, a cold monitor green for readouts.
+Phone budget (Three Kingdoms Tactics lesson): no full-screen SVG filters or `backdrop-filter` every frame; scanlines and glitches are cheap static overlays or WebGL, with a "lite" setting.
 Must not look like: Three Kingdoms Tactics (sand table, paper slips), Mallet 42k, or XCOM/Chaos Gate's own interfaces.
 
 ---
@@ -314,7 +316,7 @@ After M5: **playtest round 1**. Art and audio generation can run alongside M2 an
 ## 11. Deliberately left out of v1
 **The Arbiter is planned for v2**, right after the first playtest: Command Points, the three starting orders, the four **Verdicts** (with the alignment shift shown on the end screen), and the Vox Operator's Relay change. Until then the Vox keeps *Relay Orders* as written in 6.3.
 
-Also out: K9, mech, APC, air support beyond the Vox calls, corp security, promotions and XP, ammo, elevation, crits, camera rotation, audio, the campaign layer, save/load mid-mission.
+Also out: K9, mech, APC, air support beyond the Vox calls, corp security, promotions and XP, ammo, elevation, crits, the campaign layer. (Save and Continue is **in**, per KB rule 22; audio is in at M4; camera rotation is in, per rule 27.)
 
 ## 12. Art needed later (not blocking v1)
 The Arbiter (needed for v2), syndicate enemy concepts (Thug, Gunman, Heavy, Fixer, the Bagman), civilians, the K9 at a matching scale, the mech, the APC.
