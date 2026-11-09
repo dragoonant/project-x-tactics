@@ -1,0 +1,10 @@
+{
+  "common": ["overwatch", "hunker"],
+  "types": {
+    "thug":   { "name": "Thug",       "hp": 4, "resolve": 4, "mobility": 7, "aim": 55, "defense": 0, "weapon": "pistol", "loadouts": { "club": "club", "pistol": "pistol" }, "abilities": [], "gasImmune": false },
+    "gunman": { "name": "Gunman",     "hp": 5, "resolve": 6, "mobility": 6, "aim": 60, "defense": 0, "weapon": "smg",    "loadouts": {}, "abilities": [], "gasImmune": false },
+    "heavy":  { "name": "Heavy",      "hp": 9, "resolve": 8, "mobility": 5, "aim": 55, "defense": 0, "weapon": "lmg",    "loadouts": {}, "abilities": ["suppress"], "gasImmune": true },
+    "fixer":  { "name": "Fixer",      "hp": 5, "resolve": 7, "mobility": 6, "aim": 60, "defense": 0, "weapon": "pistol", "loadouts": {}, "abilities": ["rally"], "gasImmune": false },
+    "bagman": { "name": "The Bagman", "hp": 8, "resolve": 9, "mobility": 6, "aim": 60, "defense": 0, "weapon": "pistol", "loadouts": {}, "abilities": [], "gasImmune": false }
+  }
+}

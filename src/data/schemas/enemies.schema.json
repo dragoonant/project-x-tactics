@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "syndicate units",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["common", "types"],
+  "properties": {
+    "common": { "type": "array", "items": { "type": "string" } },
+    "types": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "hp", "resolve", "mobility", "aim", "defense", "weapon", "loadouts", "abilities", "gasImmune"],
+        "properties": {
+          "name": { "type": "string" },
+          "hp": { "type": "integer", "minimum": 1 },
+          "resolve": { "type": "integer", "minimum": 1 },
+          "mobility": { "type": "integer", "minimum": 1 },
+          "aim": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "defense": { "type": "integer" },
+          "weapon": { "type": "string" },
+          "loadouts": { "type": "object", "additionalProperties": { "type": "string" } },
+          "abilities": { "type": "array", "items": { "type": "string" } },
+          "gasImmune": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

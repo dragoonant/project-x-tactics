@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "trooper classes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["common", "classes"],
+  "properties": {
+    "common": { "type": "array", "items": { "type": "string" } },
+    "classes": {
+      "type": "object",
+      "minProperties": 7,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "hp", "mobility", "aim", "defense", "weapon", "melee", "abilities"],
+        "properties": {
+          "name": { "type": "string" },
+          "hp": { "type": "integer", "minimum": 1 },
+          "mobility": { "type": "integer", "minimum": 1 },
+          "aim": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "defense": { "type": "integer" },
+          "weapon": { "type": "string" },
+          "melee": { "type": ["string", "null"] },
+          "abilities": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "weapons",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "damage", "resolve", "noise", "melee", "maxRange", "bands", "falloff"],
+    "properties": {
+      "name": { "type": "string" },
+      "damage": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "minItems": 2, "maxItems": 2 },
+      "resolve": { "type": "integer", "minimum": 0 },
+      "noise": { "enum": ["loud", "quiet"] },
+      "melee": { "type": "boolean" },
+      "maxRange": { "type": "integer", "minimum": 1 },
+      "bands": {
+        "type": "array",
+        "items": { "type": "object", "additionalProperties": false, "required": ["from", "to", "mod"], "properties": { "from": { "type": "integer", "minimum": 0 }, "to": { "type": "integer", "minimum": 0 }, "mod": { "type": "integer" } } }
+      },
+      "falloff": { "type": "object", "additionalProperties": false, "required": ["after", "perTile"], "properties": { "after": { "type": "integer", "minimum": 0 }, "perTile": { "type": "number", "minimum": 0 } } }
+    }
+  }
+}

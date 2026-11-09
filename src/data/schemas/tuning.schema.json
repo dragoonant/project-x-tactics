@@ -1,0 +1,603 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "tuning",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "actions",
+  "sight",
+  "light",
+  "cover",
+  "hit",
+  "mark",
+  "ambush",
+  "overwatch",
+  "suppress",
+  "gas",
+  "melee",
+  "flank",
+  "resolve",
+  "civilian",
+  "arrest",
+  "noise",
+  "alarm",
+  "grenade",
+  "frag",
+  "breach",
+  "bash",
+  "pin",
+  "support",
+  "scan",
+  "smoke",
+  "spotlight",
+  "stim",
+  "stabilize",
+  "downed",
+  "destruct",
+  "rally",
+  "intel",
+  "sim"
+ ],
+ "properties": {
+  "actions": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "perPhase"
+   ],
+   "properties": {
+    "perPhase": {
+     "type": "number"
+    }
+   }
+  },
+  "sight": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "radius"
+   ],
+   "properties": {
+    "radius": {
+     "type": "number"
+    }
+   }
+  },
+  "light": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "lampRadius",
+    "darkSightRange"
+   ],
+   "properties": {
+    "lampRadius": {
+     "type": "number"
+    },
+    "darkSightRange": {
+     "type": "number"
+    }
+   }
+  },
+  "cover": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "half",
+    "full"
+   ],
+   "properties": {
+    "half": {
+     "type": "number"
+    },
+    "full": {
+     "type": "number"
+    }
+   }
+  },
+  "hit": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "min",
+    "max",
+    "grazeBand"
+   ],
+   "properties": {
+    "min": {
+     "type": "number"
+    },
+    "max": {
+     "type": "number"
+    },
+    "grazeBand": {
+     "type": "number"
+    }
+   }
+  },
+  "mark": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "aim",
+    "resolveMult",
+    "duration"
+   ],
+   "properties": {
+    "aim": {
+     "type": "number"
+    },
+    "resolveMult": {
+     "type": "number"
+    },
+    "duration": {
+     "type": "number"
+    }
+   }
+  },
+  "ambush": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "aim"
+   ],
+   "properties": {
+    "aim": {
+     "type": "number"
+    }
+   }
+  },
+  "overwatch": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "aimPenalty"
+   ],
+   "properties": {
+    "aimPenalty": {
+     "type": "number"
+    }
+   }
+  },
+  "suppress": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "aimPenalty",
+    "resolveNow",
+    "resolvePerPhase"
+   ],
+   "properties": {
+    "aimPenalty": {
+     "type": "number"
+    },
+    "resolveNow": {
+     "type": "number"
+    },
+    "resolvePerPhase": {
+     "type": "number"
+    }
+   }
+  },
+  "gas": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "aimPenalty",
+    "duration",
+    "resolve",
+    "uses"
+   ],
+   "properties": {
+    "aimPenalty": {
+     "type": "number"
+    },
+    "duration": {
+     "type": "number"
+    },
+    "resolve": {
+     "type": "number"
+    },
+    "uses": {
+     "type": "number"
+    }
+   }
+  },
+  "melee": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "base"
+   ],
+   "properties": {
+    "base": {
+     "type": "number"
+    }
+   }
+  },
+  "flank": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "damage",
+    "resolve"
+   ],
+   "properties": {
+    "damage": {
+     "type": "number"
+    },
+    "resolve": {
+     "type": "number"
+    }
+   }
+  },
+  "resolve": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "woundedMult",
+    "shotAt",
+    "rippleRadius",
+    "ripple"
+   ],
+   "properties": {
+    "woundedMult": {
+     "type": "number"
+    },
+    "shotAt": {
+     "type": "number"
+    },
+    "rippleRadius": {
+     "type": "number"
+    },
+    "ripple": {
+     "type": "number"
+    }
+   }
+  },
+  "civilian": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "hp",
+    "strayChance",
+    "panicRadius",
+    "gasPanicRadius",
+    "wander",
+    "mobility"
+   ],
+   "properties": {
+    "hp": {
+     "type": "number"
+    },
+    "strayChance": {
+     "type": "number"
+    },
+    "panicRadius": {
+     "type": "number"
+    },
+    "gasPanicRadius": {
+     "type": "number"
+    },
+    "wander": {
+     "type": "number"
+    },
+    "mobility": {
+     "type": "number"
+    }
+   }
+  },
+  "arrest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "coverRadius"
+   ],
+   "properties": {
+    "coverRadius": {
+     "type": "number"
+    }
+   }
+  },
+  "noise": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "hearingRadius"
+   ],
+   "properties": {
+    "hearingRadius": {
+     "type": "number"
+    }
+   }
+  },
+  "alarm": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "max",
+    "perRound",
+    "loudShot",
+    "explosion",
+    "supportCall",
+    "t1",
+    "t2",
+    "t3"
+   ],
+   "properties": {
+    "max": {
+     "type": "number"
+    },
+    "perRound": {
+     "type": "number"
+    },
+    "loudShot": {
+     "type": "number"
+    },
+    "explosion": {
+     "type": "number"
+    },
+    "supportCall": {
+     "type": "number"
+    },
+    "t1": {
+     "type": "number"
+    },
+    "t2": {
+     "type": "number"
+    },
+    "t3": {
+     "type": "number"
+    }
+   }
+  },
+  "grenade": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "range"
+   ],
+   "properties": {
+    "range": {
+     "type": "number"
+    }
+   }
+  },
+  "frag": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "damage",
+    "resolve",
+    "uses"
+   ],
+   "properties": {
+    "damage": {
+     "type": "number"
+    },
+    "resolve": {
+     "type": "number"
+    },
+    "uses": {
+     "type": "number"
+    }
+   }
+  },
+  "breach": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "aim"
+   ],
+   "properties": {
+    "aim": {
+     "type": "number"
+    }
+   }
+  },
+  "bash": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "damage",
+    "resolve"
+   ],
+   "properties": {
+    "damage": {
+     "type": "number"
+    },
+    "resolve": {
+     "type": "number"
+    }
+   }
+  },
+  "pin": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "damage",
+    "resolve"
+   ],
+   "properties": {
+    "damage": {
+     "type": "number"
+    },
+    "resolve": {
+     "type": "number"
+    }
+   }
+  },
+  "support": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "charges",
+    "range"
+   ],
+   "properties": {
+    "charges": {
+     "type": "number"
+    },
+    "range": {
+     "type": "number"
+    }
+   }
+  },
+  "scan": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "radius",
+    "duration"
+   ],
+   "properties": {
+    "radius": {
+     "type": "number"
+    },
+    "duration": {
+     "type": "number"
+    }
+   }
+  },
+  "smoke": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "duration"
+   ],
+   "properties": {
+    "duration": {
+     "type": "number"
+    }
+   }
+  },
+  "spotlight": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "radius",
+    "duration"
+   ],
+   "properties": {
+    "radius": {
+     "type": "number"
+    },
+    "duration": {
+     "type": "number"
+    }
+   }
+  },
+  "stim": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "uses",
+    "heal"
+   ],
+   "properties": {
+    "uses": {
+     "type": "number"
+    },
+    "heal": {
+     "type": "number"
+    }
+   }
+  },
+  "stabilize": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "chemRange"
+   ],
+   "properties": {
+    "chemRange": {
+     "type": "number"
+    }
+   }
+  },
+  "downed": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "bleedOut"
+   ],
+   "properties": {
+    "bleedOut": {
+     "type": "number"
+    }
+   }
+  },
+  "destruct": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "halfHp",
+    "fullHp"
+   ],
+   "properties": {
+    "halfHp": {
+     "type": "number"
+    },
+    "fullHp": {
+     "type": "number"
+    }
+   }
+  },
+  "rally": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "range"
+   ],
+   "properties": {
+    "range": {
+     "type": "number"
+    }
+   }
+  },
+  "intel": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "thug",
+    "gunman",
+    "fixer",
+    "heavy",
+    "bagman"
+   ],
+   "properties": {
+    "thug": {
+     "type": "number"
+    },
+    "gunman": {
+     "type": "number"
+    },
+    "fixer": {
+     "type": "number"
+    },
+    "heavy": {
+     "type": "number"
+    },
+    "bagman": {
+     "type": "number"
+    }
+   }
+  },
+  "sim": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "maxRounds",
+    "saveCheckEvery"
+   ],
+   "properties": {
+    "maxRounds": {
+     "type": "number"
+    },
+    "saveCheckEvery": {
+     "type": "number"
+    }
+   }
+  }
+ }
+}

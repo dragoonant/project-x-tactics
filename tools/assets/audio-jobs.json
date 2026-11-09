@@ -1,0 +1,31 @@
+{
+ "sfx": {
+  "rifle": {"s": 3, "p": "single assault rifle gunshot in an outdoor city street, sharp supersonic crack followed by a short boom and a brief echo off buildings, close microphone, dry and punchy, one shot only, no music, no voices, no speech"},
+  "shotgun": {"s": 3, "p": "single 12 gauge pump shotgun blast, huge low boom with a sharp crack, short echo between concrete buildings, followed by a metallic pump action chunk, no music, no voices, no speech"},
+  "revolver": {"s": 3, "p": "single large revolver gunshot, deep heavy bang with a sharp crack and a ringing short echo, one shot only, no music, no voices, no speech"},
+  "pistol": {"s": 2, "p": "single semi-automatic pistol gunshot, sharp snappy crack with a light short echo, one shot only, close microphone, dry, no music, no voices, no speech"},
+  "long-rifle-suppressed": {"s": 3, "p": "single suppressed sniper rifle shot, soft muffled thump with a faint mechanical bolt click, very quiet, short, no echo, no music, no voices, no speech"},
+  "smg": {"s": 3, "p": "short burst of five rapid submachine gun shots, fast sharp pops with a metallic rattle, one short burst only, no music, no voices, no speech"},
+  "lmg-burst": {"s": 4, "p": "heavy belt-fed light machine gun firing a burst of eight shots, deep thudding booms with metallic belt rattle and brass casings falling, one burst only, no music, no voices, no speech"},
+  "baton-hit": {"s": 2, "p": "single solid hit of a hard rubber baton on a padded body, dull heavy thwack with a small grunt-free impact, close, no music, no voices, no speech"},
+  "maul-shock": {"s": 3, "p": "heavy electric shock maul striking a target, a heavy blunt impact followed by a loud crackling electrical zap and buzz that fades, no music, no voices, no speech"},
+  "shield-bash": {"s": 2, "p": "heavy riot shield slammed into a person, a loud flat plastic and metal slam with a dull thud, short, no music, no voices, no speech"},
+  "cuffs": {"s": 2, "p": "metal handcuffs snapping shut around a wrist, two fast sharp ratchet clicks and a small metallic clink, close, quiet room, no music, no voices, no speech"},
+  "frag-explosion": {"s": 5, "p": "fragmentation grenade explosion in a city street, sharp violent blast with debris and shrapnel scattering, a deep low boom and a short ringing aftermath, no music, no voices, no speech"},
+  "gas-grenade-hiss": {"s": 6, "p": "gas grenade canister releasing gas, a loud steady pressurised hiss with a metallic clank at the start, fading out slowly, no music, no voices, no speech"},
+  "door-breach": {"s": 3, "p": "a wooden door kicked in and splintering off its hinges, a heavy crack and crash with wood splinters and a metal lock breaking, no music, no voices, no speech"},
+  "radio-chatter-short": {"s": 4, "p": "short burst of garbled police radio static, squelch click, distorted crackling noise and unintelligible electronic warble, a closing squelch click, no clear words, no music, no speech"},
+  "footsteps-armoured": {"s": 4, "p": "slow footsteps of a heavily armoured person walking on concrete, four heavy boot steps with a faint creak and rattle of plate armour, no music, no voices, no speech"},
+  "bullet-ricochet-miss": {"s": 2, "p": "a bullet ricochet off a metal wall, a sharp ping and a rising whining zing that fades away, no music, no voices, no speech"},
+  "alarm-siren-distant": {"s": 10, "p": "a distant city alarm siren heard from several blocks away, a slow rising and falling wail with faint echo off buildings and light wind, no music, no voices, no speech"},
+  "ui-select": {"s": 1, "p": "a short soft futuristic interface blip, one crisp electronic tick, clean, no music, no voices"},
+  "ui-confirm": {"s": 1.5, "p": "a short futuristic interface confirmation, two quick rising electronic tones, clean, no music, no voices"}
+ },
+ "music": {
+  "calm": {"d": 75, "bpm": 70, "p": "dark industrial dystopian city ambience, low evolving synth pads, slow deep drone, distant metallic hum, faint rain and city hum feeling, sparse soft pulse, brooding and quiet, instrumental"},
+  "tense": {"d": 75, "bpm": 90, "p": "tense dark industrial dystopian city, pulsing low synth bass, ticking percussion, dissonant rising synth textures, suspenseful slow build, sparse heavy hits, instrumental"},
+  "combat": {"d": 105, "bpm": 128, "p": "aggressive dark industrial dystopian city combat music, heavy driving percussion, distorted pulsing synth bass, tense stabbing synths, relentless energy, instrumental"},
+  "victory": {"d": 20, "bpm": 100, "p": "dark industrial dystopian triumphant resolution, heavy drums hit and a powerful rising synth brass-like chord resolving, grim victory, instrumental, ends cleanly"},
+  "defeat": {"d": 20, "bpm": 60, "p": "dark industrial dystopian defeat, slow descending low synth tones, a heavy single drum hit, fading ominous drone, bleak, instrumental, ends cleanly"}
+ }
+}

@@ -1,0 +1,22 @@
+{
+  "rifle":      { "name": "Rifle",                "damage": [3, 4], "resolve": 1, "noise": "loud",  "melee": false, "maxRange": 20,
+                  "bands": [ { "from": 1, "to": 2, "mod": -5 }, { "from": 3, "to": 10, "mod": 0 }, { "from": 11, "to": 12, "mod": -5 } ], "falloff": { "after": 12, "perTile": 5 } },
+  "shotgun":    { "name": "Shotgun",              "damage": [4, 6], "resolve": 2, "noise": "loud",  "melee": false, "maxRange": 12,
+                  "bands": [ { "from": 1, "to": 2, "mod": 20 }, { "from": 3, "to": 4, "mod": 10 }, { "from": 5, "to": 6, "mod": 0 } ], "falloff": { "after": 6, "perTile": 10 } },
+  "revolver":   { "name": "Revolver",             "damage": [3, 5], "resolve": 2, "noise": "loud",  "melee": false, "maxRange": 14,
+                  "bands": [ { "from": 1, "to": 8, "mod": 0 } ], "falloff": { "after": 8, "perTile": 10 } },
+  "longRifle":  { "name": "Suppressed long rifle", "damage": [4, 6], "resolve": 1, "noise": "quiet", "melee": false, "maxRange": 24,
+                  "bands": [ { "from": 1, "to": 4, "mod": -20 }, { "from": 5, "to": 7, "mod": -10 }, { "from": 8, "to": 16, "mod": 0 } ], "falloff": { "after": 16, "perTile": 5 } },
+  "pistol":     { "name": "Pistol",               "damage": [2, 4], "resolve": 1, "noise": "loud",  "melee": false, "maxRange": 12,
+                  "bands": [ { "from": 1, "to": 8, "mod": 0 } ], "falloff": { "after": 8, "perTile": 10 } },
+  "baton":      { "name": "Baton",                "damage": [2, 2], "resolve": 3, "noise": "quiet", "melee": true,  "maxRange": 1,
+                  "bands": [], "falloff": { "after": 1, "perTile": 0 } },
+  "shockMaul":  { "name": "Shock maul",           "damage": [3, 3], "resolve": 3, "noise": "quiet", "melee": true,  "maxRange": 1,
+                  "bands": [], "falloff": { "after": 1, "perTile": 0 } },
+  "club":       { "name": "Club",                 "damage": [2, 3], "resolve": 1, "noise": "quiet", "melee": true,  "maxRange": 1,
+                  "bands": [], "falloff": { "after": 1, "perTile": 0 } },
+  "smg":        { "name": "SMG",                  "damage": [2, 4], "resolve": 1, "noise": "loud",  "melee": false, "maxRange": 14,
+                  "bands": [ { "from": 1, "to": 6, "mod": 0 } ], "falloff": { "after": 6, "perTile": 8 } },
+  "lmg":        { "name": "LMG",                  "damage": [3, 5], "resolve": 1, "noise": "loud",  "melee": false, "maxRange": 16,
+                  "bands": [ { "from": 1, "to": 10, "mod": 0 } ], "falloff": { "after": 10, "perTile": 5 } }
+}

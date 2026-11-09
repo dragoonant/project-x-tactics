@@ -1,0 +1,12 @@
+{
+  "common": ["overwatch", "hunker", "cuff", "stabilize"],
+  "classes": {
+    "recruit":  { "name": "Recruit",       "hp": 6, "mobility": 6, "aim": 65, "defense": 0, "weapon": "rifle",     "melee": null,        "abilities": ["suppress", "frag"] },
+    "enforcer": { "name": "Enforcer",      "hp": 8, "mobility": 6, "aim": 65, "defense": 0, "weapon": "shotgun",   "melee": null,        "abilities": ["breach", "quickCuffs"] },
+    "bulwark":  { "name": "Bulwark",       "hp": 9, "mobility": 5, "aim": 60, "defense": 0, "weapon": "revolver",  "melee": "shockMaul", "abilities": ["shield", "shieldBash", "maul"] },
+    "marksman": { "name": "Marksman",      "hp": 6, "mobility": 6, "aim": 75, "defense": 0, "weapon": "longRifle", "melee": null,        "abilities": ["pinningShot", "longWatch", "squadsight"] },
+    "vox":      { "name": "Vox Operator",  "hp": 7, "mobility": 6, "aim": 65, "defense": 0, "weapon": "shotgun",   "melee": null,        "abilities": ["relay", "callSupport"] },
+    "chem":     { "name": "Chem Trooper",  "hp": 7, "mobility": 6, "aim": 65, "defense": 0, "weapon": "shotgun",   "melee": null,        "abilities": ["gas", "stim", "fieldMedic"] },
+    "recon":    { "name": "Recon",         "hp": 7, "mobility": 7, "aim": 70, "defense": 0, "weapon": "pistol",    "melee": "baton",     "abilities": ["nightVision", "mark", "baton"] }
+  }
+}
