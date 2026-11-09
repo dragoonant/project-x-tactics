@@ -15,3 +15,8 @@ art/raw/
 art/concepts/*/
 !art/concepts/arbiter/
 !art/concepts/arbiter-gemini/
+
+# A0 spike: vendor downloads and raw meshes
+tools/anim/vendor/
+art/anim-spike/raw/
+art/anim-spike/scratch/

@@ -17,7 +17,7 @@ export default defineConfig(({ command }) => ({
   },
   build: {
     chunkSizeWarningLimit: 1600,
-    rollupOptions: { input: { main: resolve(import.meta.dirname, 'index.html'), debug: resolve(import.meta.dirname, 'debug.html') } },
+    rollupOptions: { input: { main: resolve(import.meta.dirname, 'index.html'), debug: resolve(import.meta.dirname, 'debug.html'), lab: resolve(import.meta.dirname, 'figure-lab.html') } },
   },
   test: {
     environment: 'node',

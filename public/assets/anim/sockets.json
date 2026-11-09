@@ -1,0 +1,157 @@
+{
+ "note": "glTF space (y up, front +Z, 1 unit = 1 inch). rightHand.matrix is row-major: weapon-local -> right-hand bone-local. leftHand.weaponLocalGrip is the fore-end grip point in weapon-local coordinates; the left arm is solved onto it inside the baked clips. clips.walk.speed is the ground speed (figure units/s) at which the baked walk does not skate.",
+ "weapon": "shotgun.glb",
+ "tile": 1,
+ "rigs": {
+  "a": {
+   "file": "enforcer-a.glb",
+   "label": "A: library skeleton + auto weights",
+   "sockets_convention": "A",
+   "convention_err": [
+    3.4499666834442166e-07,
+    1.1373579326447154
+   ],
+   "rightHand": {
+    "bone": "hand_r",
+    "matrix": [
+     [
+      -0.287728,
+      -0.887687,
+      -0.359477,
+      0.193429
+     ],
+     [
+      -0.957592,
+      0.272618,
+      0.093263,
+      0.321682
+     ],
+     [
+      0.015211,
+      0.371067,
+      -0.928482,
+      -0.049609
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ]
+   },
+   "leftHand": {
+    "bone": "hand_l",
+    "weaponLocalGrip": [
+     0.09151,
+     0.1674,
+     0.0
+    ]
+   },
+   "muzzle": [
+    -0.57196,
+    0.2295,
+    0.0
+   ],
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.538,
+     "stanceSpeedRelStd": 0.393
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    }
+   }
+  },
+  "b": {
+   "file": "enforcer-b.glb",
+   "label": "B: UniRig skeleton + auto weights",
+   "sockets_convention": "A",
+   "convention_err": [
+    2.64834884577958e-07,
+    1.2778303403215774
+   ],
+   "rightHand": {
+    "bone": "hand_r",
+    "matrix": [
+     [
+      0.011813,
+      -0.393584,
+      0.919212,
+      0.044307
+     ],
+     [
+      -0.941927,
+      0.304161,
+      0.142339,
+      0.31319
+     ],
+     [
+      -0.335611,
+      -0.867512,
+      -0.367134,
+      0.205219
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ]
+   },
+   "leftHand": {
+    "bone": "hand_l",
+    "weaponLocalGrip": [
+     0.09151,
+     0.1674,
+     0.0
+    ]
+   },
+   "muzzle": [
+    -0.57196,
+    0.2295,
+    0.0
+   ],
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.7029,
+     "stanceSpeedRelStd": 0.303
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    }
+   }
+  }
+ }
+}
