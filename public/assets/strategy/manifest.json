@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "districts": {
+    "docks": {
+      "emblem": "emblems/docks.webp",
+      "skyline": "skylines/docks.webp"
+    },
+    "foundry": {
+      "emblem": "emblems/foundry.webp",
+      "skyline": "skylines/foundry.webp"
+    },
+    "spire": {
+      "emblem": "emblems/spire.webp",
+      "skyline": "skylines/spire.webp"
+    },
+    "market": {
+      "emblem": "emblems/market.webp",
+      "skyline": "skylines/market.webp"
+    },
+    "stacks": {
+      "emblem": "emblems/stacks.webp",
+      "skyline": "skylines/stacks.webp"
+    },
+    "undercity": {
+      "emblem": "emblems/undercity.webp",
+      "skyline": "skylines/undercity.webp"
+    }
+  },
+  "portraits": {
+    "kingpin": "portraits/kingpin.webp",
+    "lt-arms": "portraits/lt-arms.webp",
+    "lt-narcotics": "portraits/lt-narcotics.webp",
+    "lt-protection": "portraits/lt-protection.webp",
+    "crew-1": "portraits/crew-1.webp",
+    "crew-2": "portraits/crew-2.webp",
+    "crew-3": "portraits/crew-3.webp",
+    "crew-4": "portraits/crew-4.webp",
+    "crew-5": "portraits/crew-5.webp",
+    "crew-6": "portraits/crew-6.webp"
+  },
+  "textures": {
+    "table": "textures/table.webp",
+    "board": "textures/corkboard.webp"
+  },
+  "audio": {
+    "music": {
+      "strategy": "audio/strategy.ogg"
+    },
+    "sfx": {
+      "incident": "audio/incident.ogg",
+      "week": "audio/week.ogg",
+      "takeover": "audio/takeover.ogg",
+      "district-fall": "audio/district-fall.ogg",
+      "deploy": "audio/deploy.ogg",
+      "case-reveal": "audio/case-reveal.ogg"
+    }
+  }
+}
