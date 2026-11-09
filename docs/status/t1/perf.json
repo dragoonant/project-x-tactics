@@ -1,0 +1,46 @@
+[
+  {
+    "label": "v1",
+    "dev": "desktop",
+    "calls": 113,
+    "triangles": 289929,
+    "frames": 30,
+    "geometries": 92,
+    "textures": 11,
+    "msPerFrame": 115.97,
+    "canvas": "1440x900"
+  },
+  {
+    "label": "v1",
+    "dev": "phone",
+    "calls": 113,
+    "triangles": 289929,
+    "frames": 30,
+    "geometries": 92,
+    "textures": 11,
+    "msPerFrame": 33.35,
+    "canvas": "390x844"
+  },
+  {
+    "label": "v2",
+    "dev": "desktop",
+    "calls": 130,
+    "triangles": 442259,
+    "frames": 30,
+    "geometries": 106,
+    "textures": 43,
+    "msPerFrame": 182.91,
+    "canvas": "1440x900"
+  },
+  {
+    "label": "v2",
+    "dev": "phone",
+    "calls": 125,
+    "triangles": 436387,
+    "frames": 30,
+    "geometries": 103,
+    "textures": 38,
+    "msPerFrame": 36.5,
+    "canvas": "390x844"
+  }
+]

@@ -16,7 +16,7 @@ test('terrain v2 (default): New Operation waits for the terrain assets, then the
   expect(await page.evaluate(() => window.__px.models().ready)).toBe(true)
   expect(requested.some((u) => u.endsWith('/manifest.json'))).toBe(true)
   expect(requested.filter((u) => /textures\/.*\.webp/.test(u)).length).toBe(15)
-  expect(requested.filter((u) => /props\/.*\.glb/.test(u)).length).toBeGreaterThanOrEqual(12)
+  expect(requested.filter((u) => /props\/.*\.glb/.test(u)).length).toBeGreaterThanOrEqual(14)
   await beginGame(page)
   await page.waitForTimeout(800)
   const stats = await page.evaluate(() => { const gl = (window as unknown as { __pxGl: { info: { render: { calls: number }; memory: { textures: number } } } }).__pxGl; return { calls: gl.info.render.calls, textures: gl.info.memory.textures } })
