@@ -55,7 +55,7 @@ export interface V2Mats { street: MeshStandardMaterial; floor: MeshStandardMater
 export function makeV2Mats(a: TerrainAssets): V2Mats {
   const T = a.textures
   const door = pbr(T.steeldoor!) // one panel per box face: the geometry's own 0..1 UVs
-  door.color.setRGB(1.7, 1.5, 1.3)
+  door.color.setRGB(2.3, 1.95, 1.6)
   return {
     street: worldUv(pbr(T.asphalt!), T.asphalt!.tileSize),
     floor: worldUv(pbr(T.tilefloor!), T.tilefloor!.tileSize),
@@ -71,6 +71,8 @@ export const V2C = {
   street: new Color(0.62, 0.62, 0.66), floor: new Color(0.8, 0.72, 0.68), exit: new Color('#4fb07a'), escape: new Color('#c05a5a'), zone: new Color('#58c28f'),
   brick: new Color(1.5, 1.4, 1.35), boundary: new Color(1.1, 1.1, 1.15), kerb: new Color(1.1, 1.1, 1.2),
   door: new Color(1.5, 1.45, 1.4),
+  /** extra lift for dark (unlit) ground tiles: the generated textures are darker than the old flat colour, and dark tiles must still read */
+  darkBoost: new Color(1.5, 1.6, 1.9),
 }
 
 /**
@@ -107,7 +109,7 @@ export function indoorMask(state: State): Uint8Array {
 const tmpM = new Matrix4(), rotM = new Matrix4(), posM = new Matrix4(), tmpC = new Color()
 
 /** Hunyuan props as instanced meshes (one InstancedMesh per sub-mesh of each prop). `sig` changes when cover is destroyed. */
-export function PropField({ state, assets, seen, sig }: { state: State; assets: TerrainAssets; seen: Uint8Array; sig: string }): React.JSX.Element {
+export function PropField({ state, assets, seen, lit, sig }: { state: State; assets: TerrainAssets; seen: Uint8Array; lit: Uint8Array; sig: string }): React.JSX.Element {
   const { w, h } = state.map
   const defs = useMemo(() => Object.values(assets.propsByObject), [assets])
   const refs = useRef<(InstancedMesh | null)[]>([])
@@ -125,7 +127,7 @@ export function PropField({ state, assets, seen, sig }: { state: State; assets: 
         rotM.makeRotationY(flip)
         tmpM.copy(posM).multiply(rotM).multiply(part.matrix)
         m.setMatrixAt(n, tmpM)
-        m.setColorAt(n, tmpC.setScalar(seen[y * w + x] ? 1 : 0.55))
+        m.setColorAt(n, tmpC.setScalar((seen[y * w + x] ? 1 : 0.4) * (lit[y * w + x] ? 1 : 0.5))) // dark and unseen tiles dim their props too
         n++
       }
       m.count = n
@@ -133,7 +135,7 @@ export function PropField({ state, assets, seen, sig }: { state: State; assets: 
       if (m.instanceColor) m.instanceColor.needsUpdate = true
     })
     wake(120)
-  }, [flat, sig, seen, w, h, state.map.tiles])
+  }, [flat, sig, seen, lit, w, h, state.map.tiles])
   return (
     <group>
       {flat.map(({ def, part }, k) => (

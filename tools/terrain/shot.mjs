@@ -18,7 +18,7 @@ await p.waitForSelector('[data-testid=new-op]:not([disabled])', { timeout: 12000
 await p.evaluate(() => window.__px.setSpeed('instant'))
 await p.evaluate((sd) => window.__px.start(['recruit', 'enforcer', 'bulwark', 'recon'], sd), seed).catch(() => {})
 if (!(await p.evaluate(() => window.__px.screen())).startsWith('play')) { await p.click('[data-testid=new-op]') }
-await p.waitForFunction(() => window.__px.camera() !== null)
+await p.waitForFunction(() => window.__px.camera() !== null && window.__pxBoard, null, { timeout: 30000 }).catch(async () => console.log('wait failed', await p.evaluate(() => ({ keys: Object.keys(window).filter((k) => k.startsWith('__')), screen: window.__px.screen(), cam: window.__px.camera(), models: window.__px.models() }))))
 await p.waitForTimeout(1200)
 if (cam) {
   const [x, z, az, pol, dist] = cam.split(',').map(Number)
@@ -40,7 +40,7 @@ if (stats) {
     // force frames: nudge the camera so the demand loop renders
     for (let i = 0; i < 30; i++) {
       window.__px.camera()
-      window.dispatchEvent(new Event('resize'))
+      window.__pxWake()
       await new Promise((r) => requestAnimationFrame(() => r(0)))
       frames++
     }

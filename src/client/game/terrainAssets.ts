@@ -22,7 +22,7 @@ export interface PropDef { slug: string; object: string; parts: PropPart[]; heig
 export interface TerrainAssets { textures: Record<string, TexSet>; propsByObject: Record<string, PropDef> }
 
 interface ManifestTexture { color: string; normal: string; rough: string; tileSize?: number; metalness?: number; normalScale?: number }
-interface ManifestProp { file: string; replaces: string; footprint: [number, number]; height: number; fit?: 'footprint' | 'height' }
+interface ManifestProp { file: string; replaces: string; footprint: [number, number]; height: number; fit?: 'footprint' | 'height'; stretchY?: number }
 interface Manifest { textures: Record<string, ManifestTexture>; props: Record<string, ManifestProp> }
 
 const here = (p: string): string => {
@@ -50,11 +50,12 @@ function fitProp(slug: string, mp: ManifestProp, root: import('three').Object3D)
   const size = box.getSize(new Vector3()), c = box.getCenter(new Vector3())
   const [fx, fz] = mp.footprint
   const byFoot = Math.min(fx / Math.max(size.x, 1e-6), fz / Math.max(size.z, 1e-6))
-  const byHeight = mp.height / Math.max(size.y, 1e-6)
+  const byHeight = mp.height / Math.max(size.y * (mp.stretchY ?? 1), 1e-6)
   // thin props (the lamp post) fit by height and may overhang the tile with their arm; boxy props fit the footprint exactly,
   // then never exceed the height
   const s = mp.fit === 'height' ? byHeight : Math.min(byFoot, byHeight)
-  const lift = new Matrix4().makeScale(s, s, s).multiply(new Matrix4().makeTranslation(-c.x, -box.min.y, -c.z))
+  const sy = mp.stretchY ?? 1 // optional vertical stretch: a full-cover dumpster has to read taller than a half-cover stall
+  const lift = new Matrix4().makeScale(s, s * sy, s).multiply(new Matrix4().makeTranslation(-c.x, -box.min.y, -c.z))
   const parts: PropPart[] = []
   root.traverse((o) => {
     const m = o as Mesh
@@ -63,9 +64,10 @@ function fitProp(slug: string, mp: ManifestProp, root: import('three').Object3D)
     const own = mat.clone()
     own.metalness = 0
     own.roughness = Math.max(own.roughness ?? 0.8, 0.7)
+    own.color.multiplyScalar(0.62) // the lamp pools over-expose the painted colours a little
     parts.push({ geometry: m.geometry, material: own, matrix: lift.clone().multiply(m.matrixWorld) })
   })
-  return { slug, object: mp.replaces, parts, height: size.y * s, footprint: [size.x * s, size.z * s] }
+  return { slug, object: mp.replaces, parts, height: size.y * s * sy, footprint: [size.x * s, size.z * s] }
 }
 
 let started: Promise<TerrainAssets | null> | null = null

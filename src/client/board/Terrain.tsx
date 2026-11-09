@@ -166,6 +166,7 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
       else tmpColor.copy(zone.has(i) ? C.zone : t.k === 'exit' ? C.exit : t.k === 'escape' ? C.escape : C.floor)
       tmpColor.multiplyScalar(0.9 + hash2(x, y, 5) * 0.2)
       tmpColor.multiply(lit[i] ? C.litTint : C.darkTint)
+      if (v2 && !lit[i]) tmpColor.multiply(V2C.darkBoost)
       if (!seen[i]) tmpColor.multiplyScalar(0.5)
       target.setColorAt(idx, tmpColor)
     }
@@ -309,7 +310,7 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
       <instancedMesh ref={walls} args={[geo.box, v2 ? v2.brick : mats.wall, Math.max(1, wallList.length)]} frustumCulled={false} />
       {v2 && <instancedMesh ref={fence} args={[geo.box, v2.fence, Math.max(1, wallList.length)]} frustumCulled={false} />}
       {v2 && <instancedMesh ref={kerb} args={[geo.box, v2.kerb, Math.max(1, wallList.length)]} frustumCulled={false} />}
-      {v2 && assets && <PropField state={state} assets={assets} seen={seen} sig={sig} />}
+      {v2 && assets && <PropField state={state} assets={assets} seen={seen} lit={lit} sig={sig} />}
       <instancedMesh ref={stallBase} args={[geo.box, mats.plain, cap]} frustumCulled={false} />
       <instancedMesh ref={stallCrate} args={[geo.box, mats.plain, cap]} frustumCulled={false} />
       <instancedMesh ref={dumpBody} args={[geo.box, mats.metal, cap]} frustumCulled={false} />
