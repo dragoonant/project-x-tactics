@@ -31,7 +31,12 @@ Cg2b = Matrix(((1, 0, 0, 0), (0, 0, 1, 0), (0, -1, 0, 0), (0, 0, 0, 1)))  # Blen
 
 
 def item_dims(iid):
-    return json.load(open(os.path.join(RAW, 'items', iid + '.dims.json')))
+    p = os.path.join(RAW, 'items', iid + '.dims.json')
+    if os.path.exists(p):
+        return json.load(open(p))
+    ln = CFG['items'][iid]['len']          # item not generated yet: placeholder box so the sockets can be developed
+    print('PLACEHOLDER dims for', iid)
+    return {'id': iid, 'length': ln, 'width': 0.1 * ln, 'height': (1.0 if iid == 'riot-shield' else 0.8 if iid == 'case' else 0.22) * (ln if iid not in ('riot-shield', 'case') else ln)}
 
 
 def frame_of(rg, arch_clip, t=0.0, end=False):

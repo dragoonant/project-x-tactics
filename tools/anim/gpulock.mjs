@@ -22,7 +22,7 @@ export async function acquire(name, maxWaitMs = 30 * 60 * 1000) {
     } catch (e) {
       if (e.code !== 'EEXIST') throw e;
       if (Date.now() - t0 > maxWaitMs) throw new Error('gpu lock wait > 30 min, giving up');
-      await sleep(20000);
+      await sleep(+(process.env.GPU_POLL_MS || 3000));   // short poll: the other agent re-takes the lock within seconds between jobs
     }
   }
 }

@@ -3,17 +3,26 @@
  "skeleton": "ual-standard",
  "figures": {
   "enforcer": {
-   "file": "enforcer-a.glb",
+   "file": "enforcer.glb",
    "height": 1.8,
    "clips": {
     "idle": {
      "duration": 1.6667,
      "loop": true
     },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
     "walk": {
      "duration": 1.3333,
      "loop": true,
-     "speed": 0.538
+     "speed": 0.4916
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.5555
     },
     "aim": {
      "duration": 1.1667,
@@ -26,6 +35,14 @@
     "hit": {
      "duration": 0.3333,
      "loop": false
+    },
+    "downed": {
+     "duration": 2.0,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
     }
    },
    "attachments": [
@@ -33,18 +50,18 @@
      "id": "shotgun",
      "bone": "hand_r",
      "matrix": [
-      -0.287728,
-      -0.887687,
-      -0.359477,
-      0.193429,
-      -0.957592,
-      0.272618,
-      0.093263,
-      0.321682,
-      0.015211,
-      0.371067,
-      -0.928482,
-      -0.049609,
+      -0.372341,
+      -0.840137,
+      -0.394374,
+      0.212818,
+      -0.927777,
+      0.348086,
+      0.134413,
+      0.303645,
+      0.024351,
+      0.415938,
+      -0.909067,
+      -0.057779,
       0.0,
       0.0,
       0.0,
@@ -61,7 +78,7 @@
  },
  "items": {
   "shotgun": {
-   "file": "shotgun.glb"
+   "file": "items/shotgun.glb"
   }
  },
  "note": "Seeded from the A0 spike (rig A). A1 replaces it; items move to items/<id>.glb then."
