@@ -20,7 +20,8 @@ if (want('market')) shot('market.png', '', '--cam', '-1,3,0.25,0.95,10', '--sele
 if (want('bar-front')) shot('bar-front.png', '', '--bare', '--cam', '1.5,-1.5,0.2,0.85,9')
 if (want('dark-alley')) shot('dark-alley.png', '', '--cam', '-7,2,0.6,0.95,13', '--select', 'none')
 if (want('overlays')) shot('overlays.png', '', '--cam', '-0.5,4,0.2,0.95,12', '--select', 's2', '--hover', '9,15')
-if (want('phone')) shot('phone.png', '', '--w', '390', '--h', '844', '--select', 'none')
+if (want('phone')) { shot('phone.png', '', '--w', '390', '--h', '844', '--select', 'none'); shot('phone-close.png', '', '--w', '390', '--h', '844', '--cam', '-1,3,0.25,0.5,9', '--select', 'none') }
+if (want('destroyed')) { const r = spawnSync(process.execPath, [path.join(import.meta.dirname, 'destroyed.mjs'), base, path.join(out, 'destroyed.png')], { encoding: 'utf8' }); console.log('destroyed', r.status, r.stdout.trim()) }
 if (want('before-after')) {
   const cam = ['--cam', '-1.5,-0.5,0.35,0.95,12', '--select', 'none']
   shot('_before.png', '?terrain=v1', ...cam)

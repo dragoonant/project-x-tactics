@@ -248,6 +248,48 @@
       "sat": 0.85,
       "mul": 0.6,
       "note": "full cover; vending machine with a blank unlit panel"
+    },
+    "shipping-crates": {
+      "file": "props/shipping-crates.glb",
+      "replaces": "fullCover",
+      "footprint": [
+        0.95,
+        0.95
+      ],
+      "height": 1.25,
+      "fit": "footprint",
+      "where": "outdoor",
+      "weight": 2,
+      "sat": 0.6,
+      "mul": 0.6,
+      "note": "full cover; two stacked steel shipping containers"
+    },
+    "oil-barrels": {
+      "file": "props/oil-barrels.glb",
+      "replaces": "halfCover",
+      "footprint": [
+        0.9,
+        0.9
+      ],
+      "height": 0.85,
+      "fit": "footprint",
+      "where": "any",
+      "weight": 2,
+      "sat": 0.7,
+      "mul": 0.55,
+      "tints": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          0.85,
+          0.9,
+          1.0
+        ]
+      ],
+      "note": "half cover; cluster of rusty oil drums"
     }
   }
 }
