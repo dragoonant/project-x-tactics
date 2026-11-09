@@ -89,7 +89,7 @@ def crotch_z(pts, cx, zfloor, H):
     return None
 
 
-def map_skeleton(B):
+def map_simple(B):
     roots = [b for b in B if B[b]['parent'] is None]
     root = max(roots, key=lambda r: subtree_len(B, r))
     legs, spine = [], [root]
@@ -122,6 +122,50 @@ def map_skeleton(B):
     return root, spine, fork, neck_k[0], arms, legs
 
 
+def map_skeleton(B):
+    """Try the plain fork topology; when packs, antennas or hoods add extra chains, fall back to a path-based reading:
+    spine path = repeatedly the child whose subtree reaches highest; side chains hanging off it are legs (reach the floor
+    region) or arms (lateral extent); everything else (antenna, pack, hood) is ignored."""
+    try:
+        return map_simple(B)
+    except RuntimeError as e:
+        print('MAP simple failed:', e)
+    roots = [b for b in B if B[b]['parent'] is None]
+    root = max(roots, key=lambda r: subtree_len(B, r))
+    path, side = [root], []
+    cur = root
+    while B[cur]['kids']:
+        kids = B[cur]['kids']
+        nxt = max(kids, key=lambda k: max_z(B, k))
+        side += [(cur, k) for k in kids if k != nxt]
+        path.append(nxt)
+        cur = nxt
+    zs = [min(B[b]['head'][2], B[b]['tail'][2]) for b in B]
+    zmin, zmax = min(zs), max(max(B[b]['head'][2], B[b]['tail'][2]) for b in B)
+    H = zmax - zmin
+    cx = B[root]['head'][0]
+    legs_c = [(p, k) for p, k in side if min_z(B, k) < zmin + 0.22 * H]
+    arms_c = [(p, k) for p, k in side if (p, k) not in legs_c and max_absx(B, k) - abs(cx) > 0.12 * H]
+    def pick(cands, sign_key):
+        out = {}
+        for p, k in sorted(cands, key=lambda pk: -subtree_len(B, pk[1])):
+            s = 1 if B[k]['tail'][0] > cx else -1
+            if s not in out:
+                out[s] = (p, k)
+        return out
+    L, A = pick(legs_c, 0), pick(arms_c, 0)
+    if len(L) != 2 or len(A) != 2:
+        raise RuntimeError(f'path mapping failed: legs {legs_c} arms {arms_c}')
+    chest = max((A[1][0], A[-1][0]), key=lambda n: path.index(n))
+    spine = path[:path.index(chest) + 1]
+    neck_k = path[path.index(chest) + 1]
+    print('MAP path fallback: spine', spine, 'neck', neck_k, 'arms', [A[1][1], A[-1][1]], 'legs', [L[1][1], L[-1][1]])
+    return root, spine, chest, neck_k, [A[1][1], A[-1][1]], [L[1][1], L[-1][1]]
+
+
+CX = [0.0]
+
+
 def arm_joints(B, k):
     ch = chain_down(B, k)
     h = lambda i: B[ch[i]]['head']
@@ -131,6 +175,10 @@ def arm_joints(B, k):
     l2 = (B[ch[1]]['tail'] - B[ch[1]]['head']).length if len(ch) > 1 else 1
     clav = len(ch) >= 5 and l1 < 0.85 * l2 and abs(d1[2]) < 0.6 * max(abs(d1[0]), 1e-6)
     i = 1 if clav else 0
+    # the shoulder joint must sit well out from the spine; if the chain starts with two short bones, skip the extra one
+    while abs(h(i)[0] - CX[0]) < 0.17 and i + 4 < len(ch):
+        i += 1
+        clav = True
     j = {'upperarm': h(i), 'lowerarm': h(i + 1), 'hand': h(i + 2)}
     j['hand_tip'] = B[ch[i + 2]]['tail']
     j['clavicle'] = h(0) if clav else None
@@ -153,6 +201,7 @@ def main():
     body, fbx, out = [os.path.abspath(a) for a in sys.argv[1:4]]
     lo, hi, pts = mesh_bbox(body)
     centre = (lo + hi) / 2
+    CX[0] = centre[0]
     E = max(hi - lo)
     B = load_skeleton(fbx)
     for b in B.values():

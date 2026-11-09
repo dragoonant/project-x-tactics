@@ -130,7 +130,12 @@ def main():
     # triangle budget (coordinator): at most 20k triangles per rigged body, decimated before weighting
     src =L.import_ual()
     bpy.context.scene.render.fps = 24
-    J =json.load(open(JOINTS))['J']
+    J = json.load(open(JOINTS))['J']
+    if fig.get('arms_from'):   # UniRig's arms were off for this body (bone heat could not solve): borrow the arm joints of a figure with the same pose and cut
+        Jo = json.load(open(os.path.join(RAW, fig['arms_from'] + '.joints.json')))['J']
+        for k in ('clavicle_l', 'upperarm_l', 'lowerarm_l', 'hand_l', 'hand_l_tip'):
+            J[k] = Jo[k]
+        print('ARMS borrowed from', fig['arms_from'])
     tgt = A.build_target(src, J)
     coat = None
     if fig.get('coat'):

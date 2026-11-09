@@ -123,7 +123,47 @@ def skin(mesh, tgt, coat=None):
     tgt.select_set(True)
     bpy.context.view_layer.objects.active = tgt
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    if sum(1 for v in weld.data.vertices if sum(g.weight for g in v.groups) > 1e-4) < 0.5 * len(weld.data.vertices):
+        print('HEAT FAILED on the welded mesh: retrying on a voxel-remeshed proxy')
+        bpy.ops.object.select_all(action='DESELECT')
+        weld.select_set(True)
+        bpy.context.view_layer.objects.active = weld
+        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+        for m in list(weld.modifiers):
+            weld.modifiers.remove(m)
+        weld.vertex_groups.clear()
+        rm = weld.modifiers.new('rm', 'REMESH')
+        rm.mode = 'VOXEL'
+        rm.voxel_size = 0.012
+        bpy.ops.object.modifier_apply(modifier='rm')
+        bpy.ops.object.select_all(action='DESELECT')
+        weld.select_set(True)
+        tgt.select_set(True)
+        bpy.context.view_layer.objects.active = tgt
+        bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    ok = lambda: sum(1 for v in weld.data.vertices if sum(g.weight for g in v.groups) > 1e-4) >= 0.5 * len(weld.data.vertices)
+    if not ok():
+        # one bad bone can make the whole solve fail: disable deformation of one bone at a time until it solves
+        order = ['clavicle_l', 'clavicle_r', 'ball_l', 'ball_r', 'hand_l', 'hand_r', 'foot_l', 'foot_r', 'neck_01', 'Head', 'spine_03', 'spine_01', 'pelvis', 'calf_l', 'calf_r', 'thigh_l', 'thigh_r', 'lowerarm_l', 'lowerarm_r', 'upperarm_l', 'upperarm_r', 'spine_02']
+        for bn in order[:0]:   # (bone-by-bone disabling did not help on the one mesh where heat fails; kept for reference)
+            tgt.data.bones[bn].use_deform = False
+            bpy.ops.object.select_all(action='DESELECT')
+            weld.select_set(True)
+            bpy.context.view_layer.objects.active = weld
+            bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+            for m in list(weld.modifiers):
+                weld.modifiers.remove(m)
+            weld.vertex_groups.clear()
+            bpy.ops.object.select_all(action='DESELECT')
+            weld.select_set(True)
+            tgt.select_set(True)
+            bpy.context.view_layer.objects.active = tgt
+            bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+            if ok():
+                print('HEAT solved after disabling the deform of bone', bn, '(its vertices follow the neighbouring bones)')
+                break
     wd = weld.data
+    print('WELD weights: vertices with weight', sum(1 for v in wd.vertices if sum(g.weight for g in v.groups) > 1e-4), 'of', len(wd.vertices), 'groups', len(weld.vertex_groups))
     kd = KDTree(len(wd.vertices))
     for v in wd.vertices:
         kd.insert(v.co, v.index)
@@ -159,6 +199,9 @@ def fill_unweighted(mesh):
     print('UNWEIGHTED', len(bad), 'of', len(me.vertices))
     if not bad:
         return
+    if len(bad) > 0.5 * len(me.vertices):
+        distance_weights(mesh)   # bone heat failed on this mesh: nearest-bone-segment weights instead
+        return
     kd = KDTree(len(me.vertices))
     for v in me.vertices:
         if w[v.index]:
@@ -168,6 +211,32 @@ def fill_unweighted(mesh):
         _, j, _ = kd.find(me.vertices[i].co)
         for g, wt in w[j].items():
             mesh.vertex_groups[g].add([i], wt, 'REPLACE')
+
+
+def distance_weights(mesh):
+    """Fallback skinning: each vertex gets the 3 nearest deform bones (distance to the bone segment), weight ~ 1/(d+0.03)^3."""
+    arm = mesh.parent
+    segs = []
+    for b in arm.data.bones:
+        if b.use_deform:
+            segs.append((b.name, arm.matrix_world @ b.head_local, arm.matrix_world @ b.tail_local))
+    names = {s[0] for s in segs}
+    for n in names:
+        if n not in mesh.vertex_groups:
+            mesh.vertex_groups.new(name=n)
+    for g in list(mesh.vertex_groups):
+        g.remove(list(range(len(mesh.data.vertices))))
+    def dist(p, a, b):
+        ab = b - a
+        t = max(0.0, min(1.0, (p - a).dot(ab) / max(ab.length_squared, 1e-9)))
+        return (p - (a + ab * t)).length
+    for v in mesh.data.vertices:
+        ds = sorted(((dist(v.co, a, b), n) for n, a, b in segs))[:2]
+        ws = [1.0 / (d + 0.02) ** 5 for d, _ in ds]
+        s = sum(ws)
+        for (d, n), w in zip(ds, ws):
+            mesh.vertex_groups[n].add([v.index], w / s, 'REPLACE')
+    print('DISTANCE WEIGHTS used (bone heat failed)')
 
 
 def reduce_leg_influence(mesh, tgt, z_top, z_bot, keep=0.35, x_leg=None):
