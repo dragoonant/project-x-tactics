@@ -267,7 +267,7 @@ export class CameraController {
     const mid1 = { x: (cur[0].x + cur[1].x) / 2, y: (cur[0].y + cur[1].y) / 2 }
     const g0 = this.groundAt(mid0)
     if (d0 > 1 && d1 > 1) {
-      this.view.az -= twist
+      this.view.az += twist // the board turns with the fingers (screen y is down, so a clockwise twist is positive)
       this.apply()
       this.zoomAt(this.view.dist / (d1 / d0), mid0)
     }

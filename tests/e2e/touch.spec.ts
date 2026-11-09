@@ -34,6 +34,27 @@ test('touch: one finger pans, two fingers pinch and twist', async ({ page }) => 
   expect(await page.evaluate(() => window.__px.state().log.length)).toBe(0)
 })
 
+test('touch: a two-finger twist turns the board the same way as the fingers', async ({ page }) => {
+  await openStart(page)
+  await beginGame(page)
+  const s1 = await page.evaluate(() => { const u = window.__px.state().units.find((q: any) => q.id === 's1'); return { x: u.x, y: u.y } })
+  const screenAngle = (): Promise<number> => page.evaluate(([x, y]) => {
+    const a = window.__px.tileToScreen(x!, y!)!, b = window.__px.tileToScreen(x! + 4, y!)!
+    return Math.atan2(b.y - a.y, b.x - a.x)
+  }, [s1.x, s1.y])
+  const before = await screenAngle()
+  // twist clockwise on screen (y down) by 30 degrees around (195, 420), finger spacing unchanged (no pinch)
+  const at = (deg: number, sign: number) => { const r = (deg * Math.PI) / 180; return { x: 195 + sign * 60 * Math.cos(r), y: 420 + sign * 60 * Math.sin(r) } }
+  await touch(page, 'touchStart', [{ ...at(0, -1), id: 1 }, { ...at(0, 1), id: 2 }])
+  for (let i = 1; i <= 6; i++) await touch(page, 'touchMove', [{ ...at(i * 5, -1), id: 1 }, { ...at(i * 5, 1), id: 2 }])
+  await touch(page, 'touchEnd', [])
+  await page.waitForTimeout(200)
+  let turn = (await screenAngle()) - before
+  while (turn > Math.PI) turn -= Math.PI * 2
+  while (turn < -Math.PI) turn += Math.PI * 2
+  expect(turn).toBeGreaterThan(0.1) // the board turned clockwise on screen, like the fingers
+})
+
 test('touch: the first tap on a tile previews, the second confirms (no accidental moves)', async ({ page }) => {
   await openStart(page)
   await beginGame(page)
