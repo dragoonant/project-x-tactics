@@ -4,6 +4,7 @@
 import type { AnimationClip, Object3D } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+import { assetManager } from '../assetLoading'
 import { kindKey, parseAnimManifest, type AnimManifest, type FigureDef } from './contract'
 
 /** Board height of a figure in tiles: the same 1.0 the static models are normalised to (src/client/game/models.ts FIGURE_HEIGHT). */
@@ -14,7 +15,7 @@ export interface RigAsset { def: FigureDef; scene: Object3D; clips: Map<string, 
 let loader: GLTFLoader | null = null
 /** The one loader shared by the static and the rigged figures. */
 export function sharedLoader(): GLTFLoader {
-  if (!loader) { loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder) }
+  if (!loader) { loader = new GLTFLoader(assetManager()); loader.setMeshoptDecoder(MeshoptDecoder) }
   return loader
 }
 

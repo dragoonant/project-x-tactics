@@ -14,6 +14,7 @@ import { Box3, Matrix4, Mesh, SRGBColorSpace, TextureLoader, Vector3, RepeatWrap
 import type { BufferGeometry, Material, MeshStandardMaterial, Texture } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+import { assetManager } from '../../assetLoading'
 
 /** Default on. `?terrain=v1` keeps the old look for comparison (`?terrain=v2` is accepted and means the default). */
 export const TERRAIN_V2: boolean = (() => {
@@ -127,7 +128,7 @@ export function preloadTerrain(): Promise<TerrainAssets | null> {
         textures[name] = { color, normal, rough, tileSize: t.tileSize ?? 2, metalness: t.metalness ?? 0, normalScale: t.normalScale ?? 1 }
       }))
       const propsByObject: Record<string, PropDef[]> = {}
-      const gl = new GLTFLoader()
+      const gl = new GLTFLoader(assetManager())
       gl.setMeshoptDecoder(MeshoptDecoder)
       const loaded: [string, PropDef][] = []
       await Promise.all(Object.entries(man.props ?? {}).map(async ([slug, p]) => {

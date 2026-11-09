@@ -4,32 +4,10 @@
 // The repo and local dev keep the .glb files; only dist/ changes. Usage: npm run build:artifact
 import { readFileSync, writeFileSync, readdirSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { glbToJson } from './gltf-json.mjs'
 
 const dir = join(process.cwd(), 'dist', 'assets', 'models')
 const files = readdirSync(dir).filter((f) => f.endsWith('.glb'))
-
-function glbToJson(buf) {
-  if (buf.readUInt32LE(0) !== 0x46546c67) throw new Error('not a GLB')
-  let off = 12
-  let json = null
-  let bin = null
-  while (off < buf.length) {
-    const len = buf.readUInt32LE(off)
-    const type = buf.readUInt32LE(off + 4)
-    const chunk = buf.subarray(off + 8, off + 8 + len)
-    if (type === 0x4e4f534a) json = JSON.parse(chunk.toString('utf8').replace(/[\u0000 ]+$/, ''))
-    else if (type === 0x004e4942) bin = chunk
-    off += 8 + len
-  }
-  if (!json) throw new Error('GLB has no JSON chunk')
-  if (bin) {
-    // The GLB-stored buffer is the first one without a uri (meshopt fallback buffers also lack a uri but are marked).
-    const b = json.buffers.find((x) => x.uri === undefined && !x.extensions?.EXT_meshopt_compression?.fallback)
-    if (!b) throw new Error('no buffer for the BIN chunk')
-    b.uri = 'data:application/octet-stream;base64,' + Buffer.from(bin).toString('base64')
-  }
-  return JSON.stringify(json)
-}
 
 function packDir(d) {
   const names = readdirSync(d).filter((f) => f.endsWith('.glb'))
