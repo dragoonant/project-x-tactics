@@ -1,11 +1,14 @@
 // The client store (zustand). Plain data only; the controller owns every transition.
 import { create } from 'zustand'
 import type { Pt, State } from '../../engine'
+import type { CampaignState } from '../../campaign'
 import type { Armed } from './tap'
 import type { Line } from './describe'
 import { DEFAULT_SETTINGS, type SaveRead, type Settings } from './persist'
 
-export type Screen = 'start' | 'play' | 'end'
+export type Screen = 'start' | 'play' | 'end' | 'city' | 'cend'
+export type CampaignSaveRead = { kind: 'none' } | { kind: 'ok'; state: CampaignState; savedAt: number } | { kind: 'bad'; reason: string }
+export type CityPanel = 'none' | 'roster' | 'aar' | 'confirmEnd'
 export interface TickerLine extends Line { id: number; round: number }
 
 export interface Store {
@@ -32,6 +35,16 @@ export interface Store {
   panel: 'none' | 'settings' | 'log'
   confirmNew: boolean
   endShownAt: number
+  /** 'campaign' while a campaign mission is on the tactical board (its save key is px-campaign-mission). */
+  mode: 'single' | 'campaign'
+  campaign: CampaignState | null
+  campaignSave: CampaignSaveRead
+  /** City map selection: the incident being briefed and the squad picked for it. */
+  cincident: string | null
+  csquad: string[] | null
+  cpanel: CityPanel
+  confirmNewCampaign: boolean
+  cerror: string | null
 }
 
 export const DEFAULT_SQUAD = ['recruit', 'enforcer', 'bulwark', 'recon']
@@ -56,6 +69,14 @@ export const useStore = create<Store>(() => ({
   panel: 'none',
   confirmNew: false,
   endShownAt: 0,
+  mode: 'single',
+  campaign: null,
+  campaignSave: { kind: 'none' },
+  cincident: null,
+  csquad: null,
+  cpanel: 'none',
+  confirmNewCampaign: false,
+  cerror: null,
 }))
 
 export const get = (): Store => useStore.getState()

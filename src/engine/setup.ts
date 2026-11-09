@@ -61,6 +61,15 @@ export function createGame(setup: Setup): State {
   } as State
   s.supportCharges = tn(s, 'support.charges')
   s.map = loadMap(s, mapData)
+  // VAR-2: a raid carries an evidence cache on a passable floor tile.
+  const objective = setup.objective ?? 'bust'
+  if (objective !== 'bust' && objective !== 'raid') throw new Error(`unknown objective ${String(objective)}`)
+  if (objective === 'raid') {
+    const p = setup.cache
+    const t = p && Number.isInteger(p.x) && Number.isInteger(p.y) && p.x >= 0 && p.y >= 0 && p.x < s.map.w && p.y < s.map.h ? s.map.tiles[p.y * s.map.w + p.x] : undefined
+    if (!t || t.k !== 'floor' || t.o) throw new Error('a raid needs a cache on a passable floor tile')
+    s.raid = { cache: { x: p!.x, y: p!.y }, seized: false, burned: false }
+  }
   setup.squad.forEach((cl, i) => {
     const p = mapData.squadStart[i]
     if (!p) throw new Error('map has too few squad start tiles')

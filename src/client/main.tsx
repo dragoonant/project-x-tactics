@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import { boot } from './game/controller'
+import { bootCampaign } from './campaign/controller'
 import { installHook } from './hook'
 import './style.css'
 
@@ -12,5 +13,6 @@ document.addEventListener('selectstart', (e) => { if (!editable(e.target)) e.pre
 document.addEventListener('contextmenu', (e) => { if (!editable(e.target)) e.preventDefault() })
 
 boot()
+bootCampaign()
 installHook()
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)

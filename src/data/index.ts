@@ -4,6 +4,7 @@ import weaponsJson from './weapons.json'
 import unitsJson from './units.json'
 import enemiesJson from './enemies.json'
 import bust01 from './maps/bust-01.json'
+import campaignJson from './campaign.json'
 
 export interface WeaponBand { from: number; to: number; mod: number }
 export interface WeaponDef {
@@ -69,4 +70,27 @@ export const ENEMIES = enemiesJson.types as unknown as Record<string, EnemyDef>
 export const COMMON_ENEMY_ABILITIES: string[] = enemiesJson.common
 export const MAPS: Record<string, MapData> = { 'bust-01': bust01 as unknown as MapData }
 export function listMapIds(): string[] { return Object.keys(MAPS) }
-export const RAW = { tuning: tuningJson, weapons: weaponsJson, units: unitsJson, enemies: enemiesJson, maps: { 'bust-01': bust01 } }
+/** Spec 20: the campaign's tuning numbers and content (districts, modifiers, difficulty rows, variant slots, names). */
+export type CampaignTuning = typeof campaignJson.tuning
+export interface VariantChange {
+  label?: string
+  text: string
+  tuning?: Record<string, unknown>
+  extra?: { group: string; type: string; loadout?: string }[]
+  swap?: { group: string; index: number; type: string; loadout?: string }[]
+  aware?: string[]
+  civilians?: number
+  lampsOut?: number
+}
+export interface CampaignData {
+  tuning: CampaignTuning
+  districts: { id: string; name: string; patron: string; modifier: string }[]
+  modifiers: Record<string, VariantChange & { label: string }>
+  difficulty: Record<string, VariantChange>
+  slots: Record<string, Pt[]>
+  raid: { guard: string; caches: Pt[] }
+  names: string[]
+  specialties: string[]
+}
+export const CAMPAIGN = campaignJson as unknown as CampaignData
+export const RAW = { campaign: campaignJson, tuning: tuningJson, weapons: weaponsJson, units: unitsJson, enemies: enemiesJson, maps: { 'bust-01': bust01 } }

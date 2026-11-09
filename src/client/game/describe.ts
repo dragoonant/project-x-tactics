@@ -65,6 +65,8 @@ export function describeEvent(e: GameEvent, ctx: NameCtx): Line | null {
     case 'flee': return hidden(e.unit, ctx) ? null : L(`${N(e.unit)} bolts for the exit`, 'warn')
     case 'escaped': return L(`${N(e.unit)} escapes ${e.via === 'van' ? 'in the van' : 'through an exit'}`, 'alarm')
     case 'bagmanFlees': return L('The Bagman is running for the van', 'alarm')
+    case 'cacheSeized': return L(`${nameOf(e.unit, ctx)} secures the evidence cache`, 'good')
+    case 'cacheBurned': return L('The syndicate burned the evidence cache', 'alarm')
     case 'fleeBlocked': return L(`${N(e.unit)} has no way out`, 'info')
     case 'holdsSurrender': return L(`${N(e.unit)} stays down under guard`, 'info')
     case 'rally': return L(`${N(e.by)} rallies ${N(e.unit)} to Resolve ${num(e.resolve)}`, 'warn')

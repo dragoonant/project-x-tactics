@@ -15,6 +15,7 @@ export function validateData(): string[] {
     ['src/data/weapons.json', 'src/data/schemas/weapons.schema.json'],
     ['src/data/units.json', 'src/data/schemas/units.schema.json'],
     ['src/data/enemies.json', 'src/data/schemas/enemies.schema.json'],
+    ['src/data/campaign.json', 'src/data/schemas/campaign.schema.json'],
   ]
   const mapFiles = readdirSync(join(root, 'src/data/maps')).filter((f) => f.endsWith('.json')).map((f) => `src/data/maps/${f}`)
   for (const m of mapFiles) files.push([m, 'src/data/schemas/map.schema.json'])
@@ -90,6 +91,71 @@ export function validateData(): string[] {
     if (!map.groups.some((g: any) => g.units.some((u: any) => u.type === 'bagman'))) errors.push(`${id}: no Bagman placed`)
     for (const w of ['A', 'B', 'C']) if (!map.waves[w]) errors.push(`${id}: missing wave ${w}`)
   }
+  errors.push(...validateCampaign(readJson('src/data/campaign.json'), readJson('src/data/maps/bust-01.json'), enemies, units, tuning))
+  return errors
+}
+
+/** Spec 20: campaign.json cross-checks (variants must fit the Night Market) and every key the campaign engine reads. */
+function validateCampaign(camp: any, map: any, enemies: any, units: any, tuning: any): string[] {
+  const errors: string[] = []
+  const has = (key: string): boolean => key.split('.').reduce<any>((o, k) => (o === undefined ? undefined : o[k]), camp.tuning) !== undefined
+  const dir = join(root, 'src/campaign')
+  const keyRe = /\bctn\(\s*\w+\s*,\s*['"`]([A-Za-z0-9_.]+)['"`]\s*\)/g
+  for (const f of readdirSync(dir).filter((x) => x.endsWith('.ts'))) {
+    const src = readFileSync(join(dir, f), 'utf8')
+    for (const m of src.matchAll(keyRe)) if (!has(m[1] as string)) errors.push(`src/campaign/${f}: campaign tuning key ${m[1]} is not in campaign.json`)
+  }
+  for (const sp of camp.specialties) if (!units.classes[sp] || sp === 'recruit') errors.push(`campaign: specialty ${sp} is not a promotable class`)
+  const groups = new Map<string, any>(map.groups.map((g: any) => [g.id, g]))
+  const changes: [string, any][] = [...Object.entries<any>(camp.modifiers).map(([k, v]) => [`modifier ${k}`, v] as [string, any]), ...Object.entries<any>(camp.difficulty).map(([k, v]) => [`difficulty ${k}`, v] as [string, any])]
+  if (!camp.modifiers.turf) errors.push('campaign: modifier turf is missing')
+  for (const d of camp.districts) if (!camp.modifiers[d.modifier]) errors.push(`campaign: district ${d.id} uses unknown modifier ${d.modifier}`)
+  const kindAt = (x: number, y: number): any => map.legend[map.rows[y]?.[x] ?? '']
+  const used = new Set<string>()
+  for (const g of map.groups) for (const u of g.units) used.add(`${u.x},${u.y}`)
+  for (const c of map.civilians) used.add(`${c.x},${c.y}`)
+  for (const p of map.squadStart) used.add(`${p.x},${p.y}`)
+  for (const l of map.lamps) used.add(`${l.x},${l.y}`)
+  const open = (what: string, p: any): void => {
+    const k = kindAt(p.x, p.y)
+    if (!k || k.kind !== 'floor' || k.object) errors.push(`campaign: ${what} at ${p.x},${p.y} is not open floor`)
+    if (used.has(`${p.x},${p.y}`)) errors.push(`campaign: ${what} at ${p.x},${p.y} overlaps another placement`)
+    used.add(`${p.x},${p.y}`)
+  }
+  for (const [g, list] of Object.entries<any[]>(camp.slots)) list.forEach((p, i) => open(`slot ${g}[${i}]`, p))
+  camp.raid.caches.forEach((p: any, i: number) => open(`cache ${i}`, p))
+  if (!enemies.types[camp.raid.guard]) errors.push(`campaign: raid guard ${camp.raid.guard} is not an enemy type`)
+  const extrasPer = (c: any): Map<string, number> => { const m = new Map<string, number>(); for (const e of c.extra ?? []) m.set(e.group, (m.get(e.group) ?? 0) + 1); return m }
+  for (const [what, c] of changes) {
+    for (const e of [...(c.extra ?? []), ...(c.swap ?? [])]) {
+      if (!groups.has(e.group)) errors.push(`campaign: ${what} names unknown group ${e.group}`)
+      if (!enemies.types[e.type]) errors.push(`campaign: ${what} names unknown enemy type ${e.type}`)
+      if (e.loadout && !enemies.types[e.type]?.loadouts[e.loadout]) errors.push(`campaign: ${what}: ${e.type} has no loadout ${e.loadout}`)
+    }
+    for (const sw of c.swap ?? []) if (!groups.get(sw.group)?.units[sw.index]) errors.push(`campaign: ${what} swaps a unit that does not exist (${sw.group}[${sw.index}])`)
+    for (const g of c.aware ?? []) if (!groups.has(g)) errors.push(`campaign: ${what} wakes unknown group ${g}`)
+    if ((c.lampsOut ?? 0) > map.lamps.length) errors.push(`campaign: ${what} turns out more lamps than the map has`)
+    if ((c.civilians ?? 0) > (camp.slots.civilians?.length ?? 0)) errors.push(`campaign: ${what} needs more civilian slots`)
+    if (c.tuning) {
+      const walk = (o: any, pre: string): void => {
+        for (const [k, v] of Object.entries<any>(o)) {
+          const key = pre ? `${pre}.${k}` : k
+          if (typeof v === 'object') walk(v, key)
+          else if (key.split('.').reduce<any>((x, kk) => x?.[kk], tuning) === undefined) errors.push(`campaign: ${what} overrides unknown tactical tuning ${key}`)
+        }
+      }
+      walk(c.tuning, '')
+    }
+  }
+  // Worst case per group: the biggest difficulty row + the biggest district modifier + turf must fit the group's slots.
+  const diffRows = Object.values<any>(camp.difficulty).map(extrasPer)
+  const modRows = Object.entries<any>(camp.modifiers).filter(([k]) => k !== 'turf').map(([, v]) => extrasPer(v))
+  const turf = extrasPer(camp.modifiers.turf ?? {})
+  for (const g of groups.keys()) {
+    const need = Math.max(0, ...diffRows.map((m) => m.get(g) ?? 0)) + Math.max(0, ...modRows.map((m) => m.get(g) ?? 0)) + (turf.get(g) ?? 0)
+    if (need > (camp.slots[g]?.length ?? 0)) errors.push(`campaign: group ${g} can need ${need} extra slots but has ${camp.slots[g]?.length ?? 0}`)
+  }
+  if (new Set(camp.names).size !== camp.names.length) errors.push('campaign: trooper names repeat')
   return errors
 }
 

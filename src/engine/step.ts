@@ -5,7 +5,7 @@ import { checkMove, runMove } from './move'
 import { endPhase } from './phase'
 import { checkSight } from './noise'
 import { updateKnowledge } from './fog'
-import { checkOutcome } from './mission'
+import { checkOutcome, checkRaid } from './mission'
 import { unitById } from './util'
 
 const isInt = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n)
@@ -73,6 +73,7 @@ export function step(state: State, action: Action): StepResult {
     }
     if (clean.type !== 'endPhase' && s.phase === 'squad') checkSight(c)
     updateKnowledge(c)
+    checkRaid(c, clean.type !== 'endPhase' && state.phase === 'squad')
     checkOutcome(c)
     return { ok: true, state: s, events: c.ev }
   } catch (e) {

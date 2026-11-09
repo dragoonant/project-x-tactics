@@ -1,4 +1,5 @@
 import { Board } from './board/Board'
+import { CampaignEnd, CityHud } from './campaign/CampaignUI'
 import { useStore } from './game/store'
 import { EndScreen } from './ui/EndScreen'
 import { Hud } from './ui/Hud'
@@ -12,6 +13,8 @@ export function App(): React.JSX.Element {
       {screen === 'play' && <Hud />}
       {screen === 'start' && <StartScreen />}
       {screen === 'end' && <EndScreen />}
+      {screen === 'city' && <CityHud />}
+      {screen === 'cend' && <CampaignEnd />}
       <div className="fx-scan" />
       <div className="fx-vig" />
     </>

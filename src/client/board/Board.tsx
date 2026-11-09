@@ -17,6 +17,8 @@ import { Figures, Ghosts } from './Figures'
 import { tx, tz, worldToTile } from './layout'
 import { HoverOverlay, TileMarks, useHoverUnit } from './Overlays'
 import { Terrain } from './terrain/Terrain'
+import { CityScene } from '../campaign/City'
+import { CacheMarker } from './CacheMarker'
 import { TERRAIN_V2, preloadTerrain } from '../game/terrainAssets'
 
 let preview: { state: State; fog: State } | null = null
@@ -99,6 +101,7 @@ function Scene({ state, fog, fogOn }: { state: State; fog: State; fogOn: boolean
       {fogOn && <TileMarks state={state} />}
       {fogOn && <HoverOverlay state={state} />}
       <Volumes state={state} />
+      <CacheMarker state={state} />
       <FxLayer w={w} h={h} />
       <PickSurface w={w} h={h} />
     </Suspense>
@@ -110,6 +113,8 @@ export function Board(): React.JSX.Element {
   const fg = useStore((s) => s.fog)
   const screen = useStore((s) => s.screen)
   const lite = useStore((s) => s.settings.lite)
+  const campaign = useStore((s) => s.campaign)
+  const city = screen === 'city' || screen === 'cend'
   const pv = previewGame()
   const state = st ?? pv.state
   const fog = fg ?? pv.fog
@@ -124,7 +129,7 @@ export function Board(): React.JSX.Element {
   }, [])
 
   return (
-    <div className={`board-wrap${screen === 'start' ? ' dim' : ''}`}>
+    <div className={`board-wrap${screen === 'start' ? ' dim' : ''}${city ? ' city' : ''}`}>
       <Canvas
         frameloop="demand"
         dpr={lite || phone ? 1 : [1, 1.75]}
@@ -133,7 +138,7 @@ export function Board(): React.JSX.Element {
         onCreated={({ gl }) => { gl.setClearColor('#05070a'); (window as unknown as { __pxGl?: unknown }).__pxGl = gl }}
       >
         <fogExp2 attach="fog" args={['#06080c', 0.011]} />
-        <Scene state={state} fog={fog} fogOn={screen !== 'start'} />
+        {city && campaign ? <CityScene state={campaign} /> : <Scene state={state} fog={fog} fogOn={screen !== 'start'} />}
       </Canvas>
     </div>
   )

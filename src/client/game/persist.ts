@@ -10,7 +10,7 @@ export type Speed = 'normal' | 'fast' | 'instant'
 export interface Settings { speed: Speed; lite: boolean; mute: boolean; volume: number; rain: boolean }
 export const DEFAULT_SETTINGS: Settings = { speed: 'normal', lite: false, mute: false, volume: 0.6, rain: true }
 
-function storage(): Storage | null {
+export function storage(): Storage | null {
   try { return typeof localStorage === 'undefined' ? null : localStorage } catch { return null }
 }
 
@@ -39,24 +39,24 @@ export type SaveRead =
   | { kind: 'ok'; state: State; meta: SaveMeta }
   | { kind: 'bad'; reason: string }
 
-export function writeSave(state: State): { ok: true } | { ok: false; reason: string } {
+export function writeSave(state: State, key = SAVE_KEY): { ok: true } | { ok: false; reason: string } {
   const st = storage()
   if (!st) return { ok: false, reason: 'browser storage is unavailable' }
   try {
-    st.setItem(SAVE_KEY, JSON.stringify({ ...serialize(state), savedAt: Date.now() }))
+    st.setItem(key, JSON.stringify({ ...serialize(state), savedAt: Date.now() }))
     return { ok: true }
   } catch (e) {
     return { ok: false, reason: (e as Error).message || 'browser storage refused the save' }
   }
 }
 
-export function clearSave(): void {
-  try { storage()?.removeItem(SAVE_KEY) } catch { /* nothing to do */ }
+export function clearSave(key = SAVE_KEY): void {
+  try { storage()?.removeItem(key) } catch { /* nothing to do */ }
 }
 
-export function readSave(): SaveRead {
+export function readSave(key = SAVE_KEY): SaveRead {
   let raw: string | null = null
-  try { raw = storage()?.getItem(SAVE_KEY) ?? null } catch (e) { return { kind: 'bad', reason: `storage refused the read: ${(e as Error).message}` } }
+  try { raw = storage()?.getItem(key) ?? null } catch (e) { return { kind: 'bad', reason: `storage refused the read: ${(e as Error).message}` } }
   if (raw === null) return { kind: 'none' }
   const d = deserialize(raw)
   if (!d.ok) return { kind: 'bad', reason: d.reason }

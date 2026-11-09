@@ -19,6 +19,17 @@ describe('client source rules', () => {
     expect((board.match(/<mesh\b/g) ?? []).length).toBe(1)
   })
 
+  it('rule 25: on the holo-table city only the table pick plane has pointer handlers; labels ignore the pointer', () => {
+    const src = readFileSync('src/client/campaign/City.tsx', 'utf8')
+    const start = src.indexOf('function PickPlane(')
+    const end = src.indexOf('\nexport function', start)
+    expect(start).toBeGreaterThan(0)
+    const handlers = [...src.matchAll(/\bon(Pointer\w*|Click|DoubleClick|ContextMenu)\s*=/g)].map((m) => m.index ?? 0)
+    expect(handlers.length).toBeGreaterThan(0)
+    for (const at of handlers) expect(at > start && at < end).toBe(true)
+    for (const m of src.matchAll(/<Html\b[^>]*>/g)) expect(m[0]).toContain("pointerEvents: 'none'")
+  })
+
   it('rule 8: no native tooltips (title attributes or SVG <title>)', () => {
     for (const f of files.filter((x) => x.endsWith('.tsx'))) {
       const src = readFileSync(f, 'utf8')
