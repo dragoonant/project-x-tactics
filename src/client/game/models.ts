@@ -44,7 +44,8 @@ export function parseManifest(json: unknown): Map<string, ModelEntry> {
       if (typeof o.yaw === 'number') yaw = o.yaw
       if (typeof o.height === 'number' && o.height > 0) height = o.height
     }
-    if (!file || !/\.(glb|gltf)(\?.*)?$/i.test(file)) return
+    // `.gltf.json` is the Artifact build's packing (tools/pack-artifact.mjs): the host serves .json but not .glb.
+    if (!file || !/\.(glb|gltf|gltf\.json)(\?.*)?$/i.test(file)) return
     const url = /^(https?:)?\/\//.test(file) ? file : file.startsWith('assets/') ? new URL(file, document.baseURI).toString() : new URL(file, base).toString()
     out.set(normalizeKind(kind), { url, yaw, height })
   }

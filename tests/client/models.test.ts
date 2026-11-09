@@ -18,6 +18,12 @@ describe('model manifest reader (rule 26)', async () => {
     expect(arr.has('chem')).toBe(true)
   })
 
+  it('accepts the Artifact packing (.gltf.json) but not other .json files', () => {
+    const packed = parseManifest({ bagman: { file: 'bagman.gltf.json' }, notes: { file: 'notes.json' } })
+    expect([...packed.keys()]).toEqual(['bagman'])
+    expect(packed.get('bagman')!.url).toBe('http://localhost/app/assets/models/bagman.gltf.json')
+  })
+
   it('ignores junk and non-model files', () => {
     expect(parseManifest(null).size).toBe(0)
     expect(parseManifest({ a: 3, b: ['x'], c: { file: 'readme.txt' } }).size).toBe(0)
