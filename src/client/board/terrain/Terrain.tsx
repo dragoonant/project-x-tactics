@@ -246,6 +246,9 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
       } else if (t.o === 'lamp') {
         if (!propKinds.lamp) put(poles.current, cnt.pole++, X, 1.05, Z, 1, 2.1, 1, 0, '#2c3038', sh)
         if (!propKinds.lamp) put(heads.current, cnt.head++, X, 2.15, Z, 1, 1, 1)
+        // v2: the painted bulb on the prop's arm end (0.52 tiles south of the pole, measured from the fitted GLB) gets a small emissive core;
+        // the light itself stays where the engine's lamp is
+        else put(heads.current, cnt.head++, X, 2.21, Z + 0.52, 0.5, 0.5, 0.5)
       }
       if (t.k === 'door') {
         const ew = isWallAt(state, x - 1, y) && isWallAt(state, x + 1, y)

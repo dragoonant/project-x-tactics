@@ -119,6 +119,135 @@
       "height": 2.4,
       "fit": "height",
       "note": "fits by height; the arm overhangs the tile edge, the base stays inside the tile"
+    },
+    "market-stall-b": {
+      "file": "props/market-stall-b.glb",
+      "replaces": "halfCover",
+      "footprint": [
+        0.92,
+        0.92
+      ],
+      "height": 1.0,
+      "fit": "footprint",
+      "where": "outdoor",
+      "weight": 2,
+      "sat": 0.55,
+      "mul": 0.36,
+      "tints": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1.0,
+          0.9,
+          0.8
+        ]
+      ],
+      "note": "half cover; teal canvas awning, produce bins"
+    },
+    "crates-stack": {
+      "file": "props/crates-stack.glb",
+      "replaces": "halfCover",
+      "footprint": [
+        0.9,
+        0.9
+      ],
+      "height": 0.8,
+      "fit": "footprint",
+      "where": "any",
+      "weight": 2,
+      "sat": 0.7,
+      "mul": 0.55,
+      "tints": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          0.9,
+          0.95,
+          1.0
+        ]
+      ],
+      "note": "half cover; stacked wooden crates"
+    },
+    "escape-van": {
+      "file": "props/escape-van.glb",
+      "replaces": "@escape",
+      "footprint": [
+        0.95,
+        0.95
+      ],
+      "height": 0.95,
+      "fit": "footprint",
+      "orient": "long-z",
+      "sat": 0.9,
+      "mul": 0.75,
+      "note": "the escape van on its tile"
+    },
+    "rubble-pile": {
+      "file": "props/rubble-pile.glb",
+      "replaces": "rubble",
+      "footprint": [
+        0.95,
+        0.95
+      ],
+      "height": 0.55,
+      "fit": "footprint",
+      "sat": 0.85,
+      "mul": 0.7,
+      "note": "destroyed full cover (engine object rubble)"
+    },
+    "debris": {
+      "file": "props/rubble-pile.glb",
+      "replaces": "@debris",
+      "footprint": [
+        0.95,
+        0.95
+      ],
+      "height": 0.55,
+      "fit": "footprint",
+      "scale": [
+        0.85,
+        0.5,
+        0.85
+      ],
+      "sat": 0.85,
+      "mul": 0.7,
+      "note": "destroyed half cover: the same pile, flattened, as a debris decal"
+    },
+    "concrete-pillar": {
+      "file": "props/concrete-pillar.glb",
+      "replaces": "fullCover",
+      "footprint": [
+        0.7,
+        0.7
+      ],
+      "height": 1.35,
+      "fit": "footprint",
+      "where": "any",
+      "weight": 2,
+      "sat": 0.8,
+      "mul": 0.7,
+      "note": "full cover; square concrete pillar with a hazard-striped base"
+    },
+    "vending-machine": {
+      "file": "props/vending-machine.glb",
+      "replaces": "fullCover",
+      "footprint": [
+        0.7,
+        0.7
+      ],
+      "height": 1.3,
+      "fit": "footprint",
+      "where": "any",
+      "weight": 2,
+      "sat": 0.85,
+      "mul": 0.6,
+      "note": "full cover; vending machine with a blank unlit panel"
     }
   }
 }
