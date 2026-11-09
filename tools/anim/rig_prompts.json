@@ -1,0 +1,105 @@
+{
+  "pose": {
+    "template": "Start from this image. Keep the same figure exactly: {keep}, the painted-miniature style, matte realistic paint with edge highlights, the same proportions (same head size, same shoulder width, short thick legs), the plain round black base, the plain white background and the studio lighting. Change only the pose: the figure stands upright facing the camera straight on in a neutral rig pose. Both arms hang straight down and angle out about 30 degrees from the body, clear of the torso, elbows straight, both hands open and empty with the fingers together and the palms facing the thighs. The legs are straight and set apart with a clear gap of empty white background visible between the legs and between the boots. {remove} Wordless, no lettering, no logos. Full round base visible.",
+    "kinds": {
+      "recruit": {
+        "base": "docs/concept/recruit.jpg",
+        "keep": "the olive-green helmet with a dark visor and respirator, the olive armoured shoulders and knee guards, the rust-red sleeves and trousers, the chest webbing with ammunition pouches, the belt and heavy boots",
+        "remove": "Remove only the rifle: the hands hold nothing, no weapon anywhere."
+      },
+      "bulwark": {
+        "base": "docs/concept/bulwark.jpg",
+        "keep": "the black hooded helmet with amber hazard stripes, the respirator, the amber-striped shoulder pad, the black plated armour, the belt with a skull buckle and handcuffs, the knee guards and heavy boots",
+        "remove": "Remove the large riot shield, the revolver and the shock maul: the hands hold nothing, no weapon and no shield anywhere."
+      },
+      "marksman": {
+        "base": "docs/concept/marksman.jpg",
+        "keep": "the black hood with amber hazard stripes, the goggles with a green lens, the tattered black cloak hanging from the shoulders, the black plated armour, the belt with pouches and handcuffs, the knee guards and heavy boots",
+        "remove": "He stands fully upright instead of kneeling. Remove only the long rifle: the hands hold nothing, no weapon anywhere."
+      },
+      "vox-operator": {
+        "base": "docs/concept/vox-operator.jpg",
+        "keep": "the black helmet with amber hazard stripes, the respirator, the amber visor, the radio pack on the back with its tall antenna and round drum, the amber-striped shoulder pad, the black plated armour and long black coat skirts, the belt with a skull buckle and handcuffs, the heavy boots",
+        "remove": "Remove the radio handset with its coiled cable and remove the shotgun: the hands hold nothing, no weapon anywhere."
+      },
+      "chem-trooper": {
+        "base": "docs/concept/chem-trooper.jpg",
+        "keep": "the black helmet with amber hazard stripes, the respirator with a round teal lens on one side, the tank pack on the back with hoses and a purple fitting, the amber-striped shoulder pad, the long torn dark coat, the belt with vials and handcuffs, the heavy boots",
+        "remove": "Remove the shotgun and the glowing injector held in the other hand: both hands hold nothing, no weapon anywhere."
+      },
+      "recon": {
+        "base": "docs/concept/recon.jpg",
+        "keep": "the black helmet with the night-vision goggles on the front and the small radio antenna on the back, the amber-striped shoulder pad, the black plated armour, the belt with a skull buckle and handcuffs, the knee guards and heavy boots",
+        "remove": "Remove the pistol and the baton: both hands hold nothing, no weapon anywhere."
+      },
+      "enforcer": {
+        "base": "docs/concept/enforcer.jpg",
+        "keep": "the black armoured helmet with amber hazard stripes, the respirator with two round filters, the amber visor, the broad armoured shoulders with amber stripes, the black plated vest, the belt with a skull buckle, pouches and handcuffs, the baton hanging at the left hip from the belt, a small pack on the back, the knee guards and heavy boots",
+        "remove": "Remove only the shotgun: the hands hold nothing, no weapon in the hands."
+      },
+      "thug-club": {
+        "base": "art/concepts/thug-club.png",
+        "keep": "the rust-red hood, the dark cloth face wrap, the red leather jacket with orange stitching, the grey metal shoulder plate, the grey trousers with knee pads, the brown boots and the belt",
+        "remove": "Remove the pipe club: the hands hold nothing."
+      },
+      "thug-pistol": {
+        "base": "art/concepts/thug-pistol.png",
+        "keep": "the rust-red hood, the grey face scarf, the red leather jacket with orange stitching, the belt with a pouch, the stained blue trousers and the brown boots",
+        "remove": "Remove the large pistol: the hands hold nothing."
+      },
+      "gunman": {
+        "base": "art/concepts/gunman.png",
+        "keep": "the flat grey cap, the dark face wrap, the silver chest plate and shoulder plate over a brown leather coat, the rust-red armband, the brown trousers and the boots",
+        "remove": "Remove the submachine gun: the hands hold nothing."
+      },
+      "heavy": {
+        "base": "art/concepts/heavy.png",
+        "keep": "the metal helmet with a full rebreather mask and goggles, the rusted red shoulder armour, the belt of ammunition across the chest, the silver chest plate, the olive trousers, the steel knee armour, the belt with a holster and the heavy boots",
+        "remove": "Remove the machine gun: the hands hold nothing."
+      },
+      "fixer": {
+        "base": "art/concepts/fixer.png",
+        "keep": "the slicked dark hair, the goggles and face mask with an earpiece, the long rust-red button coat with orange cuffs and the grey boots",
+        "remove": "Remove the pistol: the hands hold nothing. The long coat hangs straight down with the hem open."
+      },
+      "bagman": {
+        "base": "art/concepts/bagman.png",
+        "keep": "the wide-brimmed brown hat pulled low, the red neckerchief, the brown fur-lined leather coat, the black trousers and the black boots",
+        "remove": "Remove the steel case, its chain and the pistol: the hands hold nothing."
+      },
+      "civilian-a": {
+        "base": "art/concepts/civilian-a.png",
+        "keep": "the grey hooded jacket, the worried face, the satchel on a strap across the body, the brown trousers and the brown boots",
+        "remove": "The hands are open and empty."
+      },
+      "civilian-b": {
+        "base": "art/concepts/civilian-b.png",
+        "keep": "the grey flat cap, the grey knitted scarf, the brown shirt, the teal apron, the dark trousers and the brown boots",
+        "remove": "Remove the wooden crate: the hands hold nothing."
+      },
+      "civilian-c": {
+        "base": "art/concepts/civilian-c.png",
+        "keep": "the brown hood, the grey scarf, the long brown rain cloak and the brown boots",
+        "remove": "Remove the umbrella: the hands hold nothing. The cloak hangs straight down with the hem open."
+      }
+    }
+  },
+  "items": {
+    "template": "Start from this image. Show only the {what} from this figure, nothing else: {desc}. Side view, the {front} pointing to the left, perfectly horizontal and centred, filling most of the width of the picture. No hands, no person, no armour, no base, no shadow. Plain white background, studio lighting, matte realistic paint with edge highlights. Wordless, no lettering, no logos. Exactly one object.",
+    "items": {
+      "rifle": { "base": "docs/concept/recruit.jpg", "what": "rifle", "front": "muzzle", "desc": "one service rifle with a long olive and dark metal body, a short barrel with a flash hider, a pistol grip, a magazine and a stock" },
+      "revolver": { "base": "docs/concept/bulwark.jpg", "what": "revolver", "front": "muzzle", "desc": "one large heavy revolver with a dark steel frame, a thick barrel, a cylinder and a short grip" },
+      "long-rifle": { "base": "docs/concept/marksman.jpg", "what": "long rifle", "front": "muzzle", "desc": "one long scoped rifle with a suppressed barrel, a scope on top, a bipod folded under the barrel and a dark stock" },
+      "pistol": { "base": "art/concepts/fixer.png", "what": "pistol", "front": "muzzle", "desc": "one compact semi-automatic pistol with a dark gunmetal slide, a grip and a trigger guard" },
+      "smg": { "base": "art/concepts/gunman.png", "what": "submachine gun", "front": "muzzle", "desc": "one compact submachine gun with a short barrel, a vertical magazine, a pistol grip and a folding stock" },
+      "lmg": { "base": "art/concepts/heavy.png", "what": "machine gun", "front": "muzzle", "desc": "one large machine gun with a long barrel, a bipod under the barrel, a carrying handle, an ammunition box and a stock" },
+      "baton": { "base": "docs/concept/recon.jpg", "what": "baton", "front": "tip", "desc": "one straight black steel baton with a ribbed grip at one end and a thicker striking head at the other end" },
+      "maul": { "base": "docs/concept/bulwark.jpg", "what": "shock maul", "front": "head", "desc": "one short shock maul with a dark handle and a metal head with crackling blue electric sparks" },
+      "riot-shield": { "base": "docs/concept/bulwark.jpg", "what": "riot shield", "front": "top edge", "desc": "one tall rectangular riot shield made of riveted grey steel plates with a small viewing slot near the top, seen from the front, lying upright and centred" },
+      "club": { "base": "art/concepts/thug-club.png", "what": "club", "front": "heavy end", "desc": "one rusty iron pipe club with a wrapped grip at one end" },
+      "case": { "base": "art/concepts/bagman.png", "what": "steel case", "front": "side", "desc": "one battered steel briefcase with brass corners and a carrying handle on top, seen from the front, upright and centred" },
+      "handset": { "base": "docs/concept/vox-operator.jpg", "what": "radio handset", "front": "earpiece", "desc": "one old radio handset with a rounded grey grip, a speaker end and a coiled cable" },
+      "injector": { "base": "docs/concept/chem-trooper.jpg", "what": "chemical injector", "front": "needle", "desc": "one glass and brass syringe injector with a glowing yellow vial and a short needle" }
+    }
+  }
+}

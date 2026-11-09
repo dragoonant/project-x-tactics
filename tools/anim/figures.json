@@ -1,0 +1,37 @@
+{
+  "_doc": "A1 figure and item configuration. Item local frame (Blender, before the glTF export): x along the length with the FRONT end (muzzle, tip, striking head) at -X, centred in x and y, z from 0 (bottom) to the item height (up). Fractions fx run from the front end (0) to the rear end (1), fz from the bottom (0) to the top (1).",
+  "items": {
+    "rifle":       { "len": 1.25, "front": "thin",  "kind": "gun",  "grip_r": [0.70, 0.42], "grip_l": [0.36, 0.55], "muzzle": [0.0, 0.80] },
+    "shotgun":     { "len": 1.14, "front": "thin",  "kind": "gun",  "grip_r": [0.76, 0.45], "grip_l": [0.58, 0.62], "muzzle": [0.0, 0.85] },
+    "long-rifle":  { "len": 1.55, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.40], "grip_l": [0.34, 0.50], "muzzle": [0.0, 0.60] },
+    "smg":         { "len": 0.85, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.45], "grip_l": [0.36, 0.55], "muzzle": [0.0, 0.75] },
+    "lmg":         { "len": 1.35, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.40], "grip_l": [0.34, 0.50], "muzzle": [0.0, 0.70] },
+    "pistol":      { "len": 0.46, "front": "thin",  "kind": "gun1", "grip_r": [0.78, 0.40], "muzzle": [0.0, 0.80] },
+    "revolver":    { "len": 0.56, "front": "thin",  "kind": "gun1", "grip_r": [0.80, 0.40], "muzzle": [0.0, 0.80] },
+    "baton":       { "len": 0.80, "front": "thick", "kind": "melee", "grip_r": [0.86, 0.5], "muzzle": [0.0, 0.5] },
+    "maul":        { "len": 0.85, "front": "thick", "kind": "melee", "grip_r": [0.80, 0.5], "muzzle": [0.0, 0.5] },
+    "club":        { "len": 0.95, "front": "thick", "kind": "melee", "grip_r": [0.84, 0.5], "muzzle": [0.0, 0.5] },
+    "handset":     { "len": 0.34, "front": "thick", "kind": "small", "grip_r": [0.50, 0.5], "muzzle": [0.0, 0.5] },
+    "injector":    { "len": 0.38, "front": "thin",  "kind": "small", "grip_r": [0.55, 0.5], "muzzle": [0.0, 0.5] },
+    "riot-shield": { "len": 1.05, "kind": "upright", "upright": "height" },
+    "case":        { "len": 0.50, "kind": "upright", "upright": "width" }
+  },
+  "figures": {
+    "recruit":      { "arch": "long",   "right": "rifle",      "left": null,          "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","throw","hit","downed","death"] },
+    "enforcer":     { "arch": "long",   "right": "shotgun",    "left": null,          "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","hit","downed","death"] },
+    "bulwark":      { "arch": "guard",  "right": "revolver",   "left": "riot-shield", "height": 1.8, "swap": "maul", "clips": ["idle","cover","walk","run","aim","fire","melee","bash","hit","downed","death"] },
+    "marksman":     { "arch": "long",   "right": "long-rifle", "left": null,          "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","hit","downed","death"] },
+    "vox-operator": { "arch": "long",   "right": "shotgun",    "left": "handset",     "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","point","hit","downed","death"] },
+    "chem-trooper": { "arch": "long",   "right": "shotgun",    "left": "injector",    "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","throw","hit","downed","death"] },
+    "recon":        { "arch": "pistol", "right": "pistol",     "left": "baton",       "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","melee","point","hit","downed","death"] },
+    "thug-club":    { "arch": "melee",  "right": "club",       "left": null,          "height": 1.8, "clips": ["idle","cover","walk","run","melee","hit","surrender","cuffed","death"] },
+    "thug-pistol":  { "arch": "pistol", "right": "pistol",     "left": null,          "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","hit","surrender","cuffed","death"] },
+    "gunman":       { "arch": "long",   "right": "smg",        "left": null,          "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","hit","surrender","cuffed","death"] },
+    "heavy":        { "arch": "long",   "right": "lmg",        "left": null,          "height": 1.8, "clips": ["idle","cover","walk","run","aim","fire","hit","surrender","cuffed","death"] },
+    "fixer":        { "arch": "pistol", "right": "pistol",     "left": null,          "height": 1.8, "coat": true, "clips": ["idle","cover","walk","run","aim","fire","point","hit","surrender","cuffed","death"] },
+    "bagman":       { "arch": "pistol", "right": "pistol",     "left": "case",        "height": 1.8, "coat": true, "clips": ["idle","cover","walk","run","aim","fire","hit","surrender","cuffed","death"] },
+    "civilian-a":   { "arch": "none",   "right": null,         "left": null,          "height": 1.7, "clips": ["idle","walk","run","panic","cower","hit","death"] },
+    "civilian-b":   { "arch": "none",   "right": null,         "left": null,          "height": 1.7, "coat": true, "clips": ["idle","walk","run","panic","cower","hit","death"] },
+    "civilian-c":   { "arch": "none",   "right": null,         "left": null,          "height": 1.7, "coat": true, "clips": ["idle","walk","run","panic","cower","hit","death"] }
+  }
+}

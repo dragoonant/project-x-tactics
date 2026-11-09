@@ -21,5 +21,12 @@ tools/anim/vendor/
 art/anim-spike/raw/
 art/anim-spike/scratch/
 # T0 terrain spike: raw generations and scratch
+# A1: raw Hunyuan meshes, rig scratch, frames
+art/rig/raw/
+art/rig/scratch/
+art/rig/*/cand_*.png
+art/rig/items/*/cand_*.png
+art/rig/**/cands.png
+art/rig/items/sheet_*.png
 art/terrain-spike/raw/
 art/terrain-spike/_*.png
