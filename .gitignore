@@ -1,0 +1,13 @@
+node_modules/
+dist/
+e2e-out/
+tools/out/
+test-results/
+playwright-report/
+docs/sources/
+*.pdf
+.env*
+*.token*
+Tokens.txt
+tokens.txt*
+.claude/settings.local.json
