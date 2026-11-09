@@ -1,11 +1,13 @@
-// Terrain v2 pieces (spike T0, `?terrain=v2`): world-space UV patch for the PBR surfaces, the material set, the indoor / street
+// Terrain v2 pieces (T0 spike, default since T1): world-space UV patch for the PBR surfaces, the material set, the indoor / street
 // split of the floor, and the instanced Hunyuan props. No pointer handlers anywhere in here (rule 25).
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { Color, InstancedMesh, Matrix4, MeshStandardMaterial, Vector2 } from 'three'
-import type { State } from '../../engine'
-import type { PropDef, TerrainAssets, TexSet } from '../game/terrainAssets'
-import { wake } from '../game/presentation'
-import { hash2, tx, tz } from './layout'
+import type { State } from '../../../engine'
+import type { PropDef, TerrainAssets, TexSet } from './assets'
+import { wake } from '../../game/presentation'
+import { MAPS } from '../../../data'
+import { tx, tz } from '../layout'
+import { pickTint, pickVariant, pickYaw } from './variants'
 
 const noRay = (): null => null
 
@@ -106,36 +108,72 @@ export function indoorMask(state: State): Uint8Array {
   return out
 }
 
-const tmpM = new Matrix4(), rotM = new Matrix4(), posM = new Matrix4(), tmpC = new Color()
+const tmpM = new Matrix4(), rotM = new Matrix4(), posM = new Matrix4(), scM = new Matrix4(), tmpC = new Color()
+
+interface Placement { def: PropDef; X: number; Z: number; yaw: number; tint: readonly [number, number, number]; shade: number }
+
+/** Original cover per tile (from the map data, never from game state): a half-cover tile that lost its cover keeps a debris decal. */
+function originalCover(mapId: string, w: number, h: number): Uint8Array {
+  const out = new Uint8Array(w * h)
+  const m = MAPS[mapId]
+  if (!m) return out
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const o = m.legend[m.rows[y]?.[x] ?? '']?.object
+    if (o === 'halfCover' || o === 'fullCover' || o === 'rubble') out[y * w + x] = 1
+  }
+  return out
+}
+
+/** Which kind of prop a tile shows right now, from the engine state only. */
+export function propKindAt(state: State, i: number, orig: Uint8Array): string | null {
+  const t = state.map.tiles[i]!
+  if (t.o) return t.o
+  if (t.k === 'escape') return '@escape'
+  if (orig[i]) return '@debris'
+  return null
+}
 
 /** Hunyuan props as instanced meshes (one InstancedMesh per sub-mesh of each prop). `sig` changes when cover is destroyed. */
-export function PropField({ state, assets, seen, lit, sig }: { state: State; assets: TerrainAssets; seen: Uint8Array; lit: Uint8Array; sig: string }): React.JSX.Element {
+export function PropField({ state, assets, seen, lit, sig, indoor }: { state: State; assets: TerrainAssets; seen: Uint8Array; lit: Uint8Array; sig: string; indoor: Uint8Array | null }): React.JSX.Element {
   const { w, h } = state.map
-  const defs = useMemo(() => Object.values(assets.propsByObject), [assets])
+  const defs = useMemo(() => Object.entries(assets.propsByObject).filter(([k]) => k !== '@wallbox').flatMap(([, v]) => v), [assets])
   const refs = useRef<(InstancedMesh | null)[]>([])
   const flat = useMemo(() => defs.flatMap((d) => d.parts.map((p) => ({ def: d, part: p }))), [defs])
+  const orig = useMemo(() => originalCover(state.map.id, w, h),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state.map.id, w, h])
   useLayoutEffect(() => {
+    const byDef = new Map<PropDef, Placement[]>()
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = y * w + x
+      const kind = propKindAt(state, i, orig)
+      const cands = kind ? assets.propsByObject[kind] : undefined
+      if (!cands?.length) continue
+      const def = pickVariant(cands, x, y, !!indoor?.[i])
+      if (!def) continue
+      const fixed = kind === 'lamp' || kind === '@escape'
+      const list = byDef.get(def) ?? []
+      list.push({ def, X: tx(x, w), Z: tz(y, h), yaw: fixed ? 0 : pickYaw(x, y) * (Math.PI / 2), tint: pickTint(def, x, y), shade: (seen[i] ? 1 : 0.4) * (lit[i] ? 1 : 0.5) }) // dark and unseen tiles dim their props too
+      byDef.set(def, list)
+    }
     flat.forEach(({ def, part }, k) => {
       const m = refs.current[k]
       if (!m) return
-      let n = 0
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const t = state.map.tiles[y * w + x]!
-        if (t.o !== def.object) continue
-        const flip = def.object !== 'lamp' && hash2(x, y, 61) > 0.5 ? Math.PI : 0
-        posM.makeTranslation(tx(x, w), 0, tz(y, h))
-        rotM.makeRotationY(flip)
-        tmpM.copy(posM).multiply(rotM).multiply(part.matrix)
+      const list = byDef.get(def) ?? []
+      list.forEach((p, n) => {
+        posM.makeTranslation(p.X, 0, p.Z)
+        rotM.makeRotationY(p.yaw)
+        scM.makeScale(def.scale[0], def.scale[1], def.scale[2])
+        tmpM.copy(posM).multiply(rotM).multiply(scM).multiply(part.matrix)
         m.setMatrixAt(n, tmpM)
-        m.setColorAt(n, tmpC.setScalar((seen[y * w + x] ? 1 : 0.4) * (lit[y * w + x] ? 1 : 0.5))) // dark and unseen tiles dim their props too
-        n++
-      }
-      m.count = n
+        m.setColorAt(n, tmpC.setRGB(p.tint[0] * p.shade, p.tint[1] * p.shade, p.tint[2] * p.shade))
+      })
+      m.count = list.length
       m.instanceMatrix.needsUpdate = true
       if (m.instanceColor) m.instanceColor.needsUpdate = true
     })
     wake(120)
-  }, [flat, sig, seen, lit, w, h, state.map.tiles])
+  }, [flat, sig, seen, lit, w, h, state, assets, indoor, orig])
   return (
     <group>
       {flat.map(({ def, part }, k) => (

@@ -1,0 +1,1 @@
+market-stall-b=3 crates-stack=4 oil-barrels=3 concrete-barrier=4 noodle-cart=4 concrete-pillar=3 vending-machine=1 shipping-crates=3 escape-van=2 rubble-pile=2 power-box=1
