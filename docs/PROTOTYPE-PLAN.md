@@ -227,7 +227,7 @@ All troopers are modelled at one rank (freshly promoted) so classes can be compa
 | **Gunman** | 5 | 6 | 6 | 60 | SMG 2–4, best at 1–6 tiles |
 | **Heavy** | 9 | 8 | 5 | 55 | LMG 3–5 with Suppress; respirator (gas immune) |
 | **Fixer** | 5 | 7 | 6 | 60 | Pistol; **Rally** (range 5) |
-| **The Bagman** (target) | 8 | 9 | 6 | 60 | Pistol; stays in cover, flees at Alarm 7 |
+| **The Bagman** (target) | 8 | 9 | 4 | 60 | Pistol; stays in cover, flees at Alarm 7 (heavy coat and chained case: Mobility 4, so his 12-tile run to the van takes two phases) |
 | **Civilian** | 2 | — | 6 | — | Wanders; panics and flees on noise or gas |
 
 Placeholder names throughout.

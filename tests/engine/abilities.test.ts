@@ -273,7 +273,7 @@ describe('Recon', () => {
 
 describe('ENM syndicate units', () => {
   it('ENM-1 stat lines come from enemies.json; all start a phase with 2 actions; attacks end turn', () => {
-    const lines: Record<string, [number, number, number, number]> = { thug: [4, 4, 7, 55], gunman: [5, 6, 6, 60], heavy: [9, 8, 5, 55], fixer: [5, 7, 6, 60], bagman: [8, 9, 6, 60] }
+    const lines: Record<string, [number, number, number, number]> = { thug: [4, 4, 7, 55], gunman: [5, 6, 6, 60], heavy: [9, 8, 5, 55], fixer: [5, 7, 6, 60], bagman: [8, 9, 4, 60] }
     for (const [type, [hp, res, mob, aim]] of Object.entries(lines)) {
       const s = build(ARENA, { enemies: [{ type, x: 8, y: 3 }], tuning: LIT })
       expect(U(s, 'e1')).toMatchObject({ maxHp: hp, maxResolve: res, mobility: mob, aim })
