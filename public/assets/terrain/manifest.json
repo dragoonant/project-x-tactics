@@ -105,7 +105,9 @@
           0.95,
           1.0
         ]
-      ]
+      ],
+      "sat": 0.5,
+      "mul": 0.55
     },
     "street-lamp": {
       "file": "props/street-lamp.glb",

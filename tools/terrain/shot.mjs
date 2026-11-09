@@ -41,19 +41,17 @@ if (stats) {
     const gl = window.__pxGl
     if (!gl) return null
     const t0 = performance.now()
-    let frames = 0
+    let frames = 0, calls = 0, tris = 0
     const cvs = document.querySelector('canvas')
-    gl.info.autoReset = false
-    gl.info.reset()
-    // force frames: nudge the camera so the demand loop renders
+    gl.info.autoReset = true // renderer.info then holds the last frame only; sample it after each forced frame
     for (let i = 0; i < 30; i++) {
       window.__px.camera()
       window.__pxWake()
-      await new Promise((r) => requestAnimationFrame(() => r(0)))
-      frames++
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(0))))
+      if (gl.info.render.calls > 0) { calls += gl.info.render.calls; tris += gl.info.render.triangles; frames++ }
     }
-    const ms = (performance.now() - t0) / frames
-    return { calls: Math.round(gl.info.render.calls / Math.max(1, gl.info.render.frame)), triangles: Math.round(gl.info.render.triangles / Math.max(1, gl.info.render.frame)), frames: gl.info.render.frame, geometries: gl.info.memory.geometries, textures: gl.info.memory.textures, msPerFrame: +ms.toFixed(2), canvas: cvs ? `${cvs.width}x${cvs.height}` : null }
+    const ms = (performance.now() - t0) / 30
+    return { calls: Math.round(calls / Math.max(1, frames)), triangles: Math.round(tris / Math.max(1, frames)), frames, geometries: gl.info.memory.geometries, textures: gl.info.memory.textures, msPerFrame: +ms.toFixed(2), canvas: cvs ? `${cvs.width}x${cvs.height}` : null }
   })
   fs.writeFileSync(stats, JSON.stringify(r, null, 2))
   console.log('stats', JSON.stringify(r))
