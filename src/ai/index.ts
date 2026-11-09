@@ -1,7 +1,7 @@
 // Seam (frozen 2026-11-08): the client, the sim and the bench import the syndicate's decision policy from here.
 // M3 replaces the body of `syndicatePolicy` with the utility AI; the signature and contract do not change.
 import type { Action, State } from '../engine'
-import { randomAction } from '../engine'
+import { decideSyndicate } from './syndicate'
 
 /**
  * A decision policy for one side.
@@ -11,5 +11,5 @@ import { randomAction } from '../engine'
  */
 export type Policy = (s: State) => Action
 
-/** Placeholder until M3: the seeded random policy (ENM-6). */
-export const syndicatePolicy: Policy = (s) => randomAction(s, 0, undefined, 0.08)
+/** The syndicate's utility AI (M3). See `syndicate.ts`; `decideSyndicate(s).why` explains the choice for the log. */
+export const syndicatePolicy: Policy = (s) => decideSyndicate(s).action
