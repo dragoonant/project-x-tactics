@@ -14,3 +14,4 @@ tokens.txt*
 art/raw/
 art/concepts/*/
 !art/concepts/arbiter/
+!art/concepts/arbiter-gemini/
