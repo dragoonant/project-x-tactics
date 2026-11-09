@@ -1,6 +1,9 @@
 // Bodycam "standby" screen: Continue (names the squad, round, phase, Alarm and when it was saved), New Operation with the squad
 // picker and a seed field, and the credit line.
+import { useState } from 'react'
 import { CLASSES, WEAPONS } from '../../data'
+import { campaignQuery } from '../../campaign'
+import { continueCampaign, discardCampaign, newCampaign } from '../campaign/controller'
 import { MAP_ID, continueGame, discardSave, startGame } from '../game/controller'
 import { useStore, set } from '../game/store'
 import { SettingsButton } from './Hud'
@@ -13,6 +16,45 @@ function when(ts: number): string {
   const mins = Math.max(0, Math.round((Date.now() - ts) / 60000))
   const ago = mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago` : mins < 1440 ? `${Math.round(mins / 60)} h ago` : `${Math.round(mins / 1440)} d ago`
   return `${d.toLocaleString()} (${ago})`
+}
+
+/** Campaign entry (spec 20; rule 22): Continue names the week, the Takeover, Funding and the roster; New asks before replacing. */
+function CampaignSection(): React.JSX.Element {
+  const cs = useStore((s) => s.campaignSave)
+  const confirm = useStore((s) => s.confirmNewCampaign)
+  const err = useStore((s) => s.cerror)
+  const seed = useStore((s) => s.picker.seed)
+  const models = useStore((s) => s.models)
+  const [discardAsk, setDiscardAsk] = useState(false)
+  const start = (): void => {
+    if (cs.kind === 'ok' && !confirm) { set({ confirmNewCampaign: true }); return }
+    newCampaign(seed)
+  }
+  const s = cs.kind === 'ok' ? cs.state : null
+  const t = s ? campaignQuery.takeover(s) : null
+  return (
+    <div className="sect" data-testid="campaign-sect">
+      <h3>CAMPAIGN / THE CITY</h3>
+      {s && t && (
+        <div className="meta" data-testid="campaign-continue-card">
+          Week <b>{s.week}</b>{s.phase === 'deployed' ? ' (squad deployed)' : ''}, Takeover <b>{t.value} / {t.max}</b>{t.countdown !== null ? `, countdown ${t.countdown} wk` : ''}<br />
+          Funding <b>{s.funding}</b>, Intel <b>{s.intel}</b>, roster <b>{s.roster.filter((x) => x.status !== 'dead').length}</b>, seed {s.setup.seed}<br />
+          Saved {when(cs.kind === 'ok' ? cs.savedAt : 0)}
+        </div>
+      )}
+      {cs.kind === 'bad' && <div className="err" data-testid="campaign-bad-save">The saved campaign cannot be opened: {cs.reason}.</div>}
+      <div className="btnrow">
+        {s && <button className="primary" onClick={() => continueCampaign()} disabled={!models.ready} data-testid="continue-campaign">CONTINUE CAMPAIGN</button>}
+        <button className={s ? '' : 'primary'} onClick={start} disabled={!models.ready} data-testid="new-campaign">{confirm ? 'CONFIRM: REPLACE THE SAVED CAMPAIGN' : 'NEW CAMPAIGN'}</button>
+        {confirm && <button onClick={() => set({ confirmNewCampaign: false })}>CANCEL</button>}
+        {cs.kind !== 'none' && !discardAsk && <button className="danger" onClick={() => setDiscardAsk(true)} data-testid="discard-campaign">DISCARD</button>}
+        {discardAsk && <button className="danger" onClick={() => { discardCampaign(); setDiscardAsk(false) }} data-testid="confirm-discard-campaign">CONFIRM DISCARD</button>}
+      </div>
+      {confirm && <div className="warn">A new campaign overwrites the saved one.</div>}
+      {discardAsk && <div className="warn">Discarding deletes the saved campaign for good.</div>}
+      {err && <div className="err">{err}</div>}
+    </div>
+  )
 }
 
 export function StartScreen(): React.JSX.Element {
@@ -55,8 +97,10 @@ export function StartScreen(): React.JSX.Element {
           </div>
         )}
 
+        <CampaignSection />
+
         <div className="sect">
-          <h3>NEW OPERATION / SQUAD OF FOUR</h3>
+          <h3>SINGLE OPERATION / SQUAD OF FOUR</h3>
           <div className="slots">
             {picker.squad.map((c, i) => {
               const d = CLASSES[c]

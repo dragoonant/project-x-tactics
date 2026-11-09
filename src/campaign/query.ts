@@ -7,8 +7,8 @@ import { defaultSquad } from './legal'
 import { variantFor, type VariantNote } from './bridge'
 import { ctn, living, nextRankXp } from './util'
 
-export interface TakeoverInfo { value: number; max: number; pct: number; full: boolean; countdown: number | null; countdownMax: number; nextAdvanceIn: number; scheduled: number; everyWeeks: number }
-export interface FundingInfo { funding: number; nextIncome: number; weeksToIncome: number; base: number; perOrder: number; shares: { district: string; order: number; share: number }[] }
+export interface TakeoverInfo { value: number; max: number; pct: number; full: boolean; countdown: number | null; countdownMax: number; nextAdvanceIn: number; nextAdvanceWeek: number; scheduled: number; everyWeeks: number }
+export interface FundingInfo { funding: number; nextIncome: number; weeksToIncome: number; incomeWeek: number; base: number; perOrder: number; shares: { district: string; order: number; share: number }[] }
 export interface DistrictInfo { id: string; name: string; patron: string; order: number; max: number; fallen: boolean; modifier: { label: string; text: string }; incidents: string[] }
 export interface IncidentBrief { incident: Incident; title: string; districtName: string; notes: VariantNote[]; odds: AutoBreakdown; squad: string[] }
 export interface TrooperInfo { trooper: Trooper; className: string; nextXp: number | null; canPromote: boolean; promotionRank: number }
@@ -54,7 +54,7 @@ export const campaignQuery = {
     return {
       value: s.takeover, max, pct: Math.round((s.takeover / max) * 100), full: s.takeover >= max,
       countdown: s.countdown, countdownMax: ctn(s, 'takeover.countdown'),
-      nextAdvanceIn: rem === 0 ? 0 : every - rem, scheduled: ctn(s, 'takeover.scheduled'), everyWeeks: every,
+      nextAdvanceIn: rem === 0 ? 0 : every - rem, nextAdvanceWeek: s.week + (rem === 0 ? 0 : every - rem), scheduled: ctn(s, 'takeover.scheduled'), everyWeeks: every,
     }
   },
 
@@ -62,7 +62,7 @@ export const campaignQuery = {
     const per = ctn(s, 'funding.periodWeeks')
     const rem = s.week % per
     const shares = s.districts.map((d) => ({ district: d.id, order: d.fallen ? 0 : d.order, share: d.fallen ? 0 : d.order * ctn(s, 'funding.perOrder') }))
-    return { funding: s.funding, nextIncome: ctn(s, 'funding.base') + shares.reduce((a, x) => a + x.share, 0), weeksToIncome: rem === 0 ? 0 : per - rem, base: ctn(s, 'funding.base'), perOrder: ctn(s, 'funding.perOrder'), shares }
+    return { funding: s.funding, nextIncome: ctn(s, 'funding.base') + shares.reduce((a, x) => a + x.share, 0), weeksToIncome: rem === 0 ? 0 : per - rem, incomeWeek: s.week + (rem === 0 ? 0 : per - rem), base: ctn(s, 'funding.base'), perOrder: ctn(s, 'funding.perOrder'), shares }
   },
 
   districts(s: CampaignState): DistrictInfo[] {

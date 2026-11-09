@@ -4,9 +4,10 @@ import { createGame, randomAction, step, summarize, view } from '../../engine'
 import type { Action, GameEvent, Pt, Setup, State } from '../../engine'
 import { syndicatePolicy } from '../../ai'
 import { audio } from './audio'
+import { setCallSignNames } from './names'
 import { describeEvent } from './describe'
 import { present } from './director'
-import { clearSave, loadSettings, readSave, storeSettings, writeSave, type Settings } from './persist'
+import { SAVE_KEY, clearSave, loadSettings, readSave, storeSettings, writeSave, type Settings } from './persist'
 import { clearPresentation } from './presentation'
 import { get, set, useStore, type TickerLine } from './store'
 import { fireNow, abilityEntries, legalFor, resolveTap, type AbilityEntry } from './tap'
@@ -44,23 +45,39 @@ export function discardSave(): void { clearSave(); set({ save: { kind: 'none' },
 function pushLines(lines: TickerLine[]): TickerLine[] { return [...get().ticker, ...lines].slice(-300) }
 function line(text: string, tone: TickerLine['tone'] = 'info', round = get().state?.round ?? 1): TickerLine { return { id: lineId++, round, text, tone } }
 
-function enter(state: State, resumed: boolean): void {
+function enter(state: State, resumed: boolean, mode: 'single' | 'campaign'): void {
   gen++
   clearPresentation()
   const firstActor = state.units.find((u) => u.side === 'squad' && u.status === 'active') ?? state.units.find((u) => u.side === 'squad')
   set({
     screen: 'play', state, fog: view(state, 'squad'), selected: firstActor?.id ?? null, armed: null, hover: null, busy: false, hint: null,
-    ticker: [line(resumed ? 'Feed restored from the last save' : 'Feed live. Operation NIGHT MARKET begins', 'phase', state.round)],
-    saveError: null, panel: 'none', confirmNew: false, phaseTick: 0,
+    ticker: [line(resumed ? 'Feed restored from the last save' : `Feed live. Operation NIGHT MARKET${state.raid ? ' (raid)' : ''} begins`, 'phase', state.round)],
+    saveError: null, panel: 'none', confirmNew: false, phaseTick: 0, mode,
   })
   audio.syncMusic(state)
 }
 
-export function startGame(setup: Setup): void {
+/** Campaign seam: the campaign controller registers what happens when a campaign mission ends (spec 20 OPS-5/6). */
+export const campaignHooks = { missionEnd: null as null | ((s: State) => void) }
+/** Tactical saves of campaign missions live under their own key, so the single-operation Continue never offers them. */
+export const CAMPAIGN_MISSION_KEY = 'px-campaign-mission'
+const saveKey = (): string => (get().mode === 'campaign' ? CAMPAIGN_MISSION_KEY : SAVE_KEY)
+
+export function startGame(setup: Setup, mode: 'single' | 'campaign' = 'single'): void {
   let s: State
   try { s = createGame(setup) } catch (e) { set({ hint: `Could not start: ${(e as Error).message}` }); return }
-  enter(s, false)
+  if (mode === 'single') setCallSignNames(null)
+  enter(s, false, mode)
   persist(s)
+}
+
+/** Reopen a campaign mission from its own save slot (rule 22); false when there is none to reopen. */
+export function continueCampaignMission(match: (s: State) => boolean): boolean {
+  const r = readSave(CAMPAIGN_MISSION_KEY)
+  if (r.kind !== 'ok' || !match(r.state)) return false
+  enter(r.state, true, 'campaign')
+  if (r.state.phase === 'syndicate') void runSyndicate(gen)
+  return true
 }
 
 export function replaySameSeed(): void {
@@ -72,21 +89,27 @@ export function continueGame(): void {
   const r = readSave()
   set({ save: r })
   if (r.kind !== 'ok') return
-  enter(r.state, true)
+  enter(r.state, true, 'single')
   if (r.state.phase === 'syndicate') void runSyndicate(gen)
 }
 
-export function toStart(): void {
+/** Stops whatever runs on the board (presentation, syndicate loop) without changing the screen. */
+export function leaveBoard(): void {
   gen++
   clearPresentation()
   audio.stopMusic()
-  set({ screen: 'start', busy: false, armed: null, hover: null, panel: 'none', save: readSave(), confirmNew: false })
+  set({ busy: false, armed: null, hover: null, panel: 'none' })
+}
+
+export function toStart(): void {
+  leaveBoard()
+  set({ screen: 'start', mode: 'single', save: readSave(), confirmNew: false })
 }
 
 // ------------------------------------------------------------------------------------------------ persistence
 function persist(s: State): void {
-  if (s.outcome) { clearSave(); return }
-  const r = writeSave(s)
+  if (s.outcome) { clearSave(saveKey()); return }
+  const r = writeSave(s, saveKey())
   set({ saveError: r.ok ? null : r.reason })
 }
 
@@ -164,11 +187,14 @@ export async function endTurn(): Promise<void> {
 
 async function finishGame(): Promise<void> {
   const g = gen
-  clearSave()
+  clearSave(saveKey())
+  // A campaign mission reports to the campaign at once, so a reload on the end screen cannot replay it (rule 22).
+  const st = get().state
+  if (get().mode === 'campaign' && st && campaignHooks.missionEnd) campaignHooks.missionEnd(st)
   const instant = get().settings.speed === 'instant'
   if (!instant) await new Promise((r) => setTimeout(r, 1400))
   if (g !== gen) return
-  set({ screen: 'end', busy: false, endShownAt: Date.now(), save: { kind: 'none' } })
+  set({ screen: 'end', busy: false, endShownAt: Date.now(), ...(get().mode === 'single' ? { save: { kind: 'none' as const } } : {}) })
 }
 
 // ------------------------------------------------------------------------------------------------ taps and selection

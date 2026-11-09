@@ -11,8 +11,8 @@ export default defineConfig(({ command }) => ({
   define: {
     __PX_MANIFESTS__: JSON.stringify(
       command === 'build'
-        ? { models: existsSync('public/assets/models/manifest.json'), audio: existsSync('public/assets/audio/manifest.json') }
-        : { models: true, audio: true },
+        ? { models: existsSync('public/assets/models/manifest.json'), audio: existsSync('public/assets/audio/manifest.json'), strategy: existsSync('public/assets/strategy/manifest.json') }
+        : { models: true, audio: true, strategy: true },
     ),
   },
   build: {

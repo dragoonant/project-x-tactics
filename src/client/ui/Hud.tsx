@@ -8,6 +8,7 @@ import { cancelArm, chooseAbility, endTurn, entriesFor, selectUnit, updateSettin
 import { ABILITY_TEXT, callSign } from '../game/names'
 import { useStore } from '../game/store'
 import { passiveList, type AbilityEntry } from '../game/tap'
+import { withdraw } from '../campaign/controller'
 
 export function statusChips(u: Unit): { text: string; kind: '' | 'bad' | 'good' }[] {
   const c: { text: string; kind: '' | 'bad' | 'good' }[] = []
@@ -70,6 +71,22 @@ function AlarmPanel({ state }: { state: State }): React.JSX.Element {
       <div className="lab"><span>ALARM</span><span><b>{state.alarm}</b> / {max}</span></div>
       <div className="meter">{Array.from({ length: max }, (_, i) => <i key={i} className={`${i < state.alarm ? 'on' : ''}${i < state.alarm && i + 1 >= ticks[1]! ? ' hot' : ''}`} />)}</div>
       <div className="ticks">{ticks.map((t) => <span key={t} style={{ left: `${((t - 0.5) / max) * 100}%` }}><em>{t}</em></span>)}</div>
+    </div>
+  )
+}
+
+/** Objective line: the raid's cache state (VAR-2..4) or the bust target; campaign missions can be withdrawn from here. */
+function Objective({ state }: { state: State }): React.JSX.Element {
+  const campaign = useStore((s) => s.mode === 'campaign')
+  const [ask, setAsk] = useState(false)
+  const r = state.raid
+  const text = r ? (r.seized ? 'Cache seized: extract or clear the market' : r.burned ? 'Cache burned: extract or clear the market' : `Seize the evidence cache before Alarm ${state.tuning.raid.burnAlarm}`) : 'Cuff the Bagman, then extract or clear the market'
+  return (
+    <div className="objective panel pa" data-testid="objective">
+      <span className={r?.burned ? 'bad' : r?.seized ? 'good' : ''}>{r ? 'RAID' : 'BUST'}: {text}</span>
+      {campaign && !state.outcome && (ask
+        ? <span className="wd"><button className="danger" onClick={() => { setAsk(false); withdraw() }} data-testid="confirm-withdraw">WITHDRAW: COUNTS AS LOST</button><button onClick={() => setAsk(false)}>STAY</button></span>
+        : <button className="wd" onClick={() => setAsk(true)} data-testid="withdraw">WITHDRAW</button>)}
     </div>
   )
 }
@@ -262,6 +279,7 @@ export function Hud(): React.JSX.Element | null {
       <TopLeft state={state} />
       <div className="topright">
         <AlarmPanel state={state} />
+        <Objective state={state} />
         {(phoneLog || wide) && <Ticker />}
         {hoverU && <UnitCard state={state} unit={hoverU} />}
         {canTarget && hoverU && hoverU.side === 'syndicate' && selU && <TargetPanel state={state} sel={selU} enemy={hoverU} />}

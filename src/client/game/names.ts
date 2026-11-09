@@ -3,9 +3,15 @@ import type { Unit } from '../../engine'
 
 export const CALL_SIGNS = ['ALPHA', 'BRAVO', 'CHARLIE', 'DELTA', 'ECHO', 'FOXTROT']
 
+/** Campaign missions show the roster's names instead of the call-sign list (index i is unit s{i+1}); null restores call-signs. */
+let rosterNames: string[] | null = null
+export function setCallSignNames(names: string[] | null): void { rosterNames = names ? names.map((n) => n.toUpperCase()) : null }
+
 export function callSign(u: Pick<Unit, 'id' | 'side'>): string {
   if (u.side !== 'squad') return u.id.toUpperCase()
   const n = Number(u.id.slice(1))
+  const named = rosterNames && Number.isFinite(n) ? rosterNames[n - 1] : undefined
+  if (named) return named
   return CALL_SIGNS[(Number.isFinite(n) ? n - 1 : 0) % CALL_SIGNS.length] ?? 'UNIT'
 }
 

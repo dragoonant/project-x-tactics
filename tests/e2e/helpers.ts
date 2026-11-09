@@ -23,6 +23,13 @@ export interface Px {
   start(squad: string[], seed: number): void
   randomStep(salt?: number, endChance?: number): Promise<boolean>
   autoplay(max?: number): Promise<{ screen: string; steps: number; round: number }>
+  campaign(): any
+  cincident(): string | null
+  cpanel(): string
+  mode(): string
+  newCampaign(seed: number): void
+  cstep(a: unknown): string | null
+  districtToScreen(i: number): { x: number; y: number } | null
 }
 declare global { interface Window { __px: Px } }
 

@@ -7,6 +7,10 @@ import { animStats, playedEver, playing } from './anim/cues'
 import { rigKinds } from './anim/assets'
 import { useStore } from './game/store'
 import { legalFor } from './game/tap'
+import type { CampaignAction } from '../campaign'
+import { cdispatch, newCampaign } from './campaign/controller'
+import { districtCenter } from './campaign/layout'
+import { cityApi } from './campaign/City'
 
 export function installHook(): void {
   const api = {
@@ -34,6 +38,15 @@ export function installHook(): void {
     tap: (x: number, y: number) => onTileTap({ x, y }, 'mouse'),
     setSpeed: (speed: 'normal' | 'fast' | 'instant') => updateSettings({ speed }),
     start: (squad: string[], seed: number) => startGame({ mapId: MAP_ID, squad, seed }),
+    /** Campaign (spec 20): the state, the city selection, and the screen-space point of a district plate's centre. */
+    campaign: () => useStore.getState().campaign,
+    cincident: () => useStore.getState().cincident,
+    cpanel: () => useStore.getState().cpanel,
+    mode: () => useStore.getState().mode,
+    newCampaign: (seed: number) => newCampaign(seed),
+    /** One campaign action through the controller (as the UI would); returns the refusal reason or null. */
+    cstep: (a: CampaignAction) => { const ok = cdispatch(a); return ok ? null : useStore.getState().cerror },
+    districtToScreen: (i: number) => { const c = districtCenter(i); return cityApi.project ? cityApi.project(c.x, 0, c.z) : null },
     /** One random squad action (or End Turn). */
     randomStep: async (salt = 0, endChance = 0.35) => {
       const s = useStore.getState().state
