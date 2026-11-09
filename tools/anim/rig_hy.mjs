@@ -20,11 +20,29 @@ const heights = { 'civilian-a': 1.7, 'civilian-b': 1.7, 'civilian-c': 1.7 };
 const py = path.join(process.env.USERPROFILE, 'Hunyuan3D-2.1/.venv/Scripts/python.exe');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// UniRig SKELETON stage only (never the skinning stage, never torch.load with weights_only=False). Caller holds the GPU lock.
+function unirig(kinds) {
+  const ur = path.join(process.env.USERPROFILE, 'UniRig'), upy = path.join(ur, '.venv/Scripts/python.exe');
+  const inD = path.join(ur, 'a1/in'), outD = path.join(ur, 'a1/out');
+  fs.rmSync(inD, { recursive: true, force: true }); fs.rmSync(outD, { recursive: true, force: true });
+  fs.mkdirSync(inD, { recursive: true }); fs.mkdirSync(outD, { recursive: true });
+  for (const k of kinds) fs.copyFileSync(path.join(out, `${k}.body.glb`), path.join(inD, `${k}.glb`));
+  const env = { ...process.env, PYTHONIOENCODING: 'utf-8' };
+  const a = spawnSync(upy, ['-m', 'src.data.extract', '--config=configs/data/quick_inference.yaml', '--require_suffix=glb', '--force_override=true', '--num_runs=1', '--id=0', '--time=a1', '--faces_target_count=50000', '--input_dir=a1/in', '--output_dir=tmp'], { cwd: ur, env, encoding: 'utf8' });
+  const b = spawnSync(upy, ['run.py', '--task=configs/task/quick_inference_skeleton_articulationxl_ar_256.yaml', '--seed=12345', '--input_dir=a1/in', '--output_dir=a1/out', '--npz_dir=tmp'], { cwd: ur, env, encoding: 'utf8' });
+  fs.writeFileSync(path.join(out, 'unirig.log'), `extract ${a.status}\n${(a.stdout || '').slice(-1500)}\n${(a.stderr || '').slice(-1500)}\nrun ${b.status}\n${(b.stdout || '').slice(-1500)}\n${(b.stderr || '').slice(-2500)}\n`);
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]);
+  const fbx = walk(outD).filter((f) => f.endsWith('.fbx'));
+  let n = 0;
+  for (const k of kinds) { const f = fbx.find((x) => x.includes(`${path.sep}${k}${path.sep}`) || path.basename(x).startsWith(k)); if (f) { fs.copyFileSync(f, path.join(out, `${k}.skel.fbx`)); n++; } }
+  return { status: b.status, stdout: `skeletons ${n}/${kinds.length}` };
+}
+
 for (const a of args) {
   if (a.startsWith('skel:')) {   // UniRig skeleton stage only, for bodies that already exist, under the lock
     const ks = a.slice(5).split(',');
     await withGpu('A1-unirig', async () => {
-      const u = spawnSync('powershell', ['-NoProfile', '-File', path.join(root, 'tools/anim/unirig_skel.ps1'), '-NoLock', ...ks], { encoding: 'utf8' });
+      const u = unirig(ks);
       console.log(ks.join(','), 'unirig', u.status, (u.stdout || '').trim().split('\n').slice(-2).join(' | '));
     });
     continue;
@@ -53,7 +71,7 @@ for (const a of args) {
     if (isBody) {   // finalise and predict the skeleton while this process still holds the GPU lock (UniRig skeleton stage only)
       const f = spawnSync(py, [path.join(root, 'tools/assets/finalize_model.py'), path.join(out, `${slug}.textured.glb`), path.join(out, `${slug}.body.glb`), '--height', String(heights[slug] || 1.8)], { encoding: 'utf8' });
       console.log(slug, 'finalize', f.status);
-      const u = spawnSync('powershell', ['-NoProfile', '-File', path.join(root, 'tools/anim/unirig_skel.ps1'), '-NoLock', slug], { encoding: 'utf8' });
+      const u = unirig([slug]);
       console.log(slug, 'unirig', u.status, (u.stdout || '').trim().split('\n').pop());
     }
   });
