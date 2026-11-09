@@ -37,8 +37,15 @@ bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 for o in list(bpy.context.scene.objects):
     if o != ob:
         bpy.data.objects.remove(o)
+tris0 = sum(len(p.vertices) - 2 for p in ob.data.polygons)
+if tris0 > 3000:   # item budget: at most 3k triangles
+    bpy.context.view_layer.objects.active = ob
+    md = ob.modifiers.new('dec', 'DECIMATE')
+    md.ratio = 2900.0 / tris0
+    md.use_collapse_triangulate = True
+    bpy.ops.object.modifier_apply(modifier='dec')
 me = ob.data
-P = [v.co.copy() for v in me.vertices]
+P =[v.co.copy() for v in me.vertices]
 n = len(P)
 mean = sum(P, Vector()) / n
 

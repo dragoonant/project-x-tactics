@@ -335,7 +335,10 @@ class Rig:
                 tgt = rt.Ht['foot_' + side] + Vector(lp.get('ank', (0, 0, 0)))
                 if lp.get('rel_pelvis'):
                     tgt = H['pelvis'] + Qp @ (rt.Ht['foot_' + side] - rt.Ht['pelvis'] + Vector(lp.get('ank', (0, 0, 0))))
-                R = ik_chain(rt, LEG_CHAIN[side], R, H, tgt, Vector(lp.get('pole', (0, -1, 0))))
+                pole = Vector(lp.get('pole', (0, -1, 0)))
+                if lp.get('rel_pelvis'):
+                    pole = Qp @ pole
+                R = ik_chain(rt, LEG_CHAIN[side], R, H, tgt, pole)
                 pit = euler_m(lp.get('pitch', 0.0), 0, 0)
                 for b in ('foot_' + side, 'ball_' + side):
                     R[b] = pit @ rt.Rt[b]

@@ -26,8 +26,8 @@ for (const a of args) {
   if (fs.existsSync(path.join(out, `${slug}.textured.glb`)) && !process.env.REDO) { console.log(slug, 'exists, skipped'); continue; }
   const image = fs.readFileSync(path.join(root, img)).toString('base64');
   const params = isBody
-    ? { seed, steps: 50, octree: 512, faceCount: 40000, texRes: tex, cutBase: true, removeBg: true }
-    : { seed, steps: 50, octree: 384, faceCount: 20000, texRes: 1024, cutBase: false, removeBg: true };
+    ? { seed, steps: 50, octree: 512, faceCount: 19000, texRes: tex, cutBase: true, removeBg: true }   // coordinator budget: <= 20k triangles per body
+    : { seed, steps: 50, octree: 384, faceCount: 2900, texRes: 1024, cutBase: false, removeBg: true };  // items <= 3k
   await withGpu('A1-hunyuan', async () => {
     const r = await (await fetch(API + '/api/jobs', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode: 'image', name: 'a1-' + slug, image, params }) })).json();
     if (!r.id) { console.log(slug, 'submit failed', JSON.stringify(r)); return; }
