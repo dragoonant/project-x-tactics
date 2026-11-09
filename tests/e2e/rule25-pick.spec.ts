@@ -14,6 +14,8 @@ test('rule 25: tapping the tile behind a standing figure moves to that tile', as
   // the figure (about one tile tall) covers the tile behind it on screen: that tile's centre is just above the figure's feet
   expect(far!.y).toBeLessThan(near!.y)
   expect(near!.y - far!.y).toBeLessThan(60)
+  // the figure in front is the rigged Enforcer, animating (idle breathing): its meshes must not catch the tap
+  expect(await page.evaluate(() => window.__px.anim('s2'))).not.toBeNull()
   expect(await page.evaluate(() => window.__px.selected())).toBe('s1')
   await page.mouse.move(far!.x, far!.y)
   await page.mouse.click(far!.x, far!.y)

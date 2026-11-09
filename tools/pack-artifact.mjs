@@ -74,3 +74,24 @@ if (existsSync(join(tdir, 'manifest.json'))) {
   writeFileSync(tpath, JSON.stringify(tm))
   console.log(`pack-artifact: terrain ${Object.keys(pmap).length} prop GLB -> .gltf.json, ${inlined} textures inlined`)
 }
+
+// Rigged figures (A3, spec 30): figure GLBs (dist/assets/anim/*.glb) and item GLBs (dist/assets/anim/items/*.glb) become .gltf.json the same
+// way, and dist/assets/anim/manifest.json is repointed (figures[].file, items[].file). The figure lab page in dist keeps working only in
+// the repo build: its GLBs are packed away here, like the static models.
+const adir = join(process.cwd(), 'dist', 'assets', 'anim')
+if (existsSync(join(adir, 'manifest.json'))) {
+  const maps = { '': packDir(adir), items: existsSync(join(adir, 'items')) ? packDir(join(adir, 'items')) : {} }
+  const repoint = (f) => {
+    const i = String(f).lastIndexOf('/')
+    const d = i < 0 ? '' : String(f).slice(0, i)
+    const base = i < 0 ? String(f) : String(f).slice(i + 1)
+    const m = maps[d]
+    return m && m[base] ? (d ? d + '/' : '') + m[base] : f
+  }
+  const apath = join(adir, 'manifest.json')
+  const am = JSON.parse(readFileSync(apath, 'utf8'))
+  for (const f of Object.values(am.figures ?? {})) if (f && typeof f.file === 'string') f.file = repoint(f.file)
+  for (const it of Object.values(am.items ?? {})) if (it && typeof it.file === 'string') it.file = repoint(it.file)
+  writeFileSync(apath, JSON.stringify(am, null, 2))
+  console.log(`pack-artifact: anim ${Object.keys(maps['']).length + Object.keys(maps.items).length} GLB -> .gltf.json`)
+}

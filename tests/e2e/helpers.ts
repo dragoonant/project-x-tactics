@@ -10,6 +10,10 @@ export interface Px {
   selected(): string | null
   ticker(): string[]
   models(): { done: number; total: number; ready: boolean }
+  anim(unitId: string): string | null
+  animSeen(unitId: string): string[]
+  rigKinds(): string[]
+  animStats(): { ms: number; frames: number; rigs: number; visible: number; updated: number; skippedOffscreen: number; skippedFrozen: number }
   legal(): any[]
   dispatch(a: unknown): Promise<boolean>
   endTurn(): Promise<void>

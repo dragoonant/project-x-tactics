@@ -2,8 +2,7 @@
 // with the meshopt decoder configured on the loader, and exposes a ready-to-clone scene per unit kind. Units without a model use
 // the procedural stand-in. The manifest may be missing or grow later: nothing here fails when it is absent.
 import { Box3, Group, Object3D, Vector3 } from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+import { animFileCount, fetchAnimManifest, loadAnim, sharedLoader } from '../anim/assets'
 
 export const FIGURE_HEIGHT = 1.0
 
@@ -86,33 +85,40 @@ function normalizeScene(root: Object3D, height: number): Object3D {
 export interface Progress { done: number; total: number }
 
 let started: Promise<Progress> | null = null
-/** Start once; `onProgress` fires after every model. Resolves when every listed model has loaded or failed. */
+/**
+ * Start once; `onProgress` fires after every file. Loads the static figures (public/assets/models) and the rigged figures and items
+ * (public/assets/anim, spec 30) through one loader; the count covers both. Resolves when every listed file has loaded or failed.
+ */
 export function preloadModels(onProgress: (p: Progress) => void): Promise<Progress> {
   if (started) return started
   started = (async () => {
-    let manifest: Map<string, ModelEntry>
-    try {
-      if (typeof __PX_MANIFESTS__ !== 'undefined' && !__PX_MANIFESTS__.models) throw new Error('this build ships no model manifest')
-      const r = await fetch(new URL('assets/models/manifest.json', document.baseURI).toString(), { cache: 'no-cache' })
-      const ct = r.headers.get('content-type') ?? ''
-      if (!r.ok || /text\/html/.test(ct)) manifest = new Map()
-      else manifest = parseManifest(await r.json())
-    } catch { manifest = new Map() }
-    const total = manifest.size
+    const readStatic = async (): Promise<Map<string, ModelEntry>> => {
+      try {
+        if (typeof __PX_MANIFESTS__ !== 'undefined' && !__PX_MANIFESTS__.models) throw new Error('this build ships no model manifest')
+        const r = await fetch(new URL('assets/models/manifest.json', document.baseURI).toString(), { cache: 'no-cache' })
+        const ct = r.headers.get('content-type') ?? ''
+        if (!r.ok || /text\/html/.test(ct)) return new Map()
+        return parseManifest(await r.json())
+      } catch { return new Map() }
+    }
+    const [manifest, anim] = await Promise.all([readStatic(), fetchAnimManifest()])
+    const total = manifest.size + animFileCount(anim)
     let done = 0
     onProgress({ done, total })
-    const loader = new GLTFLoader()
-    loader.setMeshoptDecoder(MeshoptDecoder)
-    await Promise.all([...manifest.entries()].map(async ([kind, e]) => {
-      try {
-        const g = await loader.loadAsync(e.url)
-        loaded.set(kind, { scene: normalizeScene(g.scene, e.height), yaw: e.yaw })
-      } catch (err) {
-        console.warn(`model ${kind}: could not load (${(err as Error).message}); using the stand-in`)
-      }
-      done++
-      onProgress({ done, total })
-    }))
+    const tick = (): void => { done++; onProgress({ done, total }) }
+    const loader = sharedLoader()
+    await Promise.all([
+      loadAnim(anim, tick),
+      ...[...manifest.entries()].map(async ([kind, e]) => {
+        try {
+          const g = await loader.loadAsync(e.url)
+          loaded.set(kind, { scene: normalizeScene(g.scene, e.height), yaw: e.yaw })
+        } catch (err) {
+          console.warn(`model ${kind}: could not load (${(err as Error).message}); using the stand-in`)
+        }
+        tick()
+      }),
+    ])
     return { done, total }
   })()
   return started
