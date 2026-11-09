@@ -3,6 +3,8 @@ import { randomAction } from '../engine'
 import type { Action } from '../engine'
 import { boardApi } from './board/CameraRig'
 import { autoplayStep, dispatch, endTurn, onTileTap, selectUnit, updateSettings, startGame, MAP_ID } from './game/controller'
+import { animStats, playedEver, playing } from './anim/cues'
+import { rigKinds } from './anim/assets'
 import { useStore } from './game/store'
 import { legalFor } from './game/tap'
 
@@ -20,6 +22,11 @@ export function installHook(): void {
     selected: () => useStore.getState().selected,
     ticker: () => useStore.getState().ticker.map((l) => l.text),
     models: () => useStore.getState().models,
+    /** The clip a rigged figure plays now (null: the unit has no rig), every clip it has played, the rigged kinds, and mixer counters. */
+    anim: (unitId: string) => playing.get(unitId) ?? null,
+    animSeen: (unitId: string) => [...(playedEver.get(unitId) ?? [])],
+    rigKinds: () => rigKinds(),
+    animStats: () => ({ ...animStats }),
     legal: () => { const s = useStore.getState().state; return s ? legalFor(s) : [] },
     dispatch: (a: Action) => dispatch(a),
     endTurn: () => endTurn(),

@@ -8,6 +8,10 @@ import type { State, Unit } from '../../engine'
 import { callSign } from '../game/names'
 import { modelFor } from '../game/models'
 import { along, motion, wake } from '../game/presentation'
+import { useStore } from '../game/store'
+import { rigFor } from '../anim/assets'
+import { cueActive } from '../anim/cues'
+import { AnimFrame, RigModel } from '../anim/Rig'
 import { tx, tz } from './layout'
 
 const noRay = (): null => null
@@ -105,20 +109,23 @@ function Marker({ color, y = 1.55, shape = 'diamond' }: { color: string; y?: num
   )
 }
 
-function FigureImpl({ unit, w, h, selected, hovered }: { unit: Unit; w: number; h: number; selected: boolean; hovered: boolean }): React.JSX.Element {
+function FigureImpl({ unit, w, h, selected, hovered, lite }: { unit: Unit; w: number; h: number; selected: boolean; hovered: boolean; lite: boolean }): React.JSX.Element {
   const ref = useRef<Group>(null)
   const inner = useRef<Group>(null)
   const yaw = useRef(Math.atan2(unit.facing.x, unit.facing.y))
   const m = modelFor(unit.kind, unit.weapon)
-  const lying = unit.status === 'downed' || unit.status === 'dead' || unit.status === 'stabilized'
-  const kneel = unit.status === 'surrendered' || unit.status === 'cuffed'
+  const rig = rigFor(unit.kind, unit.weapon) // a rigged figure (spec 30) wins over the static one; neither: the stand-in
+  const lying = !rig && (unit.status === 'downed' || unit.status === 'dead' || unit.status === 'stabilized')
+  const kneel = !rig && (unit.status === 'surrendered' || unit.status === 'cuffed')
 
-  useFrame(() => {
+  useFrame((_, dt) => {
     const g = ref.current
     if (!g) return
     let px = unit.x, py = unit.y
     let want = Math.atan2(unit.facing.x, unit.facing.y)
     let hop = 0
+    const cue = cueActive(unit.id)
+    if (cue?.face) want = Math.atan2(cue.face.x - unit.x, cue.face.y - unit.y)
     const mo = motion.get(unit.id)
     if (mo) {
       const t = (performance.now() - mo.t0) / Math.max(1, mo.dur)
@@ -127,7 +134,7 @@ function FigureImpl({ unit, w, h, selected, hovered }: { unit: Unit; w: number; 
         const a = along(mo.path, t)
         px = a.x; py = a.y
         if (a.dx !== 0 || a.dy !== 0) want = Math.atan2(a.dx, a.dy)
-        hop = Math.abs(Math.sin(t * (mo.path.length - 1) * Math.PI)) * 0.09
+        if (!rig) hop = Math.abs(Math.sin(t * (mo.path.length - 1) * Math.PI)) * 0.09 // static figures hop; a rig walks
         wake(40)
       }
     }
@@ -135,7 +142,8 @@ function FigureImpl({ unit, w, h, selected, hovered }: { unit: Unit; w: number; 
     let d = want - yaw.current
     while (d > Math.PI) d -= Math.PI * 2
     while (d < -Math.PI) d += Math.PI * 2
-    yaw.current += d * (mo ? 0.35 : 0.5)
+    // time-based turn: about 0.1 s to close most of a half turn while moving, 0.06 s standing (frame-rate independent)
+    yaw.current += d * (1 - Math.exp(-Math.min(dt, 0.1) * (mo ? 14 : 20)))
     if (Math.abs(d) > 0.01) wake(40)
     if (inner.current) inner.current.rotation.y = yaw.current
   })
@@ -144,7 +152,7 @@ function FigureImpl({ unit, w, h, selected, hovered }: { unit: Unit; w: number; 
     <group ref={ref} position={[tx(unit.x, w), 0, tz(unit.y, h)]}>
       <group ref={inner} rotation={[0, yaw.current, 0]}>
         <group rotation={lying ? [-Math.PI / 2 + 0.1, 0, 0] : [0, 0, 0]} position={lying ? [0, 0.16, 0.18] : [0, 0, 0]} scale={kneel ? [1, 0.74, 1] : [1, 1, 1]}>
-          {m ? <Model kind={unit.kind} variant={unit.weapon} /> : <StandIn u={unit} />}
+          {rig ? <RigModel unit={unit} rig={rig} lite={lite} /> : m ? <Model kind={unit.kind} variant={unit.weapon} /> : <StandIn u={unit} />}
         </group>
       </group>
       {selected && (
@@ -166,13 +174,15 @@ function FigureImpl({ unit, w, h, selected, hovered }: { unit: Unit; w: number; 
     </group>
   )
 }
-export const Figure = memo(FigureImpl, (a, b) => a.unit === b.unit && a.selected === b.selected && a.hovered === b.hovered && a.w === b.w && a.h === b.h)
+export const Figure = memo(FigureImpl, (a, b) => a.unit === b.unit && a.selected === b.selected && a.hovered === b.hovered && a.w === b.w && a.h === b.h && a.lite === b.lite)
 
 export function Figures({ units, w, h, selected, hovered }: { units: Unit[]; w: number; h: number; selected: string | null; hovered: string | null }): React.JSX.Element {
+  const lite = useStore((s) => s.settings.lite) // Low quality tier: far and off-screen figures stop animating
   return (
     <group>
+      <AnimFrame />
       {units.filter((u) => u.status !== 'escaped' && u.status !== 'safe').map((u) => (
-        <Figure key={u.id} unit={u} w={w} h={h} selected={u.id === selected} hovered={u.id === hovered} />
+        <Figure key={u.id} unit={u} w={w} h={h} selected={u.id === selected} hovered={u.id === hovered} lite={lite} />
       ))}
     </group>
   )

@@ -2,7 +2,10 @@
 // Mutable module state on purpose: it is read every frame and must not trigger React renders.
 import type { Pt } from '../../engine'
 
-export interface Motion { path: Pt[]; t0: number; dur: number }
+import { clearCues } from '../anim/cues'
+
+/** `mode` picks the travel clip of a rigged figure (walk by default; run for a dash or flight, panic for a fleeing civilian). */
+export interface Motion { path: Pt[]; t0: number; dur: number; mode?: 'walk' | 'run' | 'panic' }
 export const motion = new Map<string, Motion>()
 
 export type FxKind = 'tracer' | 'ring' | 'text' | 'flash' | 'burst'
@@ -33,7 +36,7 @@ export function pruneFx(now: number): boolean {
   for (let i = fxList.length - 1; i >= 0; i--) if (now - fxList[i]!.t0 > fxList[i]!.dur) fxList.splice(i, 1)
   return fxList.length !== n
 }
-export function clearPresentation(): void { motion.clear(); fxList.length = 0; subs.forEach((fn) => fn()) }
+export function clearPresentation(): void { motion.clear(); clearCues(); fxList.length = 0; subs.forEach((fn) => fn()) }
 
 // ---- render-loop wake-up (the canvas runs in demand mode)
 export const loop = { until: 0, invalidate: null as null | (() => void) }
