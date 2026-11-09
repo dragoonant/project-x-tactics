@@ -11,6 +11,7 @@ import { clearPresentation } from './presentation'
 import { get, set, useStore, type TickerLine } from './store'
 import { fireNow, abilityEntries, legalFor, resolveTap, type AbilityEntry } from './tap'
 import { preloadModels } from './models'
+import { TERRAIN_V2, preloadTerrain } from './terrainAssets'
 
 let gen = 0
 let lineId = 1
@@ -24,7 +25,9 @@ export function boot(): void {
   audio.setSettings(settings.mute, settings.volume)
   audio.onFound = (f) => set({ audioFound: f })
   void audio.init()
-  void preloadModels((p) => set({ models: { done: p.done, total: p.total, ready: p.done >= p.total } })).then((p) => set({ models: { done: p.done, total: p.total, ready: true } }))
+  // terrain v2 (?terrain=v2) preloads with the models: the start button waits for both (rule 26)
+  const terrain = preloadTerrain()
+  void preloadModels((p) => set({ models: { done: p.done, total: p.total, ready: p.done >= p.total && !TERRAIN_V2 } })).then(async (p) => { await terrain; set({ models: { done: p.done, total: p.total, ready: true } }) })
 }
 
 export function updateSettings(p: Partial<Settings>): void {

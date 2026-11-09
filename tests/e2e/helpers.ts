@@ -32,7 +32,8 @@ export function watchErrors(page: Page): string[] {
 }
 
 export async function openStart(page: Page): Promise<void> {
-  await page.goto('/')
+  // PX_TERRAIN=v2 runs any spec that opens through here with the terrain v2 flag on (T0 spike)
+  await page.goto(process.env.PX_TERRAIN === 'v2' ? '/?terrain=v2' : '/')
   await expect(page.getByTestId('start-screen')).toBeVisible()
   await expect(page.getByTestId('new-op')).toBeEnabled({ timeout: 60_000 })
 }

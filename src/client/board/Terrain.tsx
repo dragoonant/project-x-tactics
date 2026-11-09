@@ -2,7 +2,7 @@
 // pools, rubble, exit / extraction / escape markings. Instanced meshes, no shadows: a phone budget.
 import { useFrame, useThree } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { AdditiveBlending, BoxGeometry, Color, CylinderGeometry, InstancedMesh, MeshStandardMaterial, Object3D, SphereGeometry, type PointLight, type PerspectiveCamera } from 'three'
+import { AdditiveBlending, BoxGeometry, Color, CylinderGeometry, InstancedMesh, Matrix4, MeshStandardMaterial, Object3D, SphereGeometry, type PointLight, type PerspectiveCamera } from 'three'
 import { query } from '../../engine'
 import type { State, Tile } from '../../engine'
 import { visibleMask } from '../game/vision'
@@ -10,11 +10,14 @@ import { focus, wake } from '../game/presentation'
 import { boardApi } from './CameraRig'
 import { hash2, tx, tz } from './layout'
 import { glowTexture, groundTexture, wallTexture } from './textures'
+import type { TerrainAssets } from '../game/terrainAssets'
+import { PropField, V2C, indoorMask, makeV2Mats } from './terrainV2'
 
 const WALL_H = 1.5
 const LOW_H = 0.22
 const BOUNDARY_H = 0.5
 const dummy = new Object3D()
+const ZERO = new Matrix4().makeScale(0, 0, 0)
 const tmpColor = new Color()
 
 const C = {
@@ -44,7 +47,7 @@ export function useTileLight(state: State, fogOn: boolean): { lit: Uint8Array; s
   }, [state, fogOn])
 }
 
-export function Terrain({ state, fogOn, lamps, lights }: { state: State; fogOn: boolean; lamps: { x: number; y: number }[]; lights: React.MutableRefObject<(PointLight | null)[]> }): React.JSX.Element {
+export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state: State; fogOn: boolean; lamps: { x: number; y: number }[]; lights: React.MutableRefObject<(PointLight | null)[]>; assets?: TerrainAssets | null }): React.JSX.Element {
   const { w, h } = state.map
   const sig = useMemo(() => tileSig(state.map.tiles), [state.map.tiles])
   const { lit, seen } = useTileLight(state, fogOn)
@@ -67,7 +70,17 @@ export function Terrain({ state, fogOn, lamps, lights }: { state: State; fogOn: 
     red: new MeshStandardMaterial({ color: '#ff3b2f', emissive: '#ff2a1e', emissiveIntensity: 1.6 }),
   }), [])
 
+  // terrain v2 (?terrain=v2): PBR surfaces with world-space UVs, Hunyuan props for the kinds the manifest replaces
+  const v2 = useMemo(() => (assets ? makeV2Mats(assets) : null), [assets])
+  const indoor = useMemo(() => (assets ? indoorMask(state) : null),
+    // walls and doors never move; open / closed does not change which side of a wall a tile is on
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [assets, state.map.id])
+  const propKinds = assets?.propsByObject ?? {}
   const ground = useRef<InstancedMesh>(null)
+  const groundIn = useRef<InstancedMesh>(null)
+  const fence = useRef<InstancedMesh>(null)
+  const kerb = useRef<InstancedMesh>(null)
   const walls = useRef<InstancedMesh>(null)
   const stallBase = useRef<InstancedMesh>(null)
   const stallCrate = useRef<InstancedMesh>(null)
@@ -102,45 +115,67 @@ export function Terrain({ state, fogOn, lamps, lights }: { state: State; fogOn: 
       dummy.scale.set(1, hb, 1)
       dummy.rotation.set(0, 0, 0)
       dummy.updateMatrix()
-      m.setMatrixAt(i, dummy.matrix)
-      tmpColor.copy(wl.boundary ? C.boundary : C.wall)
+      const fe = fence.current
+      if (v2 && fe) {
+        // v2: the outer boundary is a corrugated-metal hoarding in its own mesh; the brick mesh hides that instance (and vice versa)
+        fe.setMatrixAt(i, wl.boundary ? dummy.matrix : ZERO)
+        m.setMatrixAt(i, wl.boundary ? ZERO : dummy.matrix)
+      } else m.setMatrixAt(i, dummy.matrix)
       const v = seen[wl.y * w + wl.x]
-      tmpColor.multiplyScalar((0.88 + hash2(wl.x, wl.y, 2) * 0.22) * (v ? 1 : 0.55))
+      const shade = (0.88 + hash2(wl.x, wl.y, 2) * 0.22) * (v ? 1 : 0.55)
+      tmpColor.copy(v2 ? (wl.boundary ? V2C.boundary : V2C.brick) : wl.boundary ? C.boundary : C.wall)
+      tmpColor.multiplyScalar(shade)
       m.setColorAt(i, tmpColor)
+      if (v2 && fe) fe.setColorAt(i, tmpColor)
+      const k = kerb.current
+      if (v2 && k) {
+        dummy.position.set(wl.wx, 0.07, wl.wz)
+        dummy.scale.set(1.06, 0.14, 1.06)
+        dummy.updateMatrix()
+        k.setMatrixAt(i, dummy.matrix)
+        k.setColorAt(i, tmpColor.copy(V2C.kerb).multiplyScalar(v ? 1 : 0.55))
+      }
     })
     m.count = wallList.length
     m.instanceMatrix.needsUpdate = true
     if (m.instanceColor) m.instanceColor.needsUpdate = true
+    for (const o of [fence.current, kerb.current]) if (v2 && o) { o.count = wallList.length; o.instanceMatrix.needsUpdate = true; if (o.instanceColor) o.instanceColor.needsUpdate = true }
     wake(200)
-  }, [wallList, seen, w])
+  }, [wallList, seen, w, v2])
 
-  // ---- ground colours: tile kind x light x fog
+  // ---- ground colours: tile kind x light x fog (v2: street asphalt and bar tiles are two meshes)
   useLayoutEffect(() => {
     const m = ground.current
     if (!m) return
+    const mIn = v2 ? groundIn.current : null
     const zone = new Set(state.map.extraction.map((p) => p.y * w + p.x))
-    let n = 0
+    let n = 0, nIn = 0
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const i = y * w + x
       const t = state.map.tiles[i]!
       if (t.k === 'wall') continue
       dummy.position.set(tx(x, w), -0.1, tz(y, h))
-      dummy.scale.set(0.995, 0.2, 0.995)
+      dummy.scale.set(v2 ? 0.972 : 0.995, 0.2, v2 ? 0.972 : 0.995) // v2: a slightly wider dark gap keeps the tile grid readable on textured ground
       dummy.rotation.set(0, 0, 0)
       dummy.updateMatrix()
-      m.setMatrixAt(n, dummy.matrix)
-      tmpColor.copy(zone.has(i) ? C.zone : t.k === 'exit' ? C.exit : t.k === 'escape' ? C.escape : C.floor)
+      const inside = !!(mIn && indoor && indoor[i])
+      const target = inside ? mIn! : m
+      const idx = inside ? nIn++ : n++
+      target.setMatrixAt(idx, dummy.matrix)
+      if (v2) tmpColor.copy(zone.has(i) ? V2C.zone : t.k === 'exit' ? V2C.exit : t.k === 'escape' ? V2C.escape : inside ? V2C.floor : V2C.street)
+      else tmpColor.copy(zone.has(i) ? C.zone : t.k === 'exit' ? C.exit : t.k === 'escape' ? C.escape : C.floor)
       tmpColor.multiplyScalar(0.9 + hash2(x, y, 5) * 0.2)
       tmpColor.multiply(lit[i] ? C.litTint : C.darkTint)
+      if (v2 && !lit[i]) tmpColor.multiply(V2C.darkBoost)
       if (!seen[i]) tmpColor.multiplyScalar(0.5)
-      m.setColorAt(n, tmpColor)
-      n++
+      target.setColorAt(idx, tmpColor)
     }
     m.count = n
     m.instanceMatrix.needsUpdate = true
     if (m.instanceColor) m.instanceColor.needsUpdate = true
+    if (mIn) { mIn.count = nIn; mIn.instanceMatrix.needsUpdate = true; if (mIn.instanceColor) mIn.instanceColor.needsUpdate = true }
     invalidate()
-  }, [state.map.tiles, state.map.extraction, lit, seen, w, h, invalidate])
+  }, [state.map.tiles, state.map.extraction, lit, seen, w, h, invalidate, v2, indoor])
 
   // ---- props, doors, lamps, exit markings (re-run when tiles change)
   useLayoutEffect(() => {
@@ -159,10 +194,10 @@ export function Terrain({ state, fogOn, lamps, lights }: { state: State; fogOn: 
       const t = state.map.tiles[y * w + x]!
       const X = tx(x, w), Z = tz(y, h)
       const sh = seen[y * w + x] ? 1 : 0.55
-      if (t.o === 'halfCover') {
+      if (t.o === 'halfCover' && !propKinds.halfCover) {
         put(stallBase.current, cnt.stall++, X, 0.24, Z, 0.9, 0.48, 0.78, 0, hash2(x, y, 1) > 0.5 ? '#6b5a48' : '#5a6070', sh)
         put(stallCrate.current, cnt.crate++, X + (hash2(x, y, 3) - 0.5) * 0.3, 0.6, Z + (hash2(x, y, 4) - 0.5) * 0.2, 0.34, 0.24, 0.34, hash2(x, y, 7) * 3, crateColors[Math.floor(hash2(x, y, 8) * 4)], sh)
-      } else if (t.o === 'fullCover') {
+      } else if (t.o === 'fullCover' && !propKinds.fullCover) {
         put(dumpBody.current, cnt.dump++, X, 0.52, Z, 0.92, 1.04, 0.82, 0, '#2f5a45', sh)
         put(dumpLid.current, cnt.lid++, X, 1.09, Z, 0.98, 0.1, 0.88, 0, '#1f3b2e', sh)
       } else if (t.o === 'rubble') {
@@ -172,13 +207,13 @@ export function Terrain({ state, fogOn, lamps, lights }: { state: State; fogOn: 
           put(rubble.current, cnt.rub++, X + ox, sz * 0.4, Z + oz, sz, sz * 0.8, sz * 1.1, hash2(x, y, 50 + k) * 3, '#6a645a', sh)
         }
       } else if (t.o === 'lamp') {
-        put(poles.current, cnt.pole++, X, 1.05, Z, 1, 2.1, 1, 0, '#2c3038', sh)
-        put(heads.current, cnt.head++, X, 2.15, Z, 1, 1, 1)
+        if (!propKinds.lamp) put(poles.current, cnt.pole++, X, 1.05, Z, 1, 2.1, 1, 0, '#2c3038', sh)
+        if (!propKinds.lamp) put(heads.current, cnt.head++, X, 2.15, Z, 1, 1, 1)
       }
       if (t.k === 'door') {
         const ew = isWallAt(state, x - 1, y) && isWallAt(state, x + 1, y)
-        if (!t.open) put(doorsClosed.current, cnt.dc++, X, 0.62, Z, ew ? 0.98 : 0.2, 1.24, ew ? 0.2 : 0.98, 0, '#c47a2c', sh)
-        else put(doorsOpen.current, cnt.do++, ew ? X - 0.44 : X, 0.62, ew ? Z + 0.3 : Z - 0.44, ew ? 0.1 : 0.62, 1.24, ew ? 0.62 : 0.1, 0, '#c47a2c', sh)
+        if (!t.open) put(doorsClosed.current, cnt.dc++, X, 0.62, Z, ew ? 0.98 : 0.2, 1.24, ew ? 0.2 : 0.98, 0, v2 ? '#ffffff' : '#c47a2c', sh)
+        else put(doorsOpen.current, cnt.do++, ew ? X - 0.44 : X, 0.62, ew ? Z + 0.3 : Z - 0.44, ew ? 0.1 : 0.62, 1.24, ew ? 0.62 : 0.1, 0, v2 ? '#ffffff' : '#c47a2c', sh)
       }
       if (t.k === 'exit') {
         // an arrow bar pointing out of the map
@@ -195,7 +230,7 @@ export function Terrain({ state, fogOn, lamps, lights }: { state: State; fogOn: 
     }
     invalidate()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sig, seen, w, h])
+  }, [sig, seen, w, h, propKinds])
 
   // ---- lamp light pools: one glow per original lamp, hidden when the lamp is destroyed
   useLayoutEffect(() => {
@@ -270,8 +305,12 @@ export function Terrain({ state, fogOn, lamps, lights }: { state: State; fogOn: 
   const cap = w * h
   return (
     <group>
-      <instancedMesh ref={ground} args={[geo.box, mats.ground, cap]} frustumCulled={false} />
-      <instancedMesh ref={walls} args={[geo.box, mats.wall, Math.max(1, wallList.length)]} frustumCulled={false} />
+      <instancedMesh ref={ground} args={[geo.box, v2 ? v2.street : mats.ground, cap]} frustumCulled={false} />
+      {v2 && <instancedMesh ref={groundIn} args={[geo.box, v2.floor, cap]} frustumCulled={false} />}
+      <instancedMesh ref={walls} args={[geo.box, v2 ? v2.brick : mats.wall, Math.max(1, wallList.length)]} frustumCulled={false} />
+      {v2 && <instancedMesh ref={fence} args={[geo.box, v2.fence, Math.max(1, wallList.length)]} frustumCulled={false} />}
+      {v2 && <instancedMesh ref={kerb} args={[geo.box, v2.kerb, Math.max(1, wallList.length)]} frustumCulled={false} />}
+      {v2 && assets && <PropField state={state} assets={assets} seen={seen} lit={lit} sig={sig} />}
       <instancedMesh ref={stallBase} args={[geo.box, mats.plain, cap]} frustumCulled={false} />
       <instancedMesh ref={stallCrate} args={[geo.box, mats.plain, cap]} frustumCulled={false} />
       <instancedMesh ref={dumpBody} args={[geo.box, mats.metal, cap]} frustumCulled={false} />
@@ -279,8 +318,8 @@ export function Terrain({ state, fogOn, lamps, lights }: { state: State; fogOn: 
       <instancedMesh ref={rubble} args={[geo.box, mats.plain, cap * 3]} frustumCulled={false} />
       <instancedMesh ref={poles} args={[geo.pole, mats.metal, 16]} frustumCulled={false} />
       <instancedMesh ref={heads} args={[geo.head, mats.lampHead, 16]} frustumCulled={false} />
-      <instancedMesh ref={doorsClosed} args={[geo.box, mats.door, 16]} frustumCulled={false} />
-      <instancedMesh ref={doorsOpen} args={[geo.box, mats.door, 16]} frustumCulled={false} />
+      <instancedMesh ref={doorsClosed} args={[geo.box, v2 ? v2.door : mats.door, 16]} frustumCulled={false} />
+      <instancedMesh ref={doorsOpen} args={[geo.box, v2 ? v2.door : mats.door, 16]} frustumCulled={false} />
       <instancedMesh ref={marks} args={[geo.box, mats.mark, 64]} frustumCulled={false} />
       <instancedMesh ref={glows} args={[undefined, undefined, Math.max(1, lamps.length)]} frustumCulled={false}>
         <planeGeometry args={[1, 1]} />

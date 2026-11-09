@@ -20,3 +20,6 @@ art/concepts/*/
 tools/anim/vendor/
 art/anim-spike/raw/
 art/anim-spike/scratch/
+# T0 terrain spike: raw generations and scratch
+art/terrain-spike/raw/
+art/terrain-spike/_*.png
