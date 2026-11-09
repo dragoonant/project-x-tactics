@@ -99,7 +99,7 @@ def upright_socket(rg, iid, bone, ref_clip, side):
         mid = (H['lowerarm_' + side] + H['hand_' + side]) / 2
         Rw = Matrix.Identity(3)
         c = Vector((-0.0, d['height'] / 2 * 0 + 0.0, d['height'] / 2))
-        p = mid + Vector((0.0, -0.10, 0.0))
+        p = mid + Vector((0.24, -0.08, -0.05))   # outboard of the left forearm: the shield stands at the figure's left, not over the face
         Wm = Matrix.Translation(p - c) @ Rw.to_4x4()
         bone_name = 'lowerarm_' + side
     else:
@@ -200,7 +200,7 @@ def main():
         meta['clips'][name] = {'duration': round((n if loop else n - 1) / FPS_, 4), 'loop': bool(loop), 'frames': n}
         clips[name] = rows
         if name in ('walk', 'run'):
-            sp, rel = stride_speed(rows)
+            sp, rel = stride_speed(rows, 0.012 if name == 'walk' else 0.045)
             meta['clips'][name]['speed'] = round(sp, 4)
             meta['metrics'][name] = {'stanceSpeedRelStd': round(rel, 3)}
         print('CLIP', name, n, 'frames', loop)
@@ -248,13 +248,13 @@ FPS_ = L.FPS
 TRIS = [0]
 
 
-def stride_speed(rows):
+def stride_speed(rows, thr=0.012):
     import statistics
     out = []
     for side in ('ball_l', 'ball_r'):
         z = [r[side][2] for r in rows]
         y = [r[side][1] for r in rows]
-        stance = [zz < min(z) + 0.012 for zz in z]
+        stance = [zz < min(z) + thr for zz in z]
         v = [(y[i + 1] - y[i]) * FPS_ for i in range(len(y) - 1) if stance[i] and stance[i + 1]]
         out += v
     if not out:

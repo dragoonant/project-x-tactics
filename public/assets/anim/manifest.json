@@ -17,12 +17,12 @@
     "walk": {
      "duration": 1.3333,
      "loop": true,
-     "speed": 0.4916
+     "speed": 0.4825
     },
     "run": {
      "duration": 0.9333,
      "loop": true,
-     "speed": 3.5555
+     "speed": 3.4086
     },
     "aim": {
      "duration": 1.1667,
@@ -50,35 +50,1275 @@
      "id": "shotgun",
      "bone": "hand_r",
      "matrix": [
-      -0.372341,
-      -0.840137,
-      -0.394374,
-      0.212818,
-      -0.927777,
-      0.348086,
-      0.134413,
-      0.303645,
-      0.024351,
-      0.415938,
-      -0.909067,
-      -0.057779,
+      -0.427245,
+      -0.811312,
+      -0.39904,
+      0.225015,
+      -0.902684,
+      0.407767,
+      0.137434,
+      0.28811,
+      0.051214,
+      0.418925,
+      -0.906575,
+      -0.065978,
       0.0,
       0.0,
       0.0,
       1.0
      ],
      "muzzle": [
-      -0.57196,
-      0.2295,
+      -0.57,
+      0.22905,
       0.0
      ]
     }
    ]
+  },
+  "recruit": {
+   "file": "recruit.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.5024
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.5382
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "throw": {
+     "duration": 1.2,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "downed": {
+     "duration": 2.0,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "rifle",
+     "bone": "hand_r",
+     "matrix": [
+      -0.164646,
+      -0.741073,
+      -0.650923,
+      0.158696,
+      -0.931121,
+      0.33451,
+      -0.145318,
+      0.249727,
+      0.325432,
+      0.582163,
+      -0.745105,
+      -0.173689,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.625,
+      0.3021,
+      0.0
+     ]
+    }
+   ]
+  },
+  "bulwark": {
+   "file": "bulwark.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.404
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 2.4295
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "melee": {
+     "duration": 1.5333,
+     "loop": false
+    },
+    "bash": {
+     "duration": 0.8667,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "downed": {
+     "duration": 2.0,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "revolver",
+     "bone": "hand_r",
+     "matrix": [
+      0.002648,
+      -0.640578,
+      -0.767888,
+      0.067594,
+      -0.952698,
+      0.231753,
+      -0.196615,
+      0.205438,
+      0.303908,
+      0.732086,
+      -0.609663,
+      -0.128815,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.28,
+      0.21243,
+      0.0
+     ]
+    },
+    {
+     "id": "maul",
+     "bone": "hand_r",
+     "matrix": [
+      0.338115,
+      -0.660351,
+      -0.670533,
+      -0.007811,
+      -0.829934,
+      -0.545156,
+      0.118386,
+      0.346364,
+      -0.443722,
+      0.51647,
+      -0.732373,
+      0.051825,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.425,
+      0.11874,
+      0.0
+     ]
+    },
+    {
+     "id": "riot-shield",
+     "bone": "lowerarm_l",
+     "matrix": [
+      -0.440597,
+      0.148358,
+      -0.88536,
+      -0.247042,
+      -0.870183,
+      0.171755,
+      0.461825,
+      -0.124645,
+      0.22058,
+      0.973904,
+      0.053424,
+      -0.405391,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ]
+  },
+  "marksman": {
+   "file": "marksman.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.5011
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.348
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "downed": {
+     "duration": 2.0,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "long-rifle",
+     "bone": "hand_r",
+     "matrix": [
+      -0.263842,
+      -0.961863,
+      -0.07215,
+      0.288752,
+      -0.92946,
+      0.233531,
+      0.285598,
+      0.246286,
+      -0.257857,
+      0.142414,
+      -0.955629,
+      0.030884,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.775,
+      0.34826,
+      0.0
+     ]
+    }
+   ]
+  },
+  "vox-operator": {
+   "file": "vox-operator.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.4917
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.6709
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "point": {
+     "duration": 1.3333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "downed": {
+     "duration": 2.0,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "shotgun",
+     "bone": "hand_r",
+     "matrix": [
+      -0.024617,
+      -0.736024,
+      -0.676507,
+      0.096546,
+      -0.951746,
+      0.224324,
+      -0.209426,
+      0.324896,
+      0.305899,
+      0.638707,
+      -0.70603,
+      -0.168118,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.57,
+      0.22905,
+      0.0
+     ]
+    },
+    {
+     "id": "handset",
+     "bone": "hand_l",
+     "matrix": [
+      -0.346149,
+      -0.307719,
+      -0.886279,
+      0.040355,
+      0.533508,
+      -0.841629,
+      0.083848,
+      0.180372,
+      -0.771719,
+      -0.443813,
+      0.455499,
+      0.058202,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.17,
+      0.13114,
+      0.0
+     ]
+    }
+   ]
+  },
+  "chem-trooper": {
+   "file": "chem-trooper.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.5493
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 4.012
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "throw": {
+     "duration": 1.2,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "downed": {
+     "duration": 2.0,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "shotgun",
+     "bone": "hand_r",
+     "matrix": [
+      -0.204398,
+      -0.801503,
+      -0.561973,
+      0.157773,
+      -0.945756,
+      0.309791,
+      -0.097848,
+      0.312757,
+      0.25252,
+      0.511489,
+      -0.821348,
+      -0.13687,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.57,
+      0.22905,
+      0.0
+     ]
+    },
+    {
+     "id": "injector",
+     "bone": "hand_l",
+     "matrix": [
+      -0.60903,
+      -0.052565,
+      -0.791403,
+      0.013492,
+      0.155891,
+      -0.986272,
+      -0.05446,
+      0.103063,
+      -0.777676,
+      -0.15654,
+      0.608864,
+      0.020494,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.19,
+      0.03653,
+      0.0
+     ]
+    }
+   ]
+  },
+  "recon": {
+   "file": "recon.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.531
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.594
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "melee": {
+     "duration": 1.5333,
+     "loop": false
+    },
+    "point": {
+     "duration": 1.3333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "downed": {
+     "duration": 2.0,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "pistol",
+     "bone": "hand_r",
+     "matrix": [
+      -0.180809,
+      -0.794459,
+      -0.579778,
+      0.118826,
+      -0.975292,
+      0.220915,
+      0.001438,
+      0.169051,
+      0.12694,
+      0.565713,
+      -0.814773,
+      -0.08438,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.23,
+      0.24051,
+      0.0
+     ]
+    },
+    {
+     "id": "baton",
+     "bone": "hand_l",
+     "matrix": [
+      -0.008748,
+      0.687567,
+      -0.726069,
+      -0.026757,
+      -0.869982,
+      -0.363217,
+      -0.333474,
+      0.336021,
+      -0.493007,
+      0.628749,
+      0.601348,
+      0.115214,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.4,
+      0.04258,
+      0.0
+     ]
+    }
+   ]
+  },
+  "thug-club": {
+   "file": "thug-club.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 2.5,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.4934
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.5555
+    },
+    "melee": {
+     "duration": 1.5333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "surrender": {
+     "duration": 1.6,
+     "loop": true
+    },
+    "cuffed": {
+     "duration": 1.8,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "club",
+     "bone": "hand_r",
+     "matrix": [
+      0.990672,
+      0.1202,
+      0.0642,
+      -0.326745,
+      0.117109,
+      -0.510069,
+      -0.852124,
+      0.06085,
+      -0.069678,
+      0.851693,
+      -0.519387,
+      -0.025377,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.475,
+      0.05622,
+      0.0
+     ]
+    }
+   ]
+  },
+  "thug-pistol": {
+   "file": "thug-pistol.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.4675
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 2.7785
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "surrender": {
+     "duration": 1.6,
+     "loop": true
+    },
+    "cuffed": {
+     "duration": 1.8,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "pistol",
+     "bone": "hand_r",
+     "matrix": [
+      -0.524987,
+      -0.712306,
+      -0.465842,
+      0.153277,
+      -0.827618,
+      0.554951,
+      0.084135,
+      0.109861,
+      0.198591,
+      0.429709,
+      -0.880859,
+      -0.077253,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.23,
+      0.24051,
+      0.0
+     ]
+    }
+   ]
+  },
+  "gunman": {
+   "file": "gunman.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.4527
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 2.8127
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "surrender": {
+     "duration": 1.6,
+     "loop": true
+    },
+    "cuffed": {
+     "duration": 1.8,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "smg",
+     "bone": "hand_r",
+     "matrix": [
+      -0.32803,
+      -0.79074,
+      -0.516843,
+      0.148489,
+      -0.880949,
+      0.453591,
+      -0.134846,
+      0.130222,
+      0.341063,
+      0.411079,
+      -0.845393,
+      -0.100387,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.425,
+      0.21895,
+      0.0
+     ]
+    }
+   ]
+  },
+  "heavy": {
+   "file": "heavy.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.4824
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.4053
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "surrender": {
+     "duration": 1.6,
+     "loop": true
+    },
+    "cuffed": {
+     "duration": 1.8,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "lmg",
+     "bone": "hand_r",
+     "matrix": [
+      -0.145619,
+      -0.749732,
+      -0.64552,
+      0.179431,
+      -0.936601,
+      0.314657,
+      -0.154172,
+      0.210201,
+      0.318706,
+      0.582144,
+      -0.748021,
+      -0.18374,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.675,
+      0.3454,
+      0.0
+     ]
+    }
+   ]
+  },
+  "fixer": {
+   "file": "fixer.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.531
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.5805
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "point": {
+     "duration": 1.3333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "surrender": {
+     "duration": 1.6,
+     "loop": true
+    },
+    "cuffed": {
+     "duration": 1.8,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "pistol",
+     "bone": "hand_r",
+     "matrix": [
+      -0.086274,
+      -0.718889,
+      -0.68975,
+      0.097563,
+      -0.92662,
+      0.31222,
+      -0.209508,
+      0.151803,
+      0.365967,
+      0.621062,
+      -0.693073,
+      -0.121823,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.23,
+      0.24051,
+      0.0
+     ]
+    }
+   ]
+  },
+  "bagman": {
+   "file": "bagman.glb",
+   "height": 1.8,
+   "clips": {
+    "idle": {
+     "duration": 1.6667,
+     "loop": true
+    },
+    "cover": {
+     "duration": 2.9333,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.4624
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.1143
+    },
+    "aim": {
+     "duration": 1.1667,
+     "loop": false
+    },
+    "fire": {
+     "duration": 0.6333,
+     "loop": false
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "surrender": {
+     "duration": 1.6,
+     "loop": true
+    },
+    "cuffed": {
+     "duration": 1.8,
+     "loop": true
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": [
+    {
+     "id": "pistol",
+     "bone": "hand_r",
+     "matrix": [
+      -0.281301,
+      -0.910671,
+      -0.302567,
+      0.145745,
+      -0.959315,
+      0.258928,
+      0.112562,
+      0.162422,
+      -0.024164,
+      0.321922,
+      -0.946458,
+      -0.035601,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      -0.23,
+      0.24051,
+      0.0
+     ]
+    },
+    {
+     "id": "case",
+     "bone": "hand_l",
+     "matrix": [
+      0.649295,
+      0.491248,
+      0.580596,
+      -0.214998,
+      0.443495,
+      -0.864733,
+      0.235687,
+      0.438457,
+      0.617841,
+      0.104461,
+      -0.779333,
+      -0.045718,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "muzzle": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ]
+  },
+  "civilian-a": {
+   "file": "civilian-a.glb",
+   "height": 1.7,
+   "clips": {
+    "idle": {
+     "duration": 2.5,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.5117
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.4863
+    },
+    "panic": {
+     "duration": 0.9333,
+     "loop": true
+    },
+    "cower": {
+     "duration": 1.0,
+     "loop": true
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": []
+  },
+  "civilian-b": {
+   "file": "civilian-b.glb",
+   "height": 1.7,
+   "clips": {
+    "idle": {
+     "duration": 2.5,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.4676
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 2.9255
+    },
+    "panic": {
+     "duration": 0.9333,
+     "loop": true
+    },
+    "cower": {
+     "duration": 1.0,
+     "loop": true
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": []
+  },
+  "civilian-c": {
+   "file": "civilian-c.glb",
+   "height": 1.7,
+   "clips": {
+    "idle": {
+     "duration": 2.5,
+     "loop": true
+    },
+    "walk": {
+     "duration": 1.3333,
+     "loop": true,
+     "speed": 0.5006
+    },
+    "run": {
+     "duration": 0.9333,
+     "loop": true,
+     "speed": 3.3296
+    },
+    "panic": {
+     "duration": 0.9333,
+     "loop": true
+    },
+    "cower": {
+     "duration": 1.0,
+     "loop": true
+    },
+    "hit": {
+     "duration": 0.3333,
+     "loop": false
+    },
+    "death": {
+     "duration": 2.4,
+     "loop": false
+    }
+   },
+   "attachments": []
   }
  },
  "items": {
   "shotgun": {
    "file": "items/shotgun.glb"
+  },
+  "baton": {
+   "file": "items/baton.glb"
+  },
+  "case": {
+   "file": "items/case.glb"
+  },
+  "club": {
+   "file": "items/club.glb"
+  },
+  "handset": {
+   "file": "items/handset.glb"
+  },
+  "injector": {
+   "file": "items/injector.glb"
+  },
+  "lmg": {
+   "file": "items/lmg.glb"
+  },
+  "long-rifle": {
+   "file": "items/long-rifle.glb"
+  },
+  "maul": {
+   "file": "items/maul.glb"
+  },
+  "pistol": {
+   "file": "items/pistol.glb"
+  },
+  "revolver": {
+   "file": "items/revolver.glb"
+  },
+  "rifle": {
+   "file": "items/rifle.glb"
+  },
+  "riot-shield": {
+   "file": "items/riot-shield.glb"
+  },
+  "smg": {
+   "file": "items/smg.glb"
   }
  },
  "note": "Seeded from the A0 spike (rig A). A1 replaces it; items move to items/<id>.glb then."

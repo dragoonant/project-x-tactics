@@ -17,7 +17,7 @@ RAW = os.path.join(ROOT, 'art', 'rig', 'raw')
 cfg = json.load(open(os.path.join(ROOT, 'tools', 'anim', 'figures.json')))['items']
 iid = sys.argv[1]
 it = cfg[iid]
-flipx, flipz, yaw90 = '--flipx' in sys.argv, '--flipz' in sys.argv, '--yaw90' in sys.argv
+flipx, flipz, yaw90 = '--flipx' in sys.argv or 'x' in it.get('flip', ''), '--flipz' in sys.argv or 'z' in it.get('flip', ''), '--yaw90' in sys.argv
 length = float(sys.argv[sys.argv.index('--len') + 1]) if '--len' in sys.argv else it['len']
 os.makedirs(os.path.join(RAW, 'items'), exist_ok=True)
 

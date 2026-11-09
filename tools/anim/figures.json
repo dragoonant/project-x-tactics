@@ -1,19 +1,19 @@
 {
   "_doc": "A1 figure and item configuration. Item local frame (Blender, before the glTF export): x along the length with the FRONT end (muzzle, tip, striking head) at -X, centred in x and y, z from 0 (bottom) to the item height (up). Fractions fx run from the front end (0) to the rear end (1), fz from the bottom (0) to the top (1).",
   "items": {
-    "rifle":       { "len": 1.25, "front": "thin",  "kind": "gun",  "grip_r": [0.70, 0.42], "grip_l": [0.36, 0.55], "muzzle": [0.0, 0.80] },
-    "shotgun":     { "len": 1.14, "front": "thin",  "kind": "gun",  "grip_r": [0.76, 0.45], "grip_l": [0.58, 0.62], "muzzle": [0.0, 0.85] },
-    "long-rifle":  { "len": 1.55, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.40], "grip_l": [0.34, 0.50], "muzzle": [0.0, 0.60] },
-    "smg":         { "len": 0.85, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.45], "grip_l": [0.36, 0.55], "muzzle": [0.0, 0.75] },
-    "lmg":         { "len": 1.35, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.40], "grip_l": [0.34, 0.50], "muzzle": [0.0, 0.70] },
-    "pistol":      { "len": 0.46, "front": "thin",  "kind": "gun1", "grip_r": [0.78, 0.40], "muzzle": [0.0, 0.80] },
-    "revolver":    { "len": 0.56, "front": "thin",  "kind": "gun1", "grip_r": [0.80, 0.40], "muzzle": [0.0, 0.80] },
-    "baton":       { "len": 0.80, "front": "thick", "kind": "melee", "grip_r": [0.86, 0.5], "muzzle": [0.0, 0.5] },
+    "rifle":       { "flip": "xz", "len": 1.25, "front": "thin",  "kind": "gun",  "grip_r": [0.70, 0.42], "grip_l": [0.36, 0.55], "muzzle": [0.0, 0.80] },
+    "shotgun":     { "flip": "x", "len": 1.14, "front": "thin",  "kind": "gun",  "grip_r": [0.76, 0.45], "grip_l": [0.58, 0.62], "muzzle": [0.0, 0.85] },
+    "long-rifle":  { "flip": "xz", "len": 1.55, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.40], "grip_l": [0.34, 0.50], "muzzle": [0.0, 0.60] },
+    "smg":         { "flip": "xz", "len": 0.85, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.45], "grip_l": [0.36, 0.55], "muzzle": [0.0, 0.75] },
+    "lmg":         { "flip": "xz", "len": 1.35, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.40], "grip_l": [0.34, 0.50], "muzzle": [0.0, 0.70] },
+    "pistol":      { "flip": "xz", "len": 0.46, "front": "thin",  "kind": "gun1", "grip_r": [0.78, 0.40], "muzzle": [0.0, 0.80] },
+    "revolver":    { "flip": "xz", "len": 0.56, "front": "thin",  "kind": "gun1", "grip_r": [0.80, 0.40], "muzzle": [0.0, 0.80] },
+    "baton":       { "flip": "x", "len": 0.80, "front": "thick", "kind": "melee", "grip_r": [0.86, 0.5], "muzzle": [0.0, 0.5] },
     "maul":        { "len": 0.85, "front": "thick", "kind": "melee", "grip_r": [0.80, 0.5], "muzzle": [0.0, 0.5] },
     "club":        { "len": 0.95, "front": "thick", "kind": "melee", "grip_r": [0.84, 0.5], "muzzle": [0.0, 0.5] },
     "handset":     { "len": 0.34, "front": "thick", "kind": "small", "grip_r": [0.50, 0.5], "muzzle": [0.0, 0.5] },
     "injector":    { "len": 0.38, "front": "thin",  "kind": "small", "grip_r": [0.55, 0.5], "muzzle": [0.0, 0.5] },
-    "riot-shield": { "len": 1.05, "kind": "upright", "upright": "height" },
+    "riot-shield": { "len": 0.85, "kind": "upright", "upright": "height" },
     "case":        { "len": 0.50, "kind": "upright", "upright": "width" }
   },
   "figures": {

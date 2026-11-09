@@ -123,7 +123,7 @@ function Cam({ view, scale, span }: { view: string; scale: number; span: number 
   useEffect(() => {
     const cam = camera as PerspectiveCamera
     const h = 1.8 * scale
-    const d = span > 1 ? span * 1.9 : (num('dist') ?? 5.4)
+    const d = span > 1 ? span * 1.05 : (num('dist') ?? 5.4)
     const pos = view === 'front' ? [0, h * 0.55, d] : view === 'side' ? [d, h * 0.55, 0] : view === 'high' ? [2.2, 4.6, 3.6] : [d * 0.6, h * 0.8 + 0.5, d * 0.8]
     cam.position.set(pos[0]!, pos[1]!, pos[2]!)
     cam.lookAt(0, h * 0.5, 0)

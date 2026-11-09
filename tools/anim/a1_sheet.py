@@ -20,5 +20,5 @@ for r, (clip, v) in enumerate(rows):
         sheet.paste(im, (k * cw, 26 + r * ch))
         dr.text((k * cw + 5, 26 + r * ch + 4), f'{clip} {v} {k}', fill=(200, 220, 255))
 os.makedirs(os.path.join(ROOT, 'docs', 'status', 'a1'), exist_ok=True)
-sheet.convert('RGB').save(os.path.join(ROOT, 'docs', 'status', 'a1', f'{kind}.png'), optimize=True)
+sheet.convert('RGB').quantize(160).save(os.path.join(ROOT, 'docs', 'status', 'a1', f'{kind}.png'), optimize=True)
 print('wrote', kind)
