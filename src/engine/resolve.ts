@@ -75,6 +75,20 @@ export function ripple(c: Ctx, src: Unit): void {
   }
 }
 
+/**
+ * ABL-TKD-1: a quiet takedown of an unaware enemy. It surrenders at once (Resolve 0, unarmed); RES-4 ripple applies as for any
+ * surrender. No roll, no noise, no Alarm, and unlike an attack (NOI-5) it does not wake the group by itself: the group only
+ * wakes if one of its members sees a trooper afterwards (NOI-2a).
+ */
+export function takedown(c: Ctx, by: Unit, t: Unit): void {
+  const before = t.resolve
+  t.resolve = 0
+  t.status = 'surrendered'; t.armed = false; t.actions = 0; t.overwatch = null; t.hunkered = false
+  emit(c, 'takedown', { unit: t.id, by: by.id, resolve: before })
+  emit(c, 'surrender', { unit: t.id })
+  ripple(c, t)
+}
+
 /** ARR-3: cuff a surrendered enemy. */
 export function cuff(c: Ctx, by: Unit, t: Unit): void {
   t.status = 'cuffed'; t.armed = false; t.actions = 0; t.fleeing = false

@@ -3,10 +3,28 @@ import type { Ctx, Side, State, Unit } from './types'
 import { hasLOS, isLit } from './los'
 import { dist, hasAb, isActive, onBoard, tn } from './util'
 
-/** FOG-1: does observer O see unit U (no scan considered)? */
+/** STL-1: an unaware enemy looks only inside a cone of half-angle `stealth.coneHalfAngle` around its facing. */
+export function inCone(s: State, o: Unit, x: number, y: number): boolean {
+  const vx = x - o.x, vy = y - o.y
+  if (vx === 0 && vy === 0) return true
+  const f = o.facing
+  const fl = Math.hypot(f.x, f.y)
+  if (fl === 0) return true
+  const cos = (vx * f.x + vy * f.y) / (Math.hypot(vx, vy) * fl)
+  return cos >= Math.cos((tn(s, 'stealth.coneHalfAngle') * Math.PI) / 180) - 1e-9
+}
+/** STL-1: is this observer an enemy of an unaware group (it then sees only inside its cone)? */
+export function coneLimited(s: State, o: Unit): boolean {
+  if (o.side !== 'syndicate' || !o.group) return false
+  const g = s.groups.find((x) => x.id === o.group)
+  return !!g && !g.aware
+}
+
+/** FOG-1: does observer O see unit U (no scan considered)? STL-1 narrows an unaware enemy's sight to its cone. */
 export function sees(s: State, o: Unit, u: Unit): boolean {
   const d = dist(o.x, o.y, u.x, u.y)
   if (d > tn(s, 'sight.radius')) return false
+  if (coneLimited(s, o) && !inCone(s, o, u.x, u.y)) return false
   if (!hasLOS(s, o, u)) return false
   return isLit(s, u.x, u.y) || d <= tn(s, 'light.darkSightRange') || hasAb(o, 'nightVision')
 }

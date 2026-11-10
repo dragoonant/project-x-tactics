@@ -7,7 +7,7 @@ import { boardApi } from '../board/CameraRig'
 import { cancelArm, chooseAbility, endTurn, entriesFor, selectUnit, updateSettings } from '../game/controller'
 import { ABILITY_TEXT, callSign } from '../game/names'
 import { useStore } from '../game/store'
-import { passiveList, type AbilityEntry } from '../game/tap'
+import { legalFor, passiveList, type AbilityEntry } from '../game/tap'
 import { withdraw } from '../campaign/controller'
 
 export function statusChips(u: Unit): { text: string; kind: '' | 'bad' | 'good' }[] {
@@ -135,6 +135,18 @@ function TargetPanel({ state, sel, enemy }: { state: State; sel: Unit; enemy: Un
   const ability = armed && armed.ability !== 'attack' ? armed.ability : undefined
   const p = useMemo(() => query.preview(state, sel.id, enemy.id, ability), [state, sel.id, enemy.id, ability])
   const noise = useMemo(() => query.noiseInfo(state, sel.id, ability), [state, sel.id, ability])
+  const takedown = useMemo(() => (!armed || armed.ability === 'takedown') && legalFor(state).some((a) => a.type === 'ability' && a.ability === 'takedown' && a.unit === sel.id && a.target === enemy.id), [state, armed, sel.id, enemy.id])
+  const look = useMemo(() => query.stealthOutlook(state, sel.id, enemy.id, takedown ? 'takedown' : ability), [state, sel.id, enemy.id, ability, takedown])
+  if (takedown) {
+    return (
+      <div className="target panel" data-testid="target-panel">
+        <h4>TAKEDOWN / {enemy.name.toUpperCase()} {enemy.id.toUpperCase()}</h4>
+        <div className="big"><b data-testid="hit-chance">100%</b><span>NO ROLL</span></div>
+        <div className="rows"><div><span>The target surrenders at once. Cuff it next.</span></div><div><span>Its group wakes only if another member sees you.</span></div></div>
+        <div className="flag"><span className="chip good">DROPS TARGET</span><span className="chip good">GROUP STAYS ASLEEP</span><span className="chip good">QUIET</span></div>
+      </div>
+    )
+  }
   if (!p) return null
   const b = p.breakdown
   const cls = b.chance >= 60 ? '' : b.chance >= 35 ? 'mid' : 'low'
@@ -157,6 +169,7 @@ function TargetPanel({ state, sel, enemy }: { state: State; sel: Unit; enemy: Un
         {p.flanked && <span className="chip good">FLANK</span>}
         {p.kills && <span className="chip bad">CAN KILL</span>}
         {p.surrenders && <span className="chip good">CAN BREAK RESOLVE</span>}
+        {look?.unaware && (look.wakesGroup ? <span className="chip bad">WAKES ITS GROUP</span> : <span className="chip good">GROUP STAYS ASLEEP</span>)}
         {noise.loud ? <span className="chip bad">LOUD: {noise.groups.length} group(s) would wake</span> : <span className="chip good">QUIET</span>}
       </div>
     </div>

@@ -24,7 +24,7 @@ export function shortName(u: Pick<Unit, 'id' | 'side' | 'name'>): string {
 export const ABILITY_LABELS: Record<string, string> = {
   attack: 'Fire', overwatch: 'Overwatch', hunker: 'Hunker', cuff: 'Cuff', stabilize: 'Stabilize', suppress: 'Suppress', frag: 'Frag grenade',
   breach: 'Breach', shieldBash: 'Shield bash', maul: 'Maul', baton: 'Baton', pinningShot: 'Pinning shot', longWatch: 'Long watch',
-  relay: 'Relay orders', callSupport: 'Call support', gas: 'Gas grenade', stim: 'Stim', mark: 'Mark target', rally: 'Rally',
+  relay: 'Relay orders', callSupport: 'Call support', gas: 'Gas grenade', stim: 'Stim', mark: 'Mark target', rally: 'Rally', takedown: 'Takedown',
   shield: 'Riot shield', squadsight: 'Squadsight', fieldMedic: 'Field medic', nightVision: 'Night vision', quickCuffs: 'Quick cuffs',
 }
 export const PASSIVE_ABILITIES = new Set(['shield', 'squadsight', 'fieldMedic', 'nightVision', 'quickCuffs'])
@@ -47,6 +47,7 @@ export const ABILITY_TEXT: Record<string, string> = {
   gas: 'Throw a gas cloud (3x3) that wrecks enemy Resolve.',
   stim: 'Heal 3, or give +1 action.',
   mark: 'The squad gets +aim and extra Resolve damage on the target.',
+  takedown: 'Quiet: grab an unaware enemy next to you from its blind side. It surrenders at once; its group only wakes if another member sees you.',
 }
 export const PASSIVE_TEXT: Record<string, string> = {
   shield: 'Half cover from the front for the Bulwark and adjacent allies.',

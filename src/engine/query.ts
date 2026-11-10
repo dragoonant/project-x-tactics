@@ -4,7 +4,8 @@ import { bfs, pathFrom } from './grid'
 import { coverAgainst, type CoverInfo } from './cover'
 import { AttackSpec, hitBreakdown, weaponDef } from './combat'
 import { isLit } from './los'
-import { sees, sideSees } from './fog'
+import { coneLimited, sees, sideSees } from './fog'
+import { isUnaware } from './combat'
 import { summarize, type Summary } from './mission'
 import { moveTargets } from './legal'
 import { dist, tn, unitById } from './util'
@@ -119,10 +120,55 @@ export function noiseInfo(s: State, unitId: string, ability?: string): { loud: b
   return { loud, radius, groups }
 }
 
+/** NOI-5 / ABL-TKD-1 for the target card: does this action take the target out, and does it wake the target's group? */
+export interface StealthOutlook {
+  /** 'always': takedown (no roll); 'onHit': a hit can kill or break Resolve; 'no': it can't on its own. */
+  drops: 'always' | 'onHit' | 'no'
+  /** The target's group is unaware now and this action would wake it by itself (NOI-5, or noise from a loud action). */
+  wakesGroup: boolean
+  /** The target's group is unaware now. */
+  unaware: boolean
+}
+export function stealthOutlook(s: State, unitId: string, targetId: string, ability?: string): StealthOutlook | null {
+  const u = unitById(s, unitId), t = unitById(s, targetId)
+  if (!u || !t || t.side !== 'syndicate') return null
+  const unaware = isUnaware(s, t)
+  if (ability === 'takedown') return { drops: 'always', wakesGroup: false, unaware }
+  if (ability === 'mark' || ability === 'gas') return { drops: 'no', wakesGroup: false, unaware } // R-15: not attacks
+  const p = preview(s, unitId, targetId, ability)
+  const drops = p && (p.kills || p.surrenders) ? 'onHit' : 'no'
+  // NOI-5: any attack on a member wakes its whole group, quiet or loud
+  return { drops, wakesGroup: unaware, unaware }
+}
+
+/**
+ * STL-1 for the board: for every enemy of an unaware group that `side` can see, the tiles on which it would spot a trooper
+ * (FOG-1 with the cone, asked of the engine's own sight rule with a stand-in trooper on each tile).
+ */
+export function unawareSight(s: State, side: 'squad' = 'squad'): { unit: string; facing: Pt; tiles: Pt[] }[] {
+  const out: { unit: string; facing: Pt; tiles: Pt[] }[] = []
+  const proto = s.units.find((u) => u.side === side)
+  if (!proto) return out
+  const r = tn(s, 'sight.radius')
+  for (const o of s.units) {
+    if (o.status !== 'active' || !coneLimited(s, o) || !sideSees(s, side, o)) continue
+    const tiles: Pt[] = []
+    for (let y = Math.max(0, o.y - r); y <= Math.min(s.map.h - 1, o.y + r); y++)
+      for (let x = Math.max(0, o.x - r); x <= Math.min(s.map.w - 1, o.x + r); x++) {
+        if (x === o.x && y === o.y) continue
+        const k = s.map.tiles[y * s.map.w + x]!.k
+        if (k === 'wall') continue
+        if (sees(s, o, { ...proto, id: '__probe', x, y })) tiles.push({ x, y })
+      }
+    out.push({ unit: o.id, facing: { ...o.facing }, tiles })
+  }
+  return out
+}
+
 export function summary(s: State): Summary { return summarize(s) }
 
 export const query = {
-  hitChance, preview, previewSpec, reachable, coverFrom, coverPerSide, noiseInfo, summary,
+  hitChance, preview, previewSpec, reachable, coverFrom, coverPerSide, noiseInfo, summary, stealthOutlook, unawareSight,
   isLit: (s: State, x: number, y: number): boolean => isLit(s, x, y),
   /** FOG-1 for one observer/target pair. */
   canSee: (s: State, observerId: string, targetId: string): boolean => {

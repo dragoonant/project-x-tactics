@@ -57,8 +57,9 @@ export function attackClip(e: AttackEvent): 'fire' | 'melee' | 'bash' {
 export const aimsFirst = (c: 'fire' | 'melee' | 'bash'): boolean => c === 'fire'
 
 /** Abilities that have a clip of their own. Attack-like abilities (bash, maul, baton, pinning shot, breach) arrive as `attack` events instead. */
-export function abilityClip(ability: string): 'point' | 'throw' | 'fire' | null {
+export function abilityClip(ability: string): 'point' | 'throw' | 'fire' | 'melee' | null {
   switch (ability) {
+    case 'takedown': return 'melee'
     case 'relay': case 'mark': case 'callSupport': case 'rally': return 'point'
     case 'frag': case 'gas': return 'throw'
     case 'suppress': return 'fire'

@@ -5,7 +5,7 @@ import { hasLOS, lineClear, sightOrigins } from './los'
 import { sees, squadsightSees } from './fog'
 import { canAttackTarget, explode, isUnaware, shootLamp, weaponAttack, weaponDef } from './combat'
 import { createGasCloud } from './gas'
-import { cuff, inflict, rally } from './resolve'
+import { cuff, inflict, rally, takedown } from './resolve'
 import { attackedGroup, makeNoise, raiseAlarm } from './noise'
 import { faceToward } from './move'
 import { cheb, dist, emit, hasAb, tn, unitById } from './util'
@@ -64,7 +64,7 @@ export function abilityCost(u: Unit, ability: string): number {
   if (ability === 'cuff' && hasAb(u, 'quickCuffs') && !u.cuffFreeUsed) return 0
   return 1
 }
-const ENDS_TURN = new Set(['overwatch', 'longWatch', 'hunker', 'suppress', 'frag', 'breach', 'shieldBash', 'maul', 'baton', 'pinningShot', 'gas'])
+const ENDS_TURN = new Set(['overwatch', 'longWatch', 'hunker', 'suppress', 'frag', 'breach', 'shieldBash', 'maul', 'baton', 'pinningShot', 'gas', 'takedown'])
 export function endsTurn(ability: string): boolean { return ENDS_TURN.has(ability) }
 
 export const SUPPORT_OPTIONS = ['scan', 'smoke', 'spotlight']
@@ -125,6 +125,11 @@ export function abilityProblem(s: State, a: Extract<Action, { type: 'ability' }>
       if (!t) return 'unknown target'
       if (cheb(me.x, me.y, t.x, t.y) !== 1) return 'target must be adjacent'
       return t.side === 'syndicate' && t.status === 'surrendered' ? null : 'target is not a surrendered enemy'
+    case 'takedown':
+      if (!t) return 'unknown target'
+      if (t.side !== 'syndicate' || t.status !== 'active') return 'target is not an active enemy'
+      if (cheb(me.x, me.y, t.x, t.y) !== 1) return 'target must be adjacent'
+      return isUnaware(s, t) ? null : 'target is alert: a takedown needs an unaware enemy'
     case 'stabilize':
       if (!t) return 'unknown target'
       if (t.side !== 'squad' || t.status !== 'downed') return 'target is not a downed trooper'
@@ -206,6 +211,9 @@ export function runAbility(c: Ctx, a: Extract<Action, { type: 'ability' }>): voi
     case 'cuff':
       if (cost === 0) u.cuffFreeUsed = true
       cuff(c, u, t!)
+      break
+    case 'takedown':
+      takedown(c, u, t!)
       break
     case 'stabilize':
       t!.status = 'stabilized'

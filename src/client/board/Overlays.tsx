@@ -39,7 +39,7 @@ export function TileMarks({ state }: { state: State }): React.JSX.Element {
     const u = state.units.find((x) => x.id === sel)
     if (!u || u.side !== 'squad' || u.status !== 'active') return out
     if (armed) {
-      const hot = armed.ability === 'attack' || ['suppress', 'pinningShot', 'frag', 'shieldBash', 'maul', 'baton', 'breach'].includes(armed.ability)
+      const hot = armed.ability === 'attack' || ['suppress', 'pinningShot', 'frag', 'shieldBash', 'maul', 'baton', 'breach', 'takedown'].includes(armed.ability)
       for (const p of armedTargets(state, legalFor(state), sel, armed)) out.push({ x: p.x, y: p.y, color: hot ? '#ff5a3a' : '#3dff8a', a: 0.45 })
       return out
     }
@@ -179,7 +179,10 @@ export function HoverOverlay({ state }: { state: State }): React.JSX.Element | n
     }
     let prev: ReturnType<typeof query.preview> = null
     let noise: { loud: boolean; radius: number; groups: string[] } | null = null
-    if (canAct && hu && hu.side === 'syndicate') {
+    // ABL-TKD-1: the takedown readout when it is armed, or when a plain tap on this enemy would take it down (tap.ts)
+    const takedown = canAct && !!hu && hu.side === 'syndicate' && (armed ? armed.ability === 'takedown' : true) &&
+      legalFor(state).some((a) => a.type === 'ability' && a.ability === 'takedown' && a.unit === selU!.id && a.target === hu.id)
+    if (canAct && hu && hu.side === 'syndicate' && !takedown) {
       const ability = armed && armed.ability !== 'attack' ? armed.ability : undefined
       prev = query.preview(state, selU!.id, hu.id, ability)
       noise = query.noiseInfo(state, selU!.id, ability)
@@ -187,7 +190,7 @@ export function HoverOverlay({ state }: { state: State }): React.JSX.Element | n
     if (canAct && armed && !prev) {
       noise = query.noiseInfo(state, selU!.id, armed.ability === 'attack' ? undefined : armed.ability)
     }
-    return { selU: canAct ? selU! : null, sides, path, prev, noise }
+    return { selU: canAct ? selU! : null, sides, path, prev, noise, takedown }
   }, [hover, fog, sel, state, armed, busy, hu])
   if (!hover || !data) return null
   const enemy = hu && hu.side === 'syndicate' ? hu : null
@@ -208,6 +211,14 @@ export function HoverOverlay({ state }: { state: State }): React.JSX.Element | n
               <span>RES {Math.min(...data.prev.resolve.hit) === Math.max(...data.prev.resolve.hit) ? data.prev.resolve.hit[0] : `${Math.min(...data.prev.resolve.hit)}-${Math.max(...data.prev.resolve.hit)}`}</span>
               {data.prev.flanked && <em>FLANK</em>}
             </div>
+          </Html>
+        </>
+      )}
+      {enemy && data.selU && data.takedown && (
+        <>
+          <Brackets x={enemy.x} y={enemy.y} w={w} h={h} color="#3dff8a" />
+          <Html position={[tx(enemy.x, w), 1.65, tz(enemy.y, h)]} center style={{ pointerEvents: 'none', userSelect: 'none' }} zIndexRange={[8, 0]}>
+            <div className="readout" data-testid="takedown-readout"><b>TAKEDOWN</b><span>SURRENDERS</span><span>SILENT</span></div>
           </Html>
         </>
       )}

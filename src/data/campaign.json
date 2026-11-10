@@ -53,9 +53,9 @@
     "5": { "text": "Fortified: extra Gunmen and a Heavy, and the patrol is already alert.", "extra": [{ "group": "bar", "type": "gunman" }, { "group": "backroom", "type": "heavy" }, { "group": "patrol", "type": "gunman" }], "aware": ["patrol"] }
   },
   "slots": {
-    "patrol": [{ "x": 11, "y": 14 }, { "x": 14, "y": 15 }, { "x": 9, "y": 12 }],
-    "bar": [{ "x": 10, "y": 4 }, { "x": 14, "y": 7 }, { "x": 10, "y": 6 }],
-    "backroom": [{ "x": 6, "y": 7 }, { "x": 8, "y": 6 }, { "x": 5, "y": 4 }],
+    "patrol": [{ "x": 11, "y": 14, "facing": { "x": 0, "y": 1 } }, { "x": 14, "y": 15, "facing": { "x": 1, "y": 1 } }, { "x": 9, "y": 12, "facing": { "x": -1, "y": -1 } }],
+    "bar": [{ "x": 10, "y": 4, "facing": { "x": 1, "y": 1 } }, { "x": 14, "y": 7, "facing": { "x": -1, "y": 0 } }, { "x": 10, "y": 6, "facing": { "x": 0, "y": 1 } }],
+    "backroom": [{ "x": 6, "y": 7, "facing": { "x": 1, "y": -1 } }, { "x": 8, "y": 6, "facing": { "x": 0, "y": 1 } }, { "x": 5, "y": 4, "facing": { "x": 1, "y": 1 } }],
     "civilians": [{ "x": 3, "y": 10 }, { "x": 18, "y": 12 }, { "x": 8, "y": 16 }, { "x": 12, "y": 18 }]
   },
   "raid": { "guard": "gunman", "caches": [{ "x": 8, "y": 4 }, { "x": 14, "y": 6 }, { "x": 17, "y": 4 }] },

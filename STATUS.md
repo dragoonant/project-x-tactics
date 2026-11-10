@@ -5,6 +5,7 @@
 ## What exists
 - `docs/spec/10-rules.md`: the rules spec with ids and rulings. `docs/spec/30-figures-anim.md`: the frozen asset contract for figures, clips, items and terrain.
 - `src/engine/`: the pure rules engine (movement, line of sight with peeking, light and fog, directional cover, hit and graze, damage and Resolve, surrender, arrest and flight, overwatch, suppression, noise, Alarm and reinforcements, gas, civilians, destructible cover, downed troopers, all 7 classes' abilities, save envelope).
+- Stealth (spec 10 section 11.1, ABL-TKD): unaware enemies look in a 120° cone from an authored facing; every trooper can Takedown an adjacent unaware enemy (no roll, it surrenders, its group stays asleep unless another member sees you). The board shades dark tiles, outlines lamp pools, draws each unaware enemy's red sight cone and an UNAWARE tag; the target card says whether an action wakes the group. Screenshot `docs/status/stealth/board.png`.
 - `docs/spec/20-campaign.md`: the campaign rules spec (weeks, districts and Order, incidents, the Takeover, Funding, roster, promotion, the mission bridge, auto-resolve). Spec 10 section 18.1: Night Market variants (the raid objective).
 - `src/campaign/`: the pure campaign engine (`createCampaign`, `stepCampaign`, `legalCampaignActions`, `campaignQuery`, save `px-campaign`), the mission bridge to the tactical engine, and the sim's bot policies.
 - `src/ai/`: the syndicate utility AI (M3), reading only `view()`.
@@ -37,7 +38,7 @@ Reports: `docs/status/M1-REPORT.md`, `M2-REPORT.md`, `M3-REPORT.md`, `ASSETS-REP
 
 ## What is next
 - **Strategy, next pass:** the case board (Lieutenants, leads that unlock raids, the backer slot), corps and Standing, the fleet's response range, facilities, promotion trees (`docs/status/S1-REPORT.md`, next steps). Publishing the strategy layer as an Artifact waits for the owner.
-- **Playtest round 1** by the owner (Copy report from the end screen).
+- **Playtest round 1** by the owner (Copy report from the end screen): is the stealth route fun? Knobs: `stealth.coneHalfAngle`, the facings in `maps/bust-01.json`. The squad sim policy does not use Takedown yet.
 - **Art follow-ups:** items in the figures' paint style, the Enforcer's baton and backpack, a clearer `point` for Recon and Fixer, the Arbiter pick (`art/contact/arbiter.png`).
 - **M5:** tuning panel, roll-level combat log, seeded replays, Copy report polish.
 - **v2:** the Arbiter (`docs/PROTOTYPE-PLAN.md` section 11).

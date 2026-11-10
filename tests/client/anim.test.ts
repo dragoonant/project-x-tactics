@@ -124,6 +124,7 @@ describe('mapping: engine events and state to clips', () => {
     for (const a of ['relay', 'mark', 'callSupport', 'rally']) expect(abilityClip(a)).toBe('point')
     for (const a of ['frag', 'gas']) expect(abilityClip(a)).toBe('throw')
     expect(abilityClip('suppress')).toBe('fire')
+    expect(abilityClip('takedown')).toBe('melee')
     for (const a of ['overwatch', 'hunker', 'cuff', 'stabilize', 'stim', 'breach', 'shieldBash', 'maul', 'baton', 'pinningShot']) expect(abilityClip(a)).toBeNull()
   })
 

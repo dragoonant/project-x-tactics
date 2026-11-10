@@ -26,7 +26,7 @@ export const ARENA = [
   '############',
 ]
 
-export interface EnemyDef { type: string; x: number; y: number; loadout?: string }
+export interface EnemyDef { type: string; x: number; y: number; loadout?: string; facing?: Pt }
 export interface BuildOpts {
   squad?: { cls: string; x: number; y: number }[]
   enemies?: EnemyDef[]

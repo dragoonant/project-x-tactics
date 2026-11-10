@@ -62,9 +62,9 @@
   "C": [{"type":"heavy"},{"type":"gunman"},{"type":"gunman"}]
  },
  "groups": [
-  {"id":"patrol","aware":false,"units":[{"type":"thug","loadout":"club","x":10,"y":13},{"type":"thug","loadout":"pistol","x":13,"y":13},{"type":"heavy","x":12,"y":15}]},
-  {"id":"bar","aware":false,"units":[{"type":"fixer","x":12,"y":5},{"type":"gunman","x":11,"y":7},{"type":"gunman","x":13,"y":4}]},
-  {"id":"backroom","aware":false,"units":[{"type":"bagman","x":7,"y":5},{"type":"gunman","x":5,"y":7}]}
+  {"id":"patrol","aware":false,"units":[{"type":"thug","loadout":"club","x":10,"y":13,"facing":{"x":-1,"y":1}},{"type":"thug","loadout":"pistol","x":13,"y":13,"facing":{"x":1,"y":1}},{"type":"heavy","x":12,"y":15,"facing":{"x":0,"y":1}}]},
+  {"id":"bar","aware":false,"units":[{"type":"fixer","x":12,"y":5,"facing":{"x":0,"y":1}},{"type":"gunman","x":11,"y":7,"facing":{"x":0,"y":1}},{"type":"gunman","x":13,"y":4,"facing":{"x":-1,"y":0}}]},
+  {"id":"backroom","aware":false,"units":[{"type":"bagman","x":7,"y":5,"facing":{"x":1,"y":0}},{"type":"gunman","x":5,"y":7,"facing":{"x":1,"y":0}}]}
  ],
  "civilians": [
   {"x":5,"y":9},

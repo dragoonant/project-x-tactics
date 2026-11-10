@@ -96,6 +96,9 @@ export function resolveTap(s: State, fogUnits: Unit[], legal: Action[], selId: s
     }
     if (occ && occ.id !== sel.id) {
       if (occ.side === 'syndicate') {
+        // ABL-TKD-1: next to an unaware enemy, a tap takes it down quietly instead of an ambush attack that would wake its group
+        const tk = mine.find((m) => m.type === 'ability' && m.ability === 'takedown' && m.target === occ.id)
+        if (tk) return { kind: 'actions', actions: [tk], why: 'takedown' }
         const atk = mine.find((m) => m.type === 'attack' && m.target === occ.id)
         if (atk) return { kind: 'actions', actions: [atk], why: 'attack' }
         const cuff = mine.find((m) => m.type === 'ability' && m.ability === 'cuff' && m.target === occ.id)
@@ -138,7 +141,7 @@ export interface AbilityEntry {
 }
 
 const NEED: Record<string, NeedKind> = {
-  attack: 'unit', overwatch: 'none', longWatch: 'none', hunker: 'none', cuff: 'unit', stabilize: 'unit', suppress: 'unit',
+  attack: 'unit', takedown: 'unit', overwatch: 'none', longWatch: 'none', hunker: 'none', cuff: 'unit', stabilize: 'unit', suppress: 'unit',
   shieldBash: 'unit', maul: 'unit', baton: 'unit', pinningShot: 'unit', relay: 'unit', mark: 'unit', stim: 'unit',
   frag: 'tile', gas: 'tile', breach: 'tile', callSupport: 'tile',
 }
@@ -154,6 +157,7 @@ function probeReason(s: State, u: Unit, ability: string, option?: string): strin
   }
   const p0 = actionProblem(s, ability === 'attack' ? { type: 'attack', unit: u.id, target: '' } : base)
   if (p0 && /phase|actions left|is (downed|dead|stabilized|surrendered|cuffed|escaped|safe)|unaware/.test(p0)) return cap(p0)
+  if (ability === 'takedown') return 'Needs an unaware enemy next to this trooper: reach it from behind, outside its red sight cone'
   const tileProbe = NEED[ability] === 'tile'
   const reasons: { d: number; r: string }[] = []
   if (tileProbe) {

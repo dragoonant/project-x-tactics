@@ -6,9 +6,10 @@
   "required": ["id", "name", "width", "height", "legend", "rows", "lamps", "extraction", "squadStart", "bulwarkFacing", "spawnPoints", "waves", "groups", "civilians"],
   "definitions": {
     "pt": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 } } },
+    "dir": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "integer", "minimum": -1, "maximum": 1 }, "y": { "type": "integer", "minimum": -1, "maximum": 1 } }, "not": { "properties": { "x": { "const": 0 }, "y": { "const": 0 } } } },
     "unitDef": {
       "type": "object", "additionalProperties": false, "required": ["type"],
-      "properties": { "type": { "type": "string" }, "loadout": { "type": "string" }, "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 } }
+      "properties": { "type": { "type": "string" }, "loadout": { "type": "string" }, "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 }, "facing": { "$ref": "#/definitions/dir" } }
     }
   },
   "properties": {

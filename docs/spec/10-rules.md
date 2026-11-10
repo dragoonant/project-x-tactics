@@ -55,7 +55,7 @@ Source documents: [PROTOTYPE-PLAN.md](../PROTOTYPE-PLAN.md) sections 5–8 (desi
 
 ## 5. Visibility and fog (FOG)
 
-- **FOG-1** Observer O **sees** unit U if: distance ≤ `sight.radius`, `hasLOS(O, U)`, and (U's tile is lit, or distance ≤ `light.darkSightRange`, or O has Night Vision). A Drone Scan (SUP-1) area reveals every unit inside it to the squad regardless.
+- **FOG-1** Observer O **sees** unit U if: distance ≤ `sight.radius`, `hasLOS(O, U)`, U is inside O's cone when O is an unaware enemy (STL-1), and (U's tile is lit, or distance ≤ `light.darkSightRange`, or O has Night Vision). A Drone Scan (SUP-1) area reveals every unit inside it to the squad regardless.
 - **FOG-2** A side sees what any of its units sees (shared sight).
 - **FOG-3** `view(state, side)` removes opposing units the side does not see (they keep `lastSeen` ghost records), hides unaware groups' composition, and keeps all terrain.
 - **FOG-4** A unit may attack only a target it sees itself, except the Marksman's Squadsight (ABL-MRK-3).
@@ -114,11 +114,17 @@ Source documents: [PROTOTYPE-PLAN.md](../PROTOTYPE-PLAN.md) sections 5–8 (desi
 - **NOI-2** A group becomes aware when (a) any member sees a trooper (checked after every squad action and every step of a squad move), (b) a **loud** action happens within `noise.hearingRadius` (10) of any member, or (c) Alarm reaches its first threshold (ALM-4).
 - **NOI-3** Loud: rifle, shotgun, revolver, pistol, Breach, Suppress, frag grenade, attacks on lamps with a loud weapon. Quiet: long rifle, Pinning Shot, baton, maul, Shield Bash, gas, Cuff, Mark, Relay, Stim, Stabilize, movement.
 - **NOI-4** Noise origin is the acting unit's tile (for grenades, the impact tile).
-- **NOI-5** Attacking a group damages its unaware status: any attack on a member makes the whole group aware after the attack resolves (the ambush bonus applies to that attack).
+- **NOI-5** Attacking a group damages its unaware status: any attack on a member makes the whole group aware after the attack resolves (the ambush bonus applies to that attack). A Takedown (ABL-TKD-1) is not an attack and does not do this (ABL-TKD-2).
 - **ALM-1** Alarm is an integer 0–`alarm.max` (10). It never decreases.
 - **ALM-2** +`alarm.perRound` (1) at each end of round.
 - **ALM-3** Only squad actions raise Alarm: +`alarm.loudShot` (1) the first time each round a squad loud action happens; +`alarm.explosion` (2) per frag grenade; +`alarm.supportCall` (1) per support call.
 - **ALM-4** Thresholds fire once each, when Alarm first reaches them: `alarm.t1` (4) → all groups aware + reinforcement wave `A`; `alarm.t2` (7) → the Bagman flees (ENM-5) + wave `B`; `alarm.t3` (10) → wave `C`. Waves come from the map's spawn points; units take the nearest free tiles. New units are aware.
+
+## 11.1 Stealth (STL)
+
+- **STL-1** An enemy of an **unaware** group sees only inside a cone of half-angle `stealth.coneHalfAngle` (60, so 120° wide) around its **facing**, measured from its tile centre to the target's; everything else in FOG-1 still applies. A unit straight behind or square to the side is not seen, even next to it.
+- **STL-2** Facing comes from the map (`facing` on each enemy, a unit step; campaign variant slots carry one too) and defaults to south `{ x: 0, y: 1 }`. Unaware enemies don't move or turn (NOI-1). Aware enemies see all round; their facing only follows their moves and attacks.
+- **STL-3** `query.unawareSight(view)` lists, for every enemy of an unaware group the side sees, the tiles on which it would spot a trooper (FOG-1 with STL-1). The UI draws these cones and never computes them itself (ARCH-4).
 
 ## 12. Gas (GAS)
 
@@ -130,7 +136,11 @@ Source documents: [PROTOTYPE-PLAN.md](../PROTOTYPE-PLAN.md) sections 5–8 (desi
 
 ## 13. Abilities (ABL)
 
-Common to all troopers: **Move**, **Overwatch** (OW), **Hunker** (HNK), **Cuff** (ARR-3), **Stabilize** (DWN-3). Classes and weapons: `src/data/units.json`, `weapons.json` (values from PROTOTYPE-PLAN 6.1–6.2).
+Common to all troopers: **Move**, **Overwatch** (OW), **Hunker** (HNK), **Cuff** (ARR-3), **Stabilize** (DWN-3), **Takedown** (ABL-TKD-1). Classes and weapons: `src/data/units.json`, `weapons.json` (values from PROTOTYPE-PLAN 6.1–6.2).
+
+**All troopers**
+- **ABL-TKD-1 Takedown:** 1 action, ends turn, quiet, no roll. Target: an active enemy adjacent (8-neighbour) to the trooper whose group is unaware. The target **surrenders** at once (Resolve 0, unarmed; RES-4 ripple and ARR-1..3 apply as for any surrender). No noise, no Alarm.
+- **ABL-TKD-2** A Takedown does not wake the target's group by itself (not NOI-5). After it resolves, NOI-2a still runs: if another member sees a trooper, the group wakes. `query.stealthOutlook` tells the UI whether an action drops the target (`always` / `onHit` / `no`) and whether it would wake the target's group.
 
 **Recruit**
 - **ABL-RCT-1 Suppress:** 1 action, ends turn, loud, target seen within weapon range. Target takes `suppress.resolveNow` (2) Resolve now and `suppress.resolvePerPhase` (1) at the start of each of its phases while suppressed; SPR-1 applies.
@@ -260,3 +270,6 @@ The campaign (spec 20, OPS-2/OPS-3) deploys into variants of the Night Market. A
 - **R-26** FOG-3 | `view()` empties the member list of unaware groups for the opposing side and drops its RNG state and log | Hidden information must not leak through the view.
 - **R-27** VAR-3 | Seizing needs no action: standing next to (or on) the cache after any squad action secures it | A cuffed prisoner left on the cache tile would otherwise block it for good; reaching it under fire is the test.
 - **R-28** VAR-1 | A variant keeps the map id `bust-01` and only changes units, lamps and civilians, never walls or cover | The client's terrain and props are drawn for `bust-01`; a lamp missing from the variant shows as a dead lamp.
+- **R-29** STL-1 | The cone is measured between tile centres and ignores LOS-3 peeking offsets; the boundary counts as inside | Keeps the cone a simple shape the board can draw; peeking still applies to the line itself.
+- **R-30** ABL-TKD-1 | Takedown works on every enemy type, the Bagman included, and leaves a surrender to cuff rather than a cuffed prisoner | Owner choice: "a melee action that only works on an unaware enemy you reach unseen: it always makes them surrender". Cuffing stays a second step (Quick Cuffs makes it free for the Enforcer).
+- **R-31** ABL-TKD-2 | No separate witness rule: a takedown inside another member's cone is caught by NOI-2a because that member sees the trooper | The owner chose the takedown over a witness rule; NOI-2a already covers being seen.

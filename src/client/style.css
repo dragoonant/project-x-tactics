@@ -121,6 +121,7 @@ body.lite .rec-dot { animation: none; }
 .readout b { color: var(--green); }
 .readout span { color: var(--dim); }
 .readout em { color: var(--amber); font-style: normal; }
+.stealth-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: #ff7a8e; background: rgba(5, 8, 8, 0.78); padding: 1px 5px; border: 1px solid rgba(255, 31, 75, 0.7); white-space: nowrap; }
 .ghost-tag { font-family: var(--mono); font-size: 10px; color: var(--sodium); background: rgba(5, 8, 8, 0.75); padding: 1px 4px; border: 1px dashed var(--sodium); white-space: nowrap; }
 .fx-text { font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: 0.06em; white-space: nowrap; text-shadow: 0 0 4px #000, 0 1px 0 #000; animation: floatUp 1s ease-out both; }
 .fx-text.tone-hit { color: #ff9a4a; } .fx-text.tone-miss { color: #aab3c2; } .fx-text.tone-dmg { color: #ff5a3a; } .fx-text.tone-good { color: var(--green); }

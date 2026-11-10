@@ -53,7 +53,7 @@ export function legalActions(s: State): Action[] {
         case 'overwatch': case 'longWatch': case 'hunker':
           cands.push({ type: 'ability', unit: u.id, ability: ab })
           break
-        case 'cuff': case 'stabilize': case 'suppress': case 'shieldBash': case 'maul': case 'baton': case 'pinningShot': case 'relay': case 'mark': case 'rally':
+        case 'cuff': case 'takedown': case 'stabilize': case 'suppress': case 'shieldBash': case 'maul': case 'baton': case 'pinningShot': case 'relay': case 'mark': case 'rally':
           for (const t of s.units) if (t.id !== u.id) cands.push({ type: 'ability', unit: u.id, ability: ab, target: t.id })
           break
         case 'stim':

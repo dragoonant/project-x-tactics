@@ -51,7 +51,7 @@ export function variantFor(s: CampaignState, inc: Incident): VariantPlan {
       const p = CAMPAIGN.slots[e.group]?.[k]
       if (!g || !p) continue
       used[e.group] = k + 1
-      g.units.push({ type: e.type, x: p.x, y: p.y, ...(e.loadout ? { loadout: e.loadout } : {}) })
+      g.units.push({ type: e.type, x: p.x, y: p.y, ...(e.loadout ? { loadout: e.loadout } : {}), ...(p.facing ? { facing: { ...p.facing } } : {}) })
     }
     for (const gid of c.aware ?? []) { const g = m.groups.find((x) => x.id === gid); if (g) g.aware = true }
     for (let i = 0; i < (c.civilians ?? 0); i++) {

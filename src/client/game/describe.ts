@@ -60,6 +60,7 @@ export function describeEvent(e: GameEvent, ctx: NameCtx): Line | null {
     case 'death': return L(e.cause === 'bleedOut' ? `${N(e.unit)} bleeds out` : `${N(e.unit)} is dead`, 'alarm')
     case 'downed': return L(`${N(e.unit)} is down and bleeding`, 'alarm')
     case 'stabilized': return L(`${N(e.unit)} stabilized by ${N(e.by)}`, 'good')
+    case 'takedown': return L(`${N(e.by)} takes down ${N(e.unit)} without a sound`, 'good')
     case 'surrender': return L(`${N(e.unit)} surrenders`, 'good')
     case 'cuffed': return L(`${N(e.unit)} cuffed by ${N(e.by)}`, 'good')
     case 'flee': return hidden(e.unit, ctx) ? null : L(`${N(e.unit)} bolts for the exit`, 'warn')

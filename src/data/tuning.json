@@ -6,6 +6,7 @@
   "hit": { "min": 5, "max": 95, "grazeBand": 15 },
   "mark": { "aim": 15, "resolveMult": 1.5, "duration": 2 },
   "ambush": { "aim": 20 },
+  "stealth": { "coneHalfAngle": 60 },
   "overwatch": { "aimPenalty": 15 },
   "suppress": { "aimPenalty": 20, "resolveNow": 2, "resolvePerPhase": 1 },
   "gas": { "aimPenalty": 20, "duration": 3, "resolve": 2, "uses": 2 },

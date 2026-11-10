@@ -84,6 +84,7 @@ export function createGame(setup: Setup): State {
       const id = `e${++s.nextIds.e}`
       const u = makeEnemy(id, d.type, d.x, d.y, d.loadout)
       u.group = g.id
+      u.facing = d.facing ? { x: Math.sign(d.facing.x), y: Math.sign(d.facing.y) } : { x: 0, y: 1 } // STL-1
       s.units.push(u)
       members.push(id)
     }

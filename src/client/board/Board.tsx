@@ -19,6 +19,7 @@ import { HoverOverlay, TileMarks, useHoverUnit } from './Overlays'
 import { Terrain } from './terrain/Terrain'
 import { CityScene } from '../campaign/City'
 import { CacheMarker } from './CacheMarker'
+import { StealthLayer } from './Stealth'
 import { TERRAIN_V2, preloadTerrain } from '../game/terrainAssets'
 
 let preview: { state: State; fog: State } | null = null
@@ -98,6 +99,7 @@ function Scene({ state, fog, fogOn }: { state: State; fog: State; fogOn: boolean
       <Suspense fallback={null}><TerrainGate state={state} fogOn={fogOn} lamps={lamps} lights={lights} /></Suspense>
       <Figures units={fog.units} w={w} h={h} selected={selected} hovered={hoverId} />
       <Ghosts state={state} fog={fog} />
+      {fogOn && <StealthLayer state={state} fog={fog} />}
       {fogOn && <TileMarks state={state} />}
       {fogOn && <HoverOverlay state={state} />}
       <Volumes state={state} />

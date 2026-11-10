@@ -76,8 +76,9 @@ describe('OW / HNK / SPR reaction rules', () => {
 })
 
 describe('NOI / ALM noise, activation and Alarm', () => {
+  const W = { x: -1, y: 0 } // STL-1: these sleepers look west, toward the squad
   const sleepers = (extra: Parameters<typeof build>[1] = {}): State =>
-    build(R20, { groups: [{ id: 'g1', aware: false, units: [{ type: 'gunman', x: 9, y: 3 }, { type: 'gunman', x: 9, y: 4 }] }], ...extra })
+    build(R20, { groups: [{ id: 'g1', aware: false, units: [{ type: 'gunman', x: 9, y: 3, facing: W }, { type: 'gunman', x: 9, y: 4, facing: W }] }], ...extra })
 
   it('NOI-1 unaware groups hold position: they stay put and unaware while the squad stays quiet and unseen', () => {
     let s = sleepers()

@@ -41,7 +41,8 @@ export interface EnemyDef {
 }
 export interface MapLegendEntry { kind: 'floor' | 'wall' | 'door' | 'exit' | 'escape'; object?: 'halfCover' | 'fullCover' | 'rubble' }
 export interface Pt { x: number; y: number }
-export interface MapUnitDef { type: string; x: number; y: number; loadout?: string }
+/** `facing` (STL-1): where an unaware enemy looks, a unit step such as { x: 0, y: 1 } (south); default south. */
+export interface MapUnitDef { type: string; x: number; y: number; loadout?: string; facing?: Pt }
 export interface MapData {
   id: string
   name: string
@@ -87,7 +88,7 @@ export interface CampaignData {
   districts: { id: string; name: string; patron: string; modifier: string }[]
   modifiers: Record<string, VariantChange & { label: string }>
   difficulty: Record<string, VariantChange>
-  slots: Record<string, Pt[]>
+  slots: Record<string, (Pt & { facing?: Pt })[]>
   raid: { guard: string; caches: Pt[] }
   names: string[]
   specialties: string[]

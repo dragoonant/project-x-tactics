@@ -7,6 +7,8 @@
  "definitions": {
   "numTree": { "type": "object", "additionalProperties": { "anyOf": [{ "type": "number" }, { "$ref": "#/definitions/numTree" }] } },
   "pt": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 } } },
+  "dir": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "integer", "minimum": -1, "maximum": 1 }, "y": { "type": "integer", "minimum": -1, "maximum": 1 } }, "not": { "properties": { "x": { "const": 0 }, "y": { "const": 0 } } } },
+  "slot": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 }, "facing": { "$ref": "#/definitions/dir" } } },
   "extra": { "type": "object", "additionalProperties": false, "required": ["group", "type"], "properties": { "group": { "type": "string" }, "type": { "type": "string" }, "loadout": { "type": "string" } } },
   "swap": { "type": "object", "additionalProperties": false, "required": ["group", "index", "type"], "properties": { "group": { "type": "string" }, "index": { "type": "integer", "minimum": 0 }, "type": { "type": "string" }, "loadout": { "type": "string" } } },
   "change": {
@@ -50,7 +52,7 @@
    "required": ["1", "2", "3", "4", "5"],
    "properties": { "1": { "$ref": "#/definitions/change" }, "2": { "$ref": "#/definitions/change" }, "3": { "$ref": "#/definitions/change" }, "4": { "$ref": "#/definitions/change" }, "5": { "$ref": "#/definitions/change" } }
   },
-  "slots": { "type": "object", "required": ["civilians"], "additionalProperties": { "type": "array", "items": { "$ref": "#/definitions/pt" } } },
+  "slots": { "type": "object", "required": ["civilians"], "additionalProperties": { "type": "array", "items": { "$ref": "#/definitions/slot" } } },
   "raid": {
    "type": "object",
    "additionalProperties": false,

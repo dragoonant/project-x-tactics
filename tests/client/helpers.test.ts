@@ -73,6 +73,17 @@ describe('client helpers: tap resolution (rule 25)', () => {
     expect({ x: u.x, y: u.y }).toEqual({ x: d.x, y: d.y })
   })
 
+  it('a tap on an adjacent unaware enemy takes it down quietly (ABL-TKD-1) instead of an ambush attack', () => {
+    const s = mk()
+    const e = s.units.find((u) => u.side === 'syndicate' && u.kind === 'heavy')!
+    const r1 = s.units.find((u) => u.id === 's4')! // the Recon, placed on the Heavy's blind side (it looks south)
+    r1.x = e.x; r1.y = e.y - 1
+    const r = resolveTap(s, fogUnits(s), legalActions(s), 's4', null, { x: e.x, y: e.y })
+    expect(r).toEqual({ kind: 'actions', actions: [{ type: 'ability', unit: 's4', ability: 'takedown', target: e.id }], why: 'takedown' })
+    const entry = abilityEntries(s, legalActions(s), r1).find((x) => x.ability === 'takedown')!
+    expect(entry).toMatchObject({ enabled: true, loud: false, label: 'Takedown' })
+  })
+
   it('walls and unreachable ground do nothing or clear; never throws', () => {
     const s = mk()
     expect(resolveTap(s, fogUnits(s), legalFor(s), 's1', null, { x: 0, y: 0 })).toEqual({ kind: 'none' })

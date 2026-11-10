@@ -11,6 +11,7 @@
   "hit",
   "mark",
   "ambush",
+  "stealth",
   "overwatch",
   "suppress",
   "gas",
@@ -145,6 +146,20 @@
    "properties": {
     "aim": {
      "type": "number"
+    }
+   }
+  },
+  "stealth": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "coneHalfAngle"
+   ],
+   "properties": {
+    "coneHalfAngle": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 180
     }
    }
   },
