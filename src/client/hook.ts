@@ -11,6 +11,7 @@ import type { CampaignAction } from '../campaign'
 import { cdispatch, newCampaign } from './campaign/controller'
 import { districtCenter } from './campaign/layout'
 import { cityApi } from './campaign/City'
+import { cineLog } from './game/presentation'
 
 export function installHook(): void {
   const api = {
@@ -18,6 +19,10 @@ export function installHook(): void {
       const c = boardApi.controller
       return c ? { x: c.view.x, z: c.view.z, az: c.view.az, pol: c.view.pol, dist: c.view.dist, overview: c.overview } : null
     },
+    /** Action camera: 'off', 'on' or 'returning', the camera's world position, and the shots and kill close-ups the director played. */
+    cinematic: () => boardApi.controller?.cinematicState ?? 'off',
+    cameraPos: () => { const c = boardApi.controller; return c ? { x: c.camera.position.x, y: c.camera.position.y, z: c.camera.position.z } : null },
+    cineLog: () => [...cineLog],
     tileToScreen: (x: number, y: number) => boardApi.tileToScreen(x, y),
     state: () => useStore.getState().state,
     fog: () => useStore.getState().fog,

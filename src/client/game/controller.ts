@@ -8,10 +8,11 @@ import { setCallSignNames } from './names'
 import { describeEvent } from './describe'
 import { present } from './director'
 import { SAVE_KEY, clearSave, loadSettings, readSave, storeSettings, writeSave, type Settings } from './persist'
-import { clearPresentation } from './presentation'
+import { camApi, clearPresentation } from './presentation'
 import { get, set, useStore, type TickerLine } from './store'
 import { fireNow, abilityEntries, legalFor, resolveTap, type AbilityEntry } from './tap'
 import { preloadModels } from './models'
+import { newBodies } from './vision'
 import { TERRAIN_V2, preloadTerrain } from './terrainAssets'
 
 let gen = 0
@@ -50,7 +51,8 @@ function enter(state: State, resumed: boolean, mode: 'single' | 'campaign'): voi
   clearPresentation()
   const firstActor = state.units.find((u) => u.side === 'squad' && u.status === 'active') ?? state.units.find((u) => u.side === 'squad')
   set({
-    screen: 'play', state, fog: view(state, 'squad'), selected: firstActor?.id ?? null, armed: null, hover: null, busy: false, hint: null,
+    // a resumed game keeps the bodies of the syndicate and civilians who died (the save does not say who saw them fall)
+    screen: 'play', state, fog: view(state, 'squad'), bodies: resumed ? state.units.filter((u) => u.side !== 'squad' && u.status === 'dead').map((u) => u.id) : [], selected: firstActor?.id ?? null, armed: null, hover: null, busy: false, hint: null,
     ticker: [line(resumed ? 'Feed restored from the last save' : `Feed live. Operation NIGHT MARKET${state.raid ? ' (raid)' : ''} begins`, 'phase', state.round)],
     saveError: null, panel: 'none', confirmNew: false, phaseTick: 0, mode,
   })
@@ -117,7 +119,8 @@ function persist(s: State): void {
 async function commit(next: State, events: GameEvent[], before: State, follow: boolean): Promise<void> {
   const g = gen
   const fog = view(next, 'squad')
-  const visible = new Set<string>([...view(before, 'squad').units.map((u) => u.id), ...fog.units.map((u) => u.id)])
+  const seenBefore = view(before, 'squad').units.map((u) => u.id)
+  const visible = new Set<string>([...seenBefore, ...fog.units.map((u) => u.id)])
   const lines: TickerLine[] = []
   for (const e of events) {
     const l = describeEvent(e, { state: next, visible })
@@ -131,11 +134,11 @@ async function commit(next: State, events: GameEvent[], before: State, follow: b
     if (nxt) selected = nxt.id
   }
   const phaseChanged = before.phase !== next.phase
-  set({ state: next, fog, ticker: pushLines(lines), selected, armed: null, hint: null, phaseTick: phaseChanged && prev.settings.speed !== 'instant' ? prev.phaseTick + 1 : prev.phaseTick })
+  set({ state: next, fog, bodies: newBodies(seenBefore, next, prev.bodies), ticker: pushLines(lines), selected, armed: null, hint: null, phaseTick: phaseChanged && prev.settings.speed !== 'instant' ? prev.phaseTick + 1 : prev.phaseTick })
   persist(next)
   audio.onEvents(events)
   audio.syncMusic(next)
-  await present(events, before, next, { speed: prev.settings.speed, follow, alive: () => g === gen })
+  await present(events, before, next, { speed: prev.settings.speed, follow, cine: prev.settings.actionCam, alive: () => g === gen })
 }
 
 export async function dispatch(a: Action): Promise<boolean> {
@@ -208,6 +211,14 @@ export function selectUnit(id: string | null): void {
   if (get().busy) return
   set({ selected: id, armed: null, hint: null })
   audio.ui('select')
+}
+
+/** Unit box (channel) click: select the trooper and centre the camera on it, keeping the camera's rotation, tilt and zoom. */
+export function focusUnit(id: string): void {
+  if (get().busy) return
+  selectUnit(id)
+  const u = get().state?.units.find((x) => x.id === id)
+  if (u) camApi.focusTile({ x: u.x, y: u.y })
 }
 
 export async function onTileTap(tile: Pt, pointerType: string): Promise<void> {

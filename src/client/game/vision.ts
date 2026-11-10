@@ -36,3 +36,20 @@ export function visibleMask(s: State): Uint8Array {
   cache.set(s, mask)
   return mask
 }
+
+/** Ids of units that were in the squad's view before a step and are dead after it (their bodies stay on the board). */
+export function newBodies(seenBefore: Iterable<string>, after: State, known: string[]): string[] {
+  const out = new Set(known)
+  for (const id of seenBefore) {
+    const u = after.units.find((x) => x.id === id)
+    if (u && u.side !== 'squad' && u.status === 'dead') out.add(id)
+  }
+  return out.size === known.length ? known : [...out]
+}
+
+/** The units the board draws: the squad's view plus the bodies it saw fall (own troopers are always in the view). */
+export function boardUnits(state: State, fog: State, bodies: string[]): Unit[] {
+  if (bodies.length === 0) return fog.units
+  const extra = state.units.filter((u) => bodies.includes(u.id) && u.status === 'dead' && !fog.units.some((f) => f.id === u.id))
+  return extra.length ? [...fog.units, ...extra] : fog.units
+}

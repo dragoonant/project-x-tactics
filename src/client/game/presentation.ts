@@ -36,7 +36,7 @@ export function pruneFx(now: number): boolean {
   for (let i = fxList.length - 1; i >= 0; i--) if (now - fxList[i]!.t0 > fxList[i]!.dur) fxList.splice(i, 1)
   return fxList.length !== n
 }
-export function clearPresentation(): void { motion.clear(); clearCues(); fxList.length = 0; subs.forEach((fn) => fn()) }
+export function clearPresentation(): void { motion.clear(); clearCues(); fxList.length = 0; focus.cine = null; camApi.release(); subs.forEach((fn) => fn()) }
 
 // ---- render-loop wake-up (the canvas runs in demand mode)
 export const loop = { until: 0, invalidate: null as null | (() => void) }
@@ -49,6 +49,13 @@ export function wake(ms = 500): void {
 export const camApi = {
   flyTo: (_x: number, _z: number): void => { /* set by CameraRig */ },
   focusTile: (_p: Pt): void => { /* set by CameraRig */ },
+  /** Action camera: glide to a world pose (src/client/game/cinematic.ts) in `ms`. */
+  shot: (_pos: [number, number, number], _look: [number, number, number], _ms?: number): void => { /* set by CameraRig */ },
+  /** Action camera: glide back to the orbit view in `ms`. */
+  release: (_ms?: number): void => { /* set by CameraRig */ },
+  /** World <-> tile mapping of the board (set by the CameraRig). */
+  world: (p: { x: number; y: number }): { x: number; z: number } => ({ x: p.x, z: p.y }),
+  tile: (x: number, z: number): Pt => ({ x: Math.floor(x), y: Math.floor(z) }),
 }
 
 /** Position along a path for progress t in 0..1 (tile coordinates, fractional). */
@@ -63,4 +70,9 @@ export function along(path: Pt[], t: number): { x: number; y: number; dx: number
 }
 
 /** Tiles the wall cutaway keeps clear: the selected trooper and the hovered tile. */
-export const focus = { sel: null as Pt | null, hover: null as Pt | null, units: [] as Pt[] }
+/** What the action camera played, newest last (`shot:<shooter>:<target>`, `kill:<victim>`): the test hook reads it. */
+export const cineLog: string[] = []
+export function logCine(entry: string): void { cineLog.push(entry); if (cineLog.length > 40) cineLog.splice(0, cineLog.length - 40) }
+
+/** `cine`: while the action camera runs, the only tiles the cutaway keeps clear (the shooter and its target, or the victim). */
+export const focus = { sel: null as Pt | null, hover: null as Pt | null, units: [] as Pt[], cine: null as Pt[] | null }

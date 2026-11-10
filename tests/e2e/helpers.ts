@@ -2,6 +2,9 @@ import { expect, type Page } from '@playwright/test'
 
 export interface Px {
   camera(): { x: number; z: number; az: number; pol: number; dist: number; overview: number } | null
+  cinematic(): 'off' | 'on' | 'returning'
+  cameraPos(): { x: number; y: number; z: number } | null
+  cineLog(): string[]
   tileToScreen(x: number, y: number): { x: number; y: number } | null
   state(): any
   fog(): any

@@ -9,6 +9,7 @@ import { createGame, view } from '../../engine'
 import type { State } from '../../engine'
 import { onTileTap, setHover } from '../game/controller'
 import { focus } from '../game/presentation'
+import { boardUnits } from '../game/vision'
 import { DEFAULT_SQUAD, useStore } from '../game/store'
 import { CameraRig, boardApi } from './CameraRig'
 import { gesture } from './camera'
@@ -92,12 +93,14 @@ function Scene({ state, fog, fogOn }: { state: State; fog: State; fogOn: boolean
     focus.units = fog.units.filter((x) => x.status !== 'dead' && x.side !== 'civilians').map((x) => ({ x: x.x, y: x.y }))
   }, [selected, state, fog])
   const hoverId = hu?.id ?? null
+  const bodies = useStore((s) => s.bodies)
+  const units = useMemo(() => boardUnits(state, fog, bodies), [state, fog, bodies])
   return (
     <Suspense fallback={null}>
       <CameraRig w={w} h={h} />
       <Lights state={state} lamps={lamps} refs={lights} />
       <Suspense fallback={null}><TerrainGate state={state} fogOn={fogOn} lamps={lamps} lights={lights} /></Suspense>
-      <Figures units={fog.units} w={w} h={h} selected={selected} hovered={hoverId} />
+      <Figures units={units} w={w} h={h} selected={selected} hovered={hoverId} />
       <Ghosts state={state} fog={fog} />
       {fogOn && <StealthLayer state={state} fog={fog} />}
       {fogOn && <TileMarks state={state} />}

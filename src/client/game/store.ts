@@ -16,6 +16,8 @@ export interface Store {
   state: State | null
   /** What the squad may see (view(state, 'squad')). */
   fog: State | null
+  /** Units the squad saw die: their bodies stay on the board (the fog view drops dead units), so the death clip plays and holds. */
+  bodies: string[]
   selected: string | null
   armed: Armed | null
   hover: Pt | null
@@ -53,6 +55,7 @@ export const useStore = create<Store>(() => ({
   screen: 'start',
   state: null,
   fog: null,
+  bodies: [],
   selected: null,
   armed: null,
   hover: null,

@@ -11,13 +11,15 @@ import { clearCues, cues, holds, playCue } from '../anim/cues'
 import { STATUS_EVENTS, abilityClip, aimsFirst, attackClip, damageClip, moveMode } from '../anim/mapping'
 import { AIM_MS, REACTION_MAX_MS } from '../anim/tuning'
 import type { Speed } from './persist'
-import { addFx, camApi, motion, wake } from './presentation'
+import { CINE_HOLD_MS, CINE_IN_MS, CINE_OUT_MS, KILL_HOLD_MS, KILL_MAX_MS, killPose, shotPose } from './cinematic'
+import { addFx, camApi, focus, logCine, motion, wake } from './presentation'
 
 export const SPEED_FACTOR: Record<Speed, number> = { normal: 1, fast: 0.4, instant: 0 }
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
-export interface PresentOpts { speed: Speed; follow: boolean; alive: () => boolean }
+/** `cine`: the action camera (over the shoulder for shots, a close-up when a shot kills). */
+export interface PresentOpts { speed: Speed; follow: boolean; cine?: boolean; alive: () => boolean }
 
 function visibleIds(s: State): Set<string> {
   const v = view(s, 'squad')
@@ -58,6 +60,8 @@ export async function present(events: GameEvent[], before: State, after: State, 
     await playEvents(events, before, after, opts, k, { unitOf, rigged, clipMs, cue })
   } finally {
     holds.clear()
+    focus.cine = null
+    camApi.release(CINE_OUT_MS * SPEED_FACTOR[opts.speed])
   }
 }
 
@@ -109,9 +113,36 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
 
   const follow = (p: Pt | null): void => { if (opts.follow && p) camApi.flyTo(p.x, p.y) }
 
-  for (const e of events) {
+  // ---- action camera: over the shooter's shoulder for a ranged attack; when the shot kills, a close-up of the victim's death
+  const walled = (wx: number, wz: number): boolean => {
+    const t = camApi.tile(wx, wz)
+    const tile = after.map.tiles[t.y * after.map.w + t.x]
+    return !!tile && (tile.k === 'wall' || (tile.k === 'door' && !tile.open))
+  }
+  const glideMs = CINE_IN_MS * k // the camera glide keeps pace with the animation speed
+  let cine: { shooter: string; target: string; kill: boolean } | null = null
+  const release = (): void => { if (cine) { cine = null; focus.cine = null; camApi.release(CINE_OUT_MS * k) } }
+
+  for (let i = 0; i < events.length; i++) {
+    const e = events[i]!
     if (!opts.alive()) return
     let wait = 0
+    if (cine) {
+      // the shot's own follow-up (damage, the victim's fall) keeps the action camera; anything else hands the camera back
+      const own = (e.kind === 'damage' && e.target === cine.target) || (cine.kill && e.kind === 'death' && e.unit === cine.target)
+      if (!own) release()
+    }
+    if (cine?.kill && e.kind === 'death' && e.unit === cine.target) {
+      // cut to the victim before its held pose is released, so the whole fall plays in the close-up
+      const s = h.unitOf(cine.shooter), v = tileOf(e.unit)
+      if (s && v) {
+        camApi.shot(...poseArgs(killPose(camApi.world(pos.get(s.id) ?? s), camApi.world(v), walled)), glideMs)
+        focus.cine = [v]
+        logCine(`kill:${e.unit}`)
+        await sleep(CINE_IN_MS * k)
+        if (!opts.alive()) return
+      }
+    }
     // A status change reaches the figure here: its held pose is released so the new state clip (downed, death, surrender, cuffed) plays.
     if (STATUS_EVENTS.has(e.kind) && typeof e.unit === 'string') {
       holds.delete(e.unit)
@@ -144,6 +175,14 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
         if (a && t && (seen(e.attacker) || seen(e.target))) {
           follow(a)
           const clip = attackClip(e)
+          if (opts.cine && clip === 'fire' && seen(e.attacker) && seen(e.target) && typeof e.attacker === 'string' && typeof e.target === 'string') {
+            cine = { shooter: e.attacker, target: e.target, kill: killsBeforeNextAttack(events, i, e.target) }
+            camApi.shot(...poseArgs(shotPose(camApi.world(a), camApi.world(t), walled)), glideMs)
+            focus.cine = [a, t]
+            logCine(`shot:${e.attacker}:${e.target}`)
+            await sleep(CINE_IN_MS * k)
+            if (!opts.alive()) return
+          }
           const fireMs = h.clipMs(e.attacker, clip)
           const anim = fireMs !== null // the attacker has the clip: wait for it; otherwise the old fixed beat
           let delay = 0
@@ -200,6 +239,8 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
           const clip: ClipName = e.kind === 'death' ? 'death' : e.kind === 'downed' ? 'downed' : e.kind === 'surrender' ? 'surrender' : e.kind === 'cuffed' ? 'cuffed' : 'idle'
           const ms = h.clipMs(e.unit, clip)
           wait = Math.max(380 * k, ms === null ? 0 : Math.min(ms, REACTION_MAX_MS * k))
+          // the kill close-up waits for the whole fall, then holds on the body a moment
+          if (cine?.kill && e.kind === 'death' && e.unit === cine.target) wait = Math.min(KILL_MAX_MS * k, (ms ?? 0) + KILL_HOLD_MS * k)
         }
         break
       }
@@ -213,6 +254,19 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
     }
     if (wait > 0) await sleep(wait)
   }
+  if (cine) { await sleep(CINE_HOLD_MS * k); release() }
   if (parallelEnd > 0) await sleep(Math.max(0, parallelEnd - (performance.now() - now0)))
   wake(200)
+}
+
+const poseArgs = (p: { pos: [number, number, number]; look: [number, number, number] }): [[number, number, number], [number, number, number]] => [p.pos, p.look]
+
+/** True when `target` dies in this batch before the next attack event (so the attack at index `i` is the killing shot). */
+export function killsBeforeNextAttack(events: GameEvent[], i: number, target: string): boolean {
+  for (let j = i + 1; j < events.length; j++) {
+    const x = events[j]!
+    if (x.kind === 'attack') return false
+    if (x.kind === 'death' && x.unit === target) return true
+  }
+  return false
 }

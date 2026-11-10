@@ -312,11 +312,16 @@ export function Terrain({ state, fogOn, lamps, lights, assets = null }: { state:
     const cam = camera as PerspectiveCamera
     const c = boardApi.controller
     const foci: { x: number; z: number; y: number }[] = []
-    if (c) foci.push({ x: c.view.x, z: c.view.z, y: 0.5 })
-    const sel = focus.sel, hov = focus.hover
-    if (sel) foci.push({ x: tx(sel.x, w), z: tz(sel.y, h), y: 0.6 })
-    if (hov) foci.push({ x: tx(hov.x, w), z: tz(hov.y, h), y: 0.6 })
-    for (const p of focus.units) foci.push({ x: tx(p.x, w), z: tz(p.y, h), y: 0.6 })
+    if (focus.cine) {
+      // action camera: only the shot is kept clear, so the walls around it stay up and frame it
+      for (const p of focus.cine) foci.push({ x: tx(p.x, w), z: tz(p.y, h), y: 0.6 })
+    } else {
+      if (c) foci.push({ x: c.view.x, z: c.view.z, y: 0.5 })
+      const sel = focus.sel, hov = focus.hover
+      if (sel) foci.push({ x: tx(sel.x, w), z: tz(sel.y, h), y: 0.6 })
+      if (hov) foci.push({ x: tx(hov.x, w), z: tz(hov.y, h), y: 0.6 })
+      for (const p of focus.units) foci.push({ x: tx(p.x, w), z: tz(p.y, h), y: 0.6 })
+    }
     const cx = cam.position.x, cy = cam.position.y, cz = cam.position.z
     let changed = false
     for (let i = 0; i < wallList.length; i++) {

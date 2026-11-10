@@ -4,7 +4,7 @@ import { query } from '../../engine'
 import type { State, Unit } from '../../engine'
 import { WEAPONS } from '../../data'
 import { boardApi } from '../board/CameraRig'
-import { cancelArm, chooseAbility, endTurn, entriesFor, selectUnit, updateSettings } from '../game/controller'
+import { cancelArm, chooseAbility, endTurn, entriesFor, focusUnit, updateSettings } from '../game/controller'
 import { ABILITY_TEXT, callSign } from '../game/names'
 import { useStore } from '../game/store'
 import { legalFor, passiveList, type AbilityEntry } from '../game/tap'
@@ -185,7 +185,7 @@ function Channels({ state }: { state: State }): React.JSX.Element {
       {troopers.map((u, i) => {
         const chips = statusChips(u)
         return (
-          <button key={u.id} className={`chan${sel === u.id ? ' sel' : ''}${u.status === 'dead' ? ' dead' : ''}`} onClick={() => selectUnit(u.id)} disabled={busy} data-unit={u.id}>
+          <button key={u.id} className={`chan${sel === u.id ? ' sel' : ''}${u.status === 'dead' ? ' dead' : ''}`} onClick={() => focusUnit(u.id)} disabled={busy} data-unit={u.id}>
             <span className="t"><b>{callSign(u)}</b><span>CH-{i + 1}</span></span>
             <span className="cls">{u.name}</span>
             <span className="vit"><span className={`bar ${hpClass(u)}`}><i style={{ width: `${(u.hp / Math.max(1, u.maxHp)) * 100}%` }} /></span><em>{u.hp}/{u.maxHp}</em></span>
@@ -248,6 +248,7 @@ function SettingsPanel(): React.JSX.Element {
         <div className="seg">{(['normal', 'fast', 'instant'] as const).map((k) => <button key={k} className={s.speed === k ? 'on' : ''} onClick={() => updateSettings({ speed: k })} data-speed={k}>{k.toUpperCase()}</button>)}</div>
         <label>Lite (no scanlines or glitch)<input type="checkbox" checked={s.lite} onChange={(e) => updateSettings({ lite: e.target.checked })} /></label>
         <label>Rain (never on Low: phones and Lite)<input type="checkbox" checked={s.rain} onChange={(e) => updateSettings({ rain: e.target.checked })} data-testid="rain-toggle" /></label>
+        <label>Action camera (shots over the shoulder, kill close-ups)<input type="checkbox" checked={s.actionCam} onChange={(e) => updateSettings({ actionCam: e.target.checked })} data-testid="actioncam-toggle" /></label>
         <label>Mute<input type="checkbox" checked={s.mute} onChange={(e) => updateSettings({ mute: e.target.checked })} /></label>
         <label>Volume<input type="range" min={0} max={1} step={0.05} value={s.volume} onChange={(e) => updateSettings({ volume: Number(e.target.value) })} /></label>
         {audio === 'no' && <div className="warn" data-testid="audio-missing">audio not found</div>}

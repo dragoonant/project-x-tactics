@@ -12,6 +12,8 @@ export const POL_MIN = 0.25
 export const POL_MAX = 1.38
 export const POL_DEFAULT = 0.82
 export const DIST_MIN = 4.5
+/** Action camera glide (ms) when the caller gives none. */
+export const CINE_MS = 450
 
 export const gesture = { dragged: false }
 export const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v))
@@ -73,6 +75,11 @@ export class CameraController {
   private down: { x: number; y: number } | null = null
   private panGround: { x: number; z: number } | null = null
   private pinchPrev: [{ x: number; y: number }, { x: number; y: number }] | null = null
+  /** Action camera (director): the pose it is heading to (null while blending back to the orbit view) and the pose it shows now. */
+  private cineGoal: { pos: Vector3; look: Vector3 } | null = null
+  private cine: { pos: Vector3; look: Vector3 } | null = null
+  /** The current glide: where it started, when, and how long it takes (timed, so it lands on schedule at any frame rate). */
+  private glide = { pos: new Vector3(), look: new Vector3(), t0: 0, ms: CINE_MS }
   private ray = new Raycaster()
   private ndc = new Vector2()
   private cleanup: (() => void) | null = null
@@ -86,11 +93,22 @@ export class CameraController {
     return { w: Math.max(1, r.width), h: Math.max(1, r.height), left: r.left, top: r.top }
   }
 
-  apply(): void {
+  /** Camera position and look point of the orbit view. */
+  orbitPose(): { pos: Vector3; look: Vector3 } {
     const v = this.view
     const sp = Math.sin(v.pol)
-    this.camera.position.set(v.x + Math.sin(v.az) * sp * v.dist, Math.cos(v.pol) * v.dist, v.z + Math.cos(v.az) * sp * v.dist)
-    this.camera.lookAt(v.x, 0, v.z)
+    return { pos: new Vector3(v.x + Math.sin(v.az) * sp * v.dist, Math.cos(v.pol) * v.dist, v.z + Math.cos(v.az) * sp * v.dist), look: new Vector3(v.x, 0, v.z) }
+  }
+
+  apply(): void {
+    if (this.cine) {
+      this.camera.position.copy(this.cine.pos)
+      this.camera.lookAt(this.cine.look)
+    } else {
+      const o = this.orbitPose()
+      this.camera.position.copy(o.pos)
+      this.camera.lookAt(o.look)
+    }
     const { w, h } = this.size()
     this.camera.setViewOffset(w, h, -this.shiftX, -this.shiftY, w, h)
     this.camera.updateProjectionMatrix()
@@ -126,6 +144,21 @@ export class CameraController {
     this.goal = { x: this.goal?.x ?? this.view.x, z: this.goal?.z ?? this.view.z, az, dist: this.goal?.dist ?? this.view.dist }
     wake(900)
   }
+  /** Glide to a free camera pose (the action camera); the orbit view stays where it was and the camera returns to it on endCinematic. */
+  cinematic(pos: [number, number, number], look: [number, number, number], ms = CINE_MS): void {
+    if (!this.cine) { const o = this.orbitPose(); this.cine = { pos: o.pos, look: o.look } }
+    this.cineGoal = { pos: new Vector3(...pos), look: new Vector3(...look) }
+    this.startGlide(ms)
+  }
+  endCinematic(ms = CINE_MS): void { if (this.cineGoal) { this.cineGoal = null; this.startGlide(ms) } }
+  private startGlide(ms: number): void {
+    const c = this.cine!
+    this.glide = { pos: c.pos.clone(), look: c.look.clone(), t0: performance.now(), ms: Math.max(1, ms) }
+    wake(ms + 300)
+  }
+  /** 'off', 'on' (at or heading to a cinematic pose) or 'returning' (blending back to the orbit view). */
+  get cinematicState(): 'off' | 'on' | 'returning' { return this.cineGoal ? 'on' : this.cine ? 'returning' : 'off' }
+
   setView(p: Partial<View>): void { this.view = this.clampView({ ...this.view, ...p }); this.goal = null; this.apply() }
 
   private clampView(v: View): View {
@@ -171,20 +204,31 @@ export class CameraController {
   /** Per frame; returns true while still moving (the render loop stays awake). */
   update(dt: number): boolean {
     const g = this.goal
-    if (!g) return false
-    const v = this.view
-    const k = 1 - Math.exp(-dt * 7)
-    v.x += (g.x - v.x) * k
-    v.z += (g.z - v.z) * k
-    v.az += (g.az - v.az) * k
-    v.dist += (g.dist - v.dist) * k
-    if (Math.hypot(g.x - v.x, g.z - v.z) < 0.02 && Math.abs(g.az - v.az) < 0.002 && Math.abs(g.dist - v.dist) < 0.02) {
-      v.x = g.x; v.z = g.z; v.az = g.az; v.dist = g.dist
-      this.goal = null
+    if (!g && !this.cine) return false
+    if (g) {
+      const v = this.view
+      const k = 1 - Math.exp(-dt * 7)
+      v.x += (g.x - v.x) * k
+      v.z += (g.z - v.z) * k
+      v.az += (g.az - v.az) * k
+      v.dist += (g.dist - v.dist) * k
+      if (Math.hypot(g.x - v.x, g.z - v.z) < 0.02 && Math.abs(g.az - v.az) < 0.002 && Math.abs(g.dist - v.dist) < 0.02) {
+        v.x = g.x; v.z = g.z; v.az = g.az; v.dist = g.dist
+        this.goal = null
+      }
+      this.view = this.clampView(v)
     }
-    this.view = this.clampView(v)
+    const c = this.cine
+    if (c) {
+      const to = this.cineGoal ?? this.orbitPose() // the way back follows the orbit view, which may itself be gliding
+      const t = clamp((performance.now() - this.glide.t0) / this.glide.ms, 0, 1)
+      const e = t * t * (3 - 2 * t) // smoothstep: eases out of the old view and into the new one
+      c.pos.lerpVectors(this.glide.pos, to.pos, e)
+      c.look.lerpVectors(this.glide.look, to.look, e)
+      if (t >= 1 && !this.cineGoal) this.cine = null
+    }
     this.apply()
-    return this.goal !== null
+    return this.goal !== null || this.cine !== null
   }
 
   // ---------------------------------------------------------------- input

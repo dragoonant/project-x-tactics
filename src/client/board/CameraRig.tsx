@@ -5,7 +5,7 @@ import type { PerspectiveCamera } from 'three'
 import type { Pt } from '../../engine'
 import { camApi, loop } from '../game/presentation'
 import { CameraController, fitBoard, insetsFor, POL_DEFAULT } from './camera'
-import { tx, tz } from './layout'
+import { tx, tz, worldToTile } from './layout'
 
 export const boardApi = {
   rotate: (_dir: number): void => { /* set by CameraRig */ },
@@ -40,6 +40,10 @@ export function CameraRig({ w, h }: { w: number; h: number }): null {
     boardApi.home = () => ctl.flyHome()
     camApi.flyTo = (x: number, y: number) => ctl.flyTo(tx(x, w), tz(y, h))
     camApi.focusTile = (p: Pt) => ctl.flyTo(tx(p.x, w), tz(p.y, h))
+    camApi.shot = (pos, look, ms) => ctl.cinematic(pos, look, ms)
+    camApi.release = (ms) => ctl.endCinematic(ms)
+    camApi.world = (p) => ({ x: tx(p.x, w), z: tz(p.y, h) })
+    camApi.tile = (x, z) => worldToTile(x, z, w, h)
     const onKey = (e: KeyboardEvent): void => {
       if (e.target instanceof HTMLElement && /input|textarea|select/i.test(e.target.tagName)) return
       if (e.key === 'q' || e.key === 'Q') ctl.rotateBy(-1)
