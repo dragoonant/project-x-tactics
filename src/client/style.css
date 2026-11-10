@@ -128,10 +128,10 @@ body.lite .rec-dot { animation: none; }
 @keyframes floatUp { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
 
 /* ---------------------------------------------------------------- bottom: channels, abilities, controls */
-.bottom { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.bottom { position: absolute; left: calc(10px + env(safe-area-inset-left, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
 .bottom .hint { align-self: flex-start; padding: 4px 9px; color: var(--amber); font-size: 12px; max-width: 70%; min-height: 24px; }
 .bottom .hint.empty { visibility: hidden; }
-.chans { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+.chans { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; touch-action: pan-x; overscroll-behavior-x: contain; }
 .chan { flex: 0 0 auto; min-width: 150px; text-align: left; padding: 6px 9px; display: flex; flex-direction: column; gap: 3px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid #36423d; }
 .chan.sel { border-color: var(--amber); border-left-color: var(--amber); background: rgba(40, 28, 0, 0.88); }
 .chan.dead { opacity: 0.55; }
@@ -146,7 +146,7 @@ body.lite .rec-dot { animation: none; }
 .pips i { width: 12px; height: 6px; background: #4a3a1a; }
 .pips i.on { background: var(--amber); }
 .row2 { display: flex; gap: 8px; align-items: flex-end; justify-content: space-between; }
-.abilities { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0 4px; flex: 1 1 auto; min-width: 0; }
+.abilities { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0 4px; flex: 1 1 auto; min-width: 0; touch-action: pan-x; overscroll-behavior-x: contain; }
 .abilities button { flex: 0 0 auto; padding: 8px 11px; white-space: nowrap; }
 .abilities button.armed { border-color: var(--amber); background: rgba(70, 48, 0, 0.9); color: #fff; }
 .abilities button .loud { color: var(--sodium); margin-left: 6px; font-size: 10px; }
@@ -220,7 +220,7 @@ body.lite .rec-dot { animation: none; }
   .gear { right: 8px; top: auto; bottom: auto; position: absolute; top: 12px; z-index: 47; }
   .gear.shifted { right: 8px; }
   .settings { right: 8px; top: 44px; }
-  .bottom { left: 6px; right: 6px; bottom: 6px; gap: 4px; }
+  .bottom { left: calc(6px + env(safe-area-inset-left, 0px)); right: calc(6px + env(safe-area-inset-right, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); gap: 4px; }
   .chan { min-width: 108px; padding: 4px 6px; }
   .chan .cls { display: none; }
   .row2 { flex-direction: column-reverse; align-items: stretch; gap: 4px; }
@@ -245,3 +245,7 @@ body.lite .rec-dot { animation: none; }
   .chan .pips .chip { display: none; }
   .alarm { padding: 4px 8px 6px; }
 }
+/* iOS home bar (owner: "the virtual home button on Apple interferes" with swiping the bottom bars): keep the bars above it even
+   when the page sits in a frame that reports no safe area. Portrait home bar zone is about 34px, landscape about 21px. */
+html.ios .bottom { bottom: max(calc(6px + env(safe-area-inset-bottom, 0px)), 34px); }
+@media (orientation: landscape) { html.ios .bottom { bottom: max(calc(4px + env(safe-area-inset-bottom, 0px)), 24px); left: max(calc(6px + env(safe-area-inset-left, 0px)), 18px); right: max(calc(6px + env(safe-area-inset-right, 0px)), 18px); } }
