@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { assetManager } from '../assetLoading'
 import { kindKey, parseAnimManifest, type AnimManifest, type FigureDef } from './contract'
+import { fixIdlePose } from './posefix'
 
 /** Board height of a figure in tiles: the same 1.0 the static models are normalised to (src/client/game/models.ts FIGURE_HEIGHT). */
 export const BOARD_FIGURE_HEIGHT = 1.0
@@ -63,6 +64,7 @@ export async function loadAnim(man: AnimManifest, step: () => void): Promise<voi
     jobs.push((async () => {
       try {
         const g = await l.loadAsync(def.url)
+        fixIdlePose(kind, g.scene, g.animations) // stand the gun figures up in idle, walk and run (posefix.ts)
         const clips = new Map<string, AnimationClip>()
         for (const a of g.animations) clips.set(a.name, a)
         if (!clips.has('idle')) throw new Error('no idle clip')

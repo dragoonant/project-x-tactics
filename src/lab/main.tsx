@@ -9,6 +9,7 @@ import { StrictMode, Suspense, useEffect, useMemo, useRef, useState } from 'reac
 import { createRoot } from 'react-dom/client'
 import { AnimationMixer, Group, LoopOnce, LoopRepeat, Object3D, type AnimationClip, type PerspectiveCamera } from 'three'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
+import { fixIdlePose } from '../client/anim/posefix'
 
 // Rule 24: no text selection, callouts or context menus on a long press, except in editable fields.
 const editable = (t: EventTarget | null): boolean => t instanceof HTMLElement && /^(input|textarea|select)$/i.test(t.tagName) || (t instanceof HTMLElement && t.isContentEditable)
@@ -57,6 +58,8 @@ function Figure({ man, kind, clip, speed, playing, items, spin, scale, x, treadm
 }): React.JSX.Element {
   const meta = man.figures[kind]!
   const gltf = useGLTF(BASE + meta.file)
+  // the same load-time idle correction the game applies (src/client/anim/posefix.ts); ?posefix=0 shows the raw bake
+  useMemo(() => { if (params.get('posefix') !== '0') fixIdlePose(kind, gltf.scene, gltf.animations) }, [kind, gltf])
   const { invalidate } = useThree()
   const root = useMemo(() => cloneSkinned(gltf.scene) as Group, [gltf.scene])
   const mixer = useMemo(() => new AnimationMixer(root), [root])
