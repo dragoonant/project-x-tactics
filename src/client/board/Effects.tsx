@@ -55,7 +55,7 @@ function VolleyFx({ fx }: { fx: Fx }): React.JSX.Element {
       dir.normalize()
       const q = new Quaternion().setFromUnitVectors(Y_AXIS, dir)
       const core = mesh(streakGeo, keep(mat(r.tracer ? '#ffd2a0' : '#fffaf0', true)))
-      const glow = mesh(streakGeo, keep(mat(r.color, true, r.tracer ? 0.55 : 0.32)))
+      const glow = mesh(streakGeo, keep(mat(r.color, true, r.tracer ? 0.3 : 0.32)))
       const trail = v.trail ? mesh(streakGeo, keep(mat('#cfe0ff', true, 0.3))) : null
       for (const m of [core, glow, trail]) if (m) { m.quaternion.copy(q); group.add(m) }
       const impact: Puff[] = (r.impact ? IMPACTS[r.impact] : []).map((spec) => ({ me: mesh(puffGeo, keep(mat(spec.c, spec.add, spec.o))), spec, at: to, t: r.delay + r.flight }))
@@ -86,7 +86,10 @@ function VolleyFx({ fx }: { fx: Fx }): React.JSX.Element {
       for (const m of [core, glow]) {
         m.visible = flying
         if (!flying) continue
-        const w = m === core ? Math.max(r.width, far * 0.0028) : Math.max(r.width * 2.4, far * 0.0075)
+        // tracers stay hair-thin with a faint sleeve at any zoom; plain rounds read as solid slugs
+        const w = r.tracer
+          ? (m === core ? Math.max(r.width, far * 0.0012) : Math.max(r.width * 1.8, far * 0.0024))
+          : (m === core ? Math.max(r.width, far * 0.0042) : Math.max(r.width * 2.2, far * 0.009))
         m.position.copy(mid)
         m.scale.set(w, Math.max(0.001, head - tail), w)
       }
