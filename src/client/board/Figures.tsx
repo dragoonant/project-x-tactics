@@ -17,6 +17,8 @@ import { query } from '../../engine'
 import { tx, tz } from './layout'
 
 const noRay = (): null => null
+/** How far (in tiles) a figure leaning around high cover steps toward its step-out tile (stance.peek); the lean clip does the rest. */
+export const PEEK_STEP = 0.32
 
 interface Palette { body: string; trim: string; helmet: string; weapon: string }
 function paletteFor(u: Unit): Palette {
@@ -117,6 +119,7 @@ function FigureImpl({ unit, w, h, selected, hovered, lite, stance = NO_STANCE }:
   stanceRef.current = stance
   const inner = useRef<Group>(null)
   const yaw = useRef(Math.atan2(unit.facing.x, unit.facing.y))
+  const off = useRef({ x: 0, y: 0 }) // the step toward a peek tile, eased
   const m = modelFor(unit.kind, unit.weapon)
   const rig = rigFor(unit.kind, unit.weapon) // a rigged figure (spec 30) wins over the static one; neither: the stand-in
   const lying = !rig && (unit.status === 'downed' || unit.status === 'dead' || unit.status === 'stabilized')
@@ -126,13 +129,20 @@ function FigureImpl({ unit, w, h, selected, hovered, lite, stance = NO_STANCE }:
     const g = ref.current
     if (!g) return
     let px = unit.x, py = unit.y
+    const mo = motion.get(unit.id)
+    const { aim, peek } = stanceRef.current
+    const o = off.current
+    const gx = peek && !mo ? (peek.x - unit.x) * PEEK_STEP : 0, gy = peek && !mo ? (peek.y - unit.y) * PEEK_STEP : 0
+    const ease = 1 - Math.exp(-Math.min(dt, 0.1) * 8)
+    o.x += (gx - o.x) * ease
+    o.y += (gy - o.y) * ease
+    if (Math.abs(gx - o.x) + Math.abs(gy - o.y) > 0.002) wake(40)
+    const ax = unit.x + o.x, ay = unit.y + o.y // aim from where the figure stands now
     let want = Math.atan2(unit.facing.x, unit.facing.y)
-    const aim = stanceRef.current.aim
-    if (aim && (aim.x !== unit.x || aim.y !== unit.y)) want = Math.atan2(aim.x - unit.x, aim.y - unit.y)
+    if (aim && (aim.x !== unit.x || aim.y !== unit.y)) want = Math.atan2(aim.x - ax, aim.y - ay)
     let hop = 0
     const cue = cueActive(unit.id)
-    if (cue?.face) want = Math.atan2(cue.face.x - unit.x, cue.face.y - unit.y)
-    const mo = motion.get(unit.id)
+    if (cue?.face) want = Math.atan2(cue.face.x - ax, cue.face.y - ay)
     if (mo) {
       const t = (performance.now() - mo.t0) / Math.max(1, mo.dur)
       if (t >= 1) motion.delete(unit.id)
@@ -144,7 +154,7 @@ function FigureImpl({ unit, w, h, selected, hovered, lite, stance = NO_STANCE }:
         wake(40)
       }
     }
-    g.position.set(tx(px, w), hop, tz(py, h))
+    g.position.set(tx(px + o.x, w), hop, tz(py + o.y, h))
     let d = want - yaw.current
     while (d > Math.PI) d -= Math.PI * 2
     while (d < -Math.PI) d += Math.PI * 2
@@ -181,7 +191,7 @@ function FigureImpl({ unit, w, h, selected, hovered, lite, stance = NO_STANCE }:
   )
 }
 const sameStance = (a: Stance | undefined, b: Stance | undefined): boolean =>
-  a === b || (!!a && !!b && a.cover === b.cover && a.aim?.x === b.aim?.x && a.aim?.y === b.aim?.y)
+  a === b || (!!a && !!b && a.cover === b.cover && a.aim?.x === b.aim?.x && a.aim?.y === b.aim?.y && a.peek?.x === b.peek?.x && a.peek?.y === b.peek?.y)
 export const Figure = memo(FigureImpl, (a, b) => a.unit === b.unit && a.selected === b.selected && a.hovered === b.hovered && a.w === b.w && a.h === b.h && a.lite === b.lite && sameStance(a.stance, b.stance))
 
 /** Every figure's stance (mapping.stanceFor): targets from the units on the board, cover from the engine's rules on the full state. */
@@ -189,7 +199,7 @@ export function stances(units: readonly Unit[], state: State, groups: readonly {
   const aware = new Set(groups.filter((g) => g.aware).map((g) => g.id))
   const out = new Map<string, Stance>()
   for (const u of units) {
-    const st = stanceFor(u, units, aware, (from) => query.coverFrom(state, u.id, from)?.level ?? null)
+    const st = stanceFor(u, units, aware, (from) => query.coverFrom(state, u.id, from)?.level ?? null, (at) => query.peekFrom(state, u.id, at))
     if (st.cover) out.set(u.id, st)
   }
   return out

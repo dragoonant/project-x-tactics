@@ -2,19 +2,21 @@
 // never leaves a T-pose), the item-swap rules, and a tolerant reader for public/assets/anim/manifest.json. No three.js, no DOM:
 // everything here is unit-tested table-driven.
 
-export const CLIPS = ['idle', 'cover', 'coverHigh', 'walk', 'run', 'aim', 'fire', 'melee', 'bash', 'throw', 'point', 'hit', 'downed', 'surrender', 'cuffed', 'death', 'panic', 'cower'] as const
+export const CLIPS = ['idle', 'cover', 'coverHigh', 'peekLeft', 'peekRight', 'walk', 'run', 'aim', 'fire', 'melee', 'bash', 'throw', 'point', 'hit', 'downed', 'surrender', 'cuffed', 'death', 'panic', 'cower'] as const
 export type ClipName = (typeof CLIPS)[number]
 
 /** Clips that loop; every other clip plays once (aim and death then hold their last frame). */
-export const LOOPING: ReadonlySet<ClipName> = new Set<ClipName>(['idle', 'cover', 'coverHigh', 'walk', 'run', 'downed', 'surrender', 'cuffed', 'panic', 'cower'])
+export const LOOPING: ReadonlySet<ClipName> = new Set<ClipName>(['idle', 'cover', 'coverHigh', 'peekLeft', 'peekRight', 'walk', 'run', 'downed', 'surrender', 'cuffed', 'panic', 'cower'])
 /** Clips whose last frame stays on screen until the next state change. */
 export const HOLDS_LAST: ReadonlySet<ClipName> = new Set<ClipName>(['aim', 'death'])
 
-/** What to try, in order, when a clip is missing. Spec 30 section 2: idle always; run -> walk, cover -> idle, coverHigh -> cover, panic -> run, cower -> idle. */
+/** What to try, in order, when a clip is missing. Spec 30 section 2: idle always; run -> walk, cover -> idle, coverHigh -> cover, peekLeft / peekRight -> coverHigh, panic -> run, cower -> idle. */
 export const FALLBACK: Record<ClipName, readonly ClipName[]> = {
   idle: [],
   cover: ['idle'],
   coverHigh: ['cover', 'idle'],
+  peekLeft: ['coverHigh', 'cover', 'idle'],
+  peekRight: ['coverHigh', 'cover', 'idle'],
   walk: ['idle'],
   run: ['walk', 'idle'],
   aim: ['idle'],

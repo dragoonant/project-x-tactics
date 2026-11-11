@@ -45,7 +45,7 @@ describe('idle pose correction (owner feedback: hunched, heads to the floor)', (
     const gripBefore = world(before, 'hand_l').distanceTo(world(before, 'hand_r'))
     const clip = hunched()
     const base = skeleton()
-    expect(fixIdlePose('recruit', base, [clip])).toEqual(['coverHigh', 'cover', 'idle']) // the cover clips are built from the raw idle first
+    expect(fixIdlePose('recruit', base, [clip])).toEqual(['coverHigh', 'peekLeft', 'peekRight', 'cover', 'idle']) // the cover clips are built from the raw idle first
     const after = posed(skeleton(), clip, 0.5)
     // the grip on a two-handed gun is unchanged
     expect(world(after, 'hand_l').distanceTo(world(after, 'hand_r'))).toBeCloseTo(gripBefore, 5)
@@ -64,14 +64,14 @@ describe('idle pose correction (owner feedback: hunched, heads to the floor)', (
 
   it('lowers only idle, walk and run, builds the cover clips, only once, and only for gun figures', () => {
     const clips = ['idle', 'walk', 'run', 'aim', 'cover'].map((n) => hunched(n))
-    expect(fixIdlePose('gunman', skeleton(), clips).sort()).toEqual(['cover', 'coverHigh', 'idle', 'run', 'walk'])
+    expect(fixIdlePose('gunman', skeleton(), clips).sort()).toEqual(['cover', 'coverHigh', 'idle', 'peekLeft', 'peekRight', 'run', 'walk'])
     expect(fixIdlePose('gunman', skeleton(), clips)).toEqual([])
     expect([...FIXED_CLIPS].sort()).toEqual(['idle', 'run', 'walk'])
     for (const k of ['thug-club', 'civilian-a', 'civilian-b', 'civilian-c']) expect(POSE_FIX[k]).toBeUndefined()
     expect(fixIdlePose('civilian-a', skeleton(), [hunched(), hunched('cover')])).toEqual([])
     // the club thug keeps its idle but gets the cover clips; civilians have no cover clip
     expect(COVER_KINDS.has('thug-club')).toBe(true)
-    expect(fixIdlePose('thug-club', skeleton(), ['idle', 'cover'].map((n) => hunched(n)))).toEqual(['coverHigh', 'cover'])
+    expect(fixIdlePose('thug-club', skeleton(), ['idle', 'cover'].map((n) => hunched(n)))).toEqual(['coverHigh', 'peekLeft', 'peekRight', 'cover'])
     for (const k of ['civilian-a', 'civilian-b', 'civilian-c']) expect(COVER_KINDS.has(k)).toBe(false)
   })
 
@@ -96,9 +96,9 @@ describe('idle pose correction (owner feedback: hunched, heads to the floor)', (
     const floor = Math.min(world(bind, 'ball_l').y, world(bind, 'ball_r').y)
 
     const clips = [hunched('idle'), hunched('cover')]
-    expect(buildCoverClips(skeleton(), clips)).toEqual(['coverHigh', 'cover'])
+    expect(buildCoverClips(skeleton(), clips)).toEqual(['coverHigh', 'peekLeft', 'peekRight', 'cover'])
     expect(buildCoverClips(skeleton(), clips)).toEqual([]) // once
-    expect(clips.map((c) => c.name)).toEqual(['idle', 'cover', 'coverHigh'])
+    expect(clips.map((c) => c.name)).toEqual(['idle', 'cover', 'coverHigh', 'peekLeft', 'peekRight'])
     expect(tilt(raw)).toBeGreaterThan(25)
 
     // standing aim: legs as in the idle, chest at the small lean, face level, gun where the idle aimed it
@@ -107,6 +107,20 @@ describe('idle pose correction (owner feedback: hunched, heads to the floor)', (
     expect(Math.abs(faceY(high))).toBeLessThan(1e-3)
     expect(gun(high)).toBeCloseTo(gun(raw), 2)
     expect(world(high, 'pelvis').y).toBeCloseTo(world(raw, 'pelvis').y, 5)
+
+    // peeking: the standing aim with the chest leaning out sideways (left = +X), the head partly back upright, face level, gun aimed
+    const side = (r: Object3D): number => (Math.asin(Math.max(-1, Math.min(1, up(r).x))) * 180) / Math.PI
+    const headRoll = (r: Object3D): number => (Math.asin(Math.max(-1, Math.min(1, new Vector3(0, 1, 0).applyQuaternion(r.getObjectByName('Head')!.getWorldQuaternion(new Quaternion())).x))) * 180) / Math.PI
+    for (const [nm, sign] of [['peekLeft', 1], ['peekRight', -1]] as const) {
+      const pk = posed(skeleton(), clips.find((c) => c.name === nm)!, 0.5)
+      expect(side(pk) * sign).toBeCloseTo(COVER_FIX.peekLean, 0)
+      expect(Math.abs(headRoll(pk))).toBeLessThan(COVER_FIX.peekLean * 0.6)
+      expect(Math.abs(faceY(pk))).toBeLessThan(1e-3)
+      const dir = (r: Object3D): Vector3 => world(r, 'hand_r').sub(world(r, 'upperarm_r')).normalize()
+      expect(dir(pk).angleTo(dir(high))).toBeLessThan(1e-3) // the gun points exactly where the standing aim points it
+      expect(world(pk, 'Head').x * sign).toBeGreaterThan(world(high, 'Head').x * sign + 0.08) // the head goes out to that side
+      expect(world(pk, 'foot_l').distanceTo(world(high, 'foot_l'))).toBeLessThan(1e-4) // the feet stay put
+    }
 
     // kneel: right knee near the floor under the hip, left knee up with the foot flat in front, much lower pelvis
     const low = posed(skeleton(), clips.find((c) => c.name === 'cover')!, 0.5)

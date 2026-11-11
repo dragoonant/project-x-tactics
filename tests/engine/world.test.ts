@@ -160,6 +160,19 @@ describe('LOS line of sight', () => {
     expect(rejected(s, { type: 'attack', unit: 's1', target: 'e1' })).toMatch(/not seen/)
   })
 
+  it('LOS-3 query.peekFrom: the step-out tile a unit looks from when its own line is blocked; null when it sees directly or not at all', () => {
+    const s = build(ARENA, { squad: [{ cls: 'recruit', x: 3, y: 2 }], enemies: [{ type: 'gunman', x: 6, y: 2 }], tuning: LIT })
+    expect(query.peekFrom(s, 's1', { x: 6, y: 2 })).toBeNull() // a clear straight line: no step-out
+    setTile(s, 4, 2, { k: 'wall' })
+    const p = query.peekFrom(s, 's1', { x: 6, y: 2 })
+    expect([{ x: 3, y: 1 }, { x: 3, y: 3 }]).toContainEqual(p)
+    setTile(s, 3, 1, { k: 'wall' })
+    expect(query.peekFrom(s, 's1', { x: 6, y: 2 })).toEqual({ x: 3, y: 3 }) // the other side is walled
+    place(s, 's1', 2, 2)
+    expect(query.peekFrom(s, 's1', { x: 6, y: 2 })).toBeNull() // not beside the blocker
+    expect(query.peekFrom(s, 'nobody', { x: 6, y: 2 })).toBeNull()
+  })
+
   it('LOS-5 sight radius is 12 tiles for every unit', () => {
     const s = build(WIDE, { squad: [{ cls: 'recruit', x: 1, y: 2 }], enemies: [{ type: 'gunman', x: 13, y: 2 }, { type: 'gunman', x: 14, y: 2 }], tuning: LIT })
     expect(query.canSee(s, 's1', 'e1')).toBe(true)

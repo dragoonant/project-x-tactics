@@ -14,7 +14,8 @@ export interface StateLike {
 export type MoveMode = 'walk' | 'run' | 'panic' | null
 
 type TileAt = (x: number, y: number) => { k: string; o?: string; open?: boolean } | undefined
-export type CoverLevel = 'high' | 'low'
+/** low: kneel behind half cover; high: stand beside full cover; peekLeft / peekRight: stand beside full cover leaning out to that side. */
+export type CoverLevel = 'high' | 'peekLeft' | 'peekRight' | 'low'
 interface Pt { x: number; y: number }
 
 /** True when any of the four sides of a tile has cover (wall, closed door, cover object, rubble): the same sources the engine's COV rules use. */
@@ -49,7 +50,8 @@ export function aimTarget(u: AimUnit, units: readonly AimUnit[], awareGroups: Re
 
 /**
  * The state-driven clip: death / downed / surrender / cuffed by status, panic and cower for civilians; behind low cover (or hunkered)
- * the kneel (`cover`), next to high cover the standing aim (`coverHigh`). `cover: true` means low.
+ * the kneel (`cover`), next to high cover the standing aim (`coverHigh`), or the lean around it (`peekLeft` / `peekRight`) when
+ * the figure looks past it from a step-out tile. `cover: true` means low.
  */
 export function baseClip(u: StateLike, o: { cover: boolean | CoverLevel | null; moving: MoveMode }): ClipName {
   switch (u.status) {
@@ -64,6 +66,7 @@ export function baseClip(u: StateLike, o: { cover: boolean | CoverLevel | null; 
   if (u.armed === false) return 'idle'
   if (u.hunkered) return 'cover'
   if (o.cover === 'high') return 'coverHigh'
+  if (o.cover === 'peekLeft' || o.cover === 'peekRight') return o.cover
   if (o.cover) return 'cover'
   return 'idle'
 }
@@ -109,6 +112,8 @@ export const CLIP_SOURCES: Record<ClipName, string> = {
   idle: 'state: standing',
   cover: 'state: kneeling behind low cover (or hunkered)',
   coverHigh: 'state: standing aim beside high cover',
+  peekLeft: 'state: beside high cover, leaning out left toward a step-out tile (LOS-3)',
+  peekRight: 'state: beside high cover, leaning out right toward a step-out tile (LOS-3)',
   walk: 'event: move (first action), civilianMove',
   run: 'event: move using the second action, flee',
   aim: 'event: attack (ranged), before fire',
@@ -126,20 +131,36 @@ export const CLIP_SOURCES: Record<ClipName, string> = {
   cower: 'state: civilian panicked / fleeing and standing',
 }
 
-/** How a figure stands when nothing else is happening: the cover it poses against and the point it aims at. */
-export interface Stance { cover: CoverLevel | null; aim: Pt | null }
-export const NO_STANCE: Stance = { cover: null, aim: null }
+/**
+ * How a figure stands when nothing else is happening: the cover it poses against, the point it aims at, and the step-out tile it
+ * leans toward (LOS-3) when full cover blocks its own line to that point.
+ */
+export interface Stance { cover: CoverLevel | null; aim: Pt | null; peek: Pt | null }
+export const NO_STANCE: Stance = { cover: null, aim: null, peek: null }
 
 /**
  * Owner: aim around high cover at the closest enemy, take a knee behind low cover. The cover is the engine's cover against the aim
  * target (query.coverFrom: COV rules, Riot Shield included), or, with no target, against an attacker straight ahead. Full cover
- * stands (coverHigh), half cover kneels (cover). A figure with no cover that way (open ground, or cover only behind it) keeps its
- * normal stance and facing.
+ * stands (coverHigh), half cover kneels (cover). Beside full cover, when the line to the target is blocked and the engine names a
+ * step-out tile (`peekFrom`, query.peekFrom), the figure leans out toward it: peekLeft or peekRight by the side of that tile
+ * relative to the facing toward the target. A figure with no cover that way (open ground, or cover only behind it) keeps its normal
+ * stance and facing.
  */
-export function stanceFor(u: AimUnit & { facing: Pt }, units: readonly AimUnit[], awareGroups: ReadonlySet<string>, coverFrom: (from: Pt) => 'none' | 'half' | 'full' | null): Stance {
+export function stanceFor(
+  u: AimUnit & { facing: Pt },
+  units: readonly AimUnit[],
+  awareGroups: ReadonlySet<string>,
+  coverFrom: (from: Pt) => 'none' | 'half' | 'full' | null,
+  peekFrom: (at: Pt) => Pt | null = () => null,
+): Stance {
   if (u.status !== 'active' || u.side === 'civilians') return NO_STANCE
   const target = aimTarget(u, units, awareGroups)
   const level = coverFrom(target ?? { x: u.x + u.facing.x * 5, y: u.y + u.facing.y * 5 })
-  const cover: CoverLevel | null = level === 'full' ? 'high' : level === 'half' ? 'low' : null
-  return { cover, aim: cover ? target : null }
+  if (level === 'half') return { cover: 'low', aim: target, peek: null }
+  if (level !== 'full') return NO_STANCE
+  const peek = target ? peekFrom(target) : null
+  if (!target || !peek) return { cover: 'high', aim: target, peek: null }
+  // the figure faces f = target - u; its left on the board (x east, y south) is (f.y, -f.x)
+  const left = (peek.x - u.x) * (target.y - u.y) - (peek.y - u.y) * (target.x - u.x)
+  return { cover: left > 0 ? 'peekLeft' : 'peekRight', aim: target, peek }
 }

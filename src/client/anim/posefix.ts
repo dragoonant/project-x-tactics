@@ -14,6 +14,8 @@
 // the idle itself is lowered:
 //   coverHigh  standing aim: the idle's legs; the chest turned up to a small forward lean; the face level with the horizon; both
 //              arms turned rigidly about the shoulder line so the gun keeps the idle's aim;
+//   peekLeft / peekRight  the standing aim with the chest leaning out sideways (peekLean) and the head partly back upright; the
+//              board also steps the figure toward its step-out tile (Figures), so it leans around the corner of the cover;
 //   cover      kneel: the same upper body on a kneeling lower body built from the bind-pose leg lengths: right knee on the floor
 //              under the hip, right shin back with the toes tucked, left foot flat in front with the shin upright.
 // The board turns the figure toward its aim point (Figures: stances), so the gun points at the closest enemy.
@@ -48,8 +50,12 @@ export interface CoverFix {
   kneelLean: number
   /** Degrees the right thigh tilts forward from vertical in the kneel (the knee on the floor). */
   kneeTilt: number
+  /** Degrees the chest leans sideways in peekLeft / peekRight (leaning out around high cover). */
+  peekLean: number
+  /** 0..1: how much of the sideways lean the head takes back toward upright. */
+  peekHead: number
 }
-export const COVER_FIX: CoverFix = { standLean: 6, kneelLean: 8, kneeTilt: 6 }
+export const COVER_FIX: CoverFix = { standLean: 6, kneelLean: 8, kneeTilt: 6, peekLean: 22, peekHead: 0.6 }
 /** Every figure with a cover clip (tools/anim/figures.json). */
 export const COVER_KINDS: ReadonlySet<string> = new Set([...Object.keys(POSE_FIX), 'thug-club'])
 
@@ -148,10 +154,11 @@ const LEGS = ['thigh_l', 'calf_l', 'foot_l', 'thigh_r', 'calf_r', 'foot_r']
 const UP = new Vector3(0, 1, 0), FWD = new Vector3(0, 0, 1), LEFT = new Vector3(1, 0, 0)
 
 /**
- * Builds `coverHigh` (added to `clips`) and `cover` (replaced, or added) from the raw idle; see the header. Runs once per idle
+ * Builds `coverHigh`, `peekLeft` and `peekRight` (added to `clips`) and `cover` (replaced, or added) from the raw idle; see the header. Runs once per idle
  * clip; does nothing when the idle or a needed bone is missing. Returns the names of the clips it made.
  */
 export function buildCoverClips(scene: Object3D, clips: AnimationClip[], fix: CoverFix = COVER_FIX): string[] {
+  const made = ['coverHigh', 'peekLeft', 'peekRight', 'cover']
   const idle = clips.find((c) => c.name === 'idle')
   if (!idle || done.has(idle) || clips.some((c) => c.name === 'coverHigh')) return []
   const rig = cloneSkinned(scene)
@@ -175,6 +182,7 @@ export function buildCoverClips(scene: Object3D, clips: AnimationClip[], fix: Co
   const hipDrop = P('pelvis').y - P('thigh_r').y // the pelvis joint above the hip joints
   const chestUp = UP.clone().applyQuaternion(bindW.get('spine_03')!.clone().invert())
   const headFwd = FWD.clone().applyQuaternion(bindW.get('Head')!.clone().invert())
+  const headUp = UP.clone().applyQuaternion(bindW.get('Head')!.clone().invert())
   const pelvisFwd = FWD.clone().applyQuaternion(bindW.get('pelvis')!.clone().invert())
 
   const pq = new Quaternion(), wq = new Quaternion(), d = new Quaternion(), v = new Vector3()
@@ -254,15 +262,30 @@ export function buildCoverClips(scene: Object3D, clips: AnimationClip[], fix: Co
       const up = chestUp.clone().applyQuaternion(W('spine_03')).normalize()
       turnWorld(get(SPINE[k]!), new Quaternion().slerp(new Quaternion().setFromUnitVectors(up, target), 1 / (SPINE.length - k)))
     }
-    for (let pass = 0; pass < 2; pass++) {
-      const axis = P('upperarm_l').sub(P('upperarm_r'))
-      if (axis.lengthSq() < 1e-10) break
+    // Both arms turn rigidly about the shoulder line by the angle that puts the gun arm (upperarm_r -> hand_r) back at `elev`. Exact
+    // solve: the arm vector v turned by t about unit axis a has height p + q cos t + r sin t (p from v along a, q from the rest, r from
+    // a x v); the smaller of the two solutions wins (as close as it gets when `elev` is out of reach).
+    const axis = P('upperarm_l').sub(P('upperarm_r'))
+    if (axis.lengthSq() > 1e-10) {
       axis.normalize()
-      if (axis.dot(LEFT) < 0) axis.negate() // the figure's left: a positive turn lowers the muzzle
-      const turn = new Quaternion().setFromAxisAngle(axis, gunElev() - elev)
-      turnWorld(get('upperarm_l'), turn)
-      turnWorld(get('upperarm_r'), turn)
+      const arm = P('hand_r').sub(P('upperarm_r'))
+      const along = axis.clone().multiplyScalar(arm.dot(axis))
+      const perp = arm.clone().sub(along)
+      const p = along.y, q = perp.y, r = axis.clone().cross(perp).y
+      const R = Math.hypot(q, r)
+      if (R > 1e-9) {
+        const c = Math.max(-1, Math.min(1, (arm.length() * Math.sin(elev) - p) / R))
+        const phi = Math.atan2(r, q), dt = Math.acos(c)
+        const wrap = (t: number): number => Math.atan2(Math.sin(t), Math.cos(t))
+        const t1 = wrap(phi + dt), t2 = wrap(phi - dt)
+        const turn = new Quaternion().setFromAxisAngle(axis, Math.abs(t1) <= Math.abs(t2) ? t1 : t2)
+        turnWorld(get('upperarm_l'), turn)
+        turnWorld(get('upperarm_r'), turn)
+      }
     }
+    levelFace()
+  }
+  const levelFace = (): void => {
     for (const [nm, share] of [['neck_01', 0.5], ['Head', 1]] as const) {
       const f = headFwd.clone().applyQuaternion(W('Head')).normalize()
       const level = f.clone().setY(0)
@@ -270,10 +293,26 @@ export function buildCoverClips(scene: Object3D, clips: AnimationClip[], fix: Co
       turnWorld(get(nm), new Quaternion().slerp(new Quaternion().setFromUnitVectors(f, level.normalize()), share))
     }
   }
+  // Leaning out around high cover, over the finished standing aim: the spine rolls `sideDeg` toward the figure's left (+X; negative
+  // leans right) about the facing, in thirds; both arms then turn back by the one rotation that restores the gun arm's exact
+  // direction (aim unchanged), and the head takes part of the roll back (peekHead) with the face kept level.
+  const peek = (sideDeg: number): void => {
+    const gunDir = P('hand_r').sub(P('upperarm_r')).normalize()
+    const roll = new Quaternion().setFromAxisAngle(FWD, (-sideDeg * Math.PI) / 180 / SPINE.length) // -a about +Z takes up toward +X
+    for (const nm of SPINE) turnWorld(get(nm), roll)
+    const back = new Quaternion().setFromUnitVectors(P('hand_r').sub(P('upperarm_r')).normalize(), gunDir)
+    turnWorld(get('upperarm_l'), back)
+    turnWorld(get('upperarm_r'), back)
+    const f = headFwd.clone().applyQuaternion(W('Head')).normalize()
+    const u = headUp.clone().applyQuaternion(W('Head')).projectOnPlane(f)
+    const want = UP.clone().projectOnPlane(f)
+    if (u.lengthSq() > 1e-6 && want.lengthSq() > 1e-6) turnWorld(get('Head'), new Quaternion().slerp(new Quaternion().setFromUnitVectors(u.normalize(), want.normalize()), fix.peekHead))
+    levelFace()
+  }
 
   const n = Math.max(2, Math.round(idle.duration * FPS) + 1)
   const times = new Float32Array(n)
-  const make = (withKneel: boolean): { quats: Map<string, Float32Array>; pos: Float32Array } => {
+  const make = (withKneel: boolean, sideDeg = 0): { quats: Map<string, Float32Array>; pos: Float32Array } => {
     const quats = new Map(edited.map((nm) => [nm, new Float32Array(n * 4)] as const))
     const pos = new Float32Array(n * 3)
     for (let i = 0; i < n; i++) {
@@ -283,12 +322,13 @@ export function buildCoverClips(scene: Object3D, clips: AnimationClip[], fix: Co
       const elev = gunElev() // the raw idle's aim
       if (withKneel) kneel()
       upper(withKneel ? fix.kneelLean : fix.standLean, elev)
+      if (sideDeg !== 0) peek(sideDeg)
       for (const nm of edited) get(nm).quaternion.toArray(quats.get(nm)!, i * 4)
       get('pelvis').position.toArray(pos, i * 3)
     }
     return { quats, pos }
   }
-  const stand = make(false), knelt = make(true)
+  const stand = make(false), knelt = make(true), left = make(false, fix.peekLean), right = make(false, -fix.peekLean)
   mixer.stopAllAction()
   mixer.uncacheRoot(rig)
 
@@ -300,10 +340,12 @@ export function buildCoverClips(scene: Object3D, clips: AnimationClip[], fix: Co
     new VectorKeyframeTrack('pelvis.position', times.slice(), r.pos),
   ]
   const high = new AnimationClip('coverHigh', idle.duration, tracks(stand))
-  clips.push(high)
+  const peekL = new AnimationClip('peekLeft', idle.duration, tracks(left))
+  const peekR = new AnimationClip('peekRight', idle.duration, tracks(right))
+  clips.push(high, peekL, peekR)
   let low = clips.find((c) => c.name === 'cover')
   if (low) { low.tracks = tracks(knelt); low.duration = idle.duration }
   else { low = new AnimationClip('cover', idle.duration, tracks(knelt)); clips.push(low) }
-  done.add(high); done.add(low)
-  return ['coverHigh', 'cover']
+  for (const c of [high, peekL, peekR, low]) done.add(c)
+  return made
 }

@@ -85,7 +85,7 @@ export function AnimFrame(): null {
 export function RigModel({ unit, rig, lite, cover = null }: { unit: Unit; rig: RigAsset; lite: boolean; cover?: CoverLevel | null }): React.JSX.Element {
   const unitRef = useRef(unit)
   unitRef.current = unit
-  const coverRef = useRef(cover) // which cover the figure poses against (Figures: coverStance toward its aim target)
+  const coverRef = useRef(cover) // which cover the figure poses against (Figures: stances, toward its aim target)
   coverRef.current = cover
   const liteRef = useRef(lite)
   liteRef.current = lite
@@ -230,7 +230,7 @@ export function RigModel({ unit, rig, lite, cover = null }: { unit: Unit; rig: R
     S.acc += dt * rate // bullet time slows every figure while rounds are in the air
     g.getWorldPosition(tmp)
     const moving = !!cue || !!mo || !LOOPING.has(resolved ?? 'idle') || mode !== null
-    const standing = !moving && (resolved === 'idle' || resolved === 'cover' || resolved === 'cower')
+    const standing = !moving && (resolved === 'idle' || resolved === 'cover' || resolved === 'coverHigh' || resolved === 'peekLeft' || resolved === 'peekRight' || resolved === 'cower')
     if (!onScreen(tmp)) { animStats.skippedOffscreen++; S.acc = Math.min(S.acc, 0.5); return }
     animStats.visible++
     if (standing) {

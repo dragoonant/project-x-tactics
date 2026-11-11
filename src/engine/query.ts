@@ -3,7 +3,7 @@ import type { HitBreakdown, Pt, State } from './types'
 import { bfs, pathFrom } from './grid'
 import { coverAgainst, type CoverInfo } from './cover'
 import { AttackSpec, hitBreakdown, weaponDef } from './combat'
-import { isLit } from './los'
+import { isLit, lineClear, sightOrigins } from './los'
 import { coneLimited, sees, sideSees } from './fog'
 import { isUnaware } from './combat'
 import { summarize, type Summary } from './mission'
@@ -90,6 +90,23 @@ export function coverFrom(s: State, unitId: string, from: Pt): CoverInfo | null 
   const u = unitById(s, unitId)
   return u ? coverAgainst(s, u, from.x, from.y) : null
 }
+/**
+ * LOS-3: the step-out tile a unit looks from toward a tile, when the line from its own tile is blocked and a line from a step-out
+ * tile is clear (the closest such tile to `at`; ties keep LOS-3's order). Null when it sees from its own tile, or not at all.
+ */
+export function peekFrom(s: State, unitId: string, at: Pt): Pt | null {
+  const u = unitById(s, unitId)
+  if (!u) return null
+  const ends = sightOrigins(s, at)
+  if (ends.some((e) => lineClear(s, u.x, u.y, e.x, e.y))) return null
+  let best: Pt | null = null, bd = Infinity
+  for (const o of sightOrigins(s, u).slice(1)) {
+    if (!ends.some((e) => lineClear(s, o.x, o.y, e.x, e.y))) continue
+    const d = (o.x - at.x) ** 2 + (o.y - at.y) ** 2
+    if (d < bd) { best = o; bd = d }
+  }
+  return best
+}
 /** COV: cover value and level against an attacker straight north / east / south / west. */
 export function coverPerSide(s: State, unitId: string): Record<Compass, { level: 'none' | 'half' | 'full'; value: number }> | null {
   const u = unitById(s, unitId)
@@ -168,7 +185,7 @@ export function unawareSight(s: State, side: 'squad' = 'squad'): { unit: string;
 export function summary(s: State): Summary { return summarize(s) }
 
 export const query = {
-  hitChance, preview, previewSpec, reachable, coverFrom, coverPerSide, noiseInfo, summary, stealthOutlook, unawareSight,
+  hitChance, preview, previewSpec, reachable, coverFrom, coverPerSide, peekFrom, noiseInfo, summary, stealthOutlook, unawareSight,
   isLit: (s: State, x: number, y: number): boolean => isLit(s, x, y),
   /** FOG-1 for one observer/target pair. */
   canSee: (s: State, observerId: string, targetId: string): boolean => {

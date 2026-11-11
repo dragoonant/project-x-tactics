@@ -33,6 +33,7 @@ The seam between the asset pipeline (A1/A2, T1) and the client (A3). Both sides 
 | `idle` | yes | everyone | standing |
 | `cover` | yes | troopers, armed syndicate | kneeling aim behind low cover (half cover, rubble), or hunkered; built at load from the raw idle (`posefix.ts`) |
 | `coverHigh` | yes | troopers, armed syndicate | standing aim beside high cover (wall, closed door, full cover); built at load from the raw idle. In cover the figure turns to the closest active hostile it can see; an unaware syndicate group keeps its facing (sight cone). The cover on the side facing that target picks the clip |
+| `peekLeft` / `peekRight` | yes | troopers, armed syndicate | beside high cover when the line to the aim target is blocked from the figure's own tile and the engine names a step-out tile (LOS-3, `query.peekFrom`): the standing aim with the chest rolled out to that side (`COVER_FIX.peekLean`) and the head partly back upright, gun aim unchanged; built at load from `coverHigh`. The board also steps the figure `PEEK_STEP` (0.32) of a tile toward the step-out tile. Left / right is the side of that tile relative to the facing toward the target |
 | `walk`, `run` | yes | everyone | moving (run when a move uses the second action / dash); played at `speed` along the path, phase from distance travelled |
 | `aim` | no, holds last frame | armed units | target lock / before a shot |
 | `fire` | no | armed units | each ranged attack, overwatch and reaction shot |
@@ -48,7 +49,7 @@ The seam between the asset pipeline (A1/A2, T1) and the client (A3). Both sides 
 | `panic` | yes | civilians | panicked civilians moving |
 | `cower` | yes | civilians | panicked civilians standing |
 
-A missing clip falls back to `idle` (and `run` → `walk`, `cover` → `idle`, `coverHigh` → `cover`, `panic` → `run`, `cower` → `idle`), never to a T-pose.
+A missing clip falls back to `idle` (and `run` → `walk`, `cover` → `idle`, `coverHigh` → `cover`, `peekLeft` / `peekRight` → `coverHigh`, `panic` → `run`, `cower` → `idle`), never to a T-pose.
 
 ## 3. Figures and their items (A1)
 

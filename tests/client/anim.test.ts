@@ -6,7 +6,7 @@ import { CLIP_SOURCES, abilityClip, aimTarget, aimsFirst, attackClip, baseClip, 
 import { cueActive, playCue, startCue, cues } from '../../src/client/anim/cues'
 
 // The canonical clip list of docs/spec/30-figures-anim.md section 2, written out so a spec change breaks this test on purpose.
-const SPEC_CLIPS = ['idle', 'cover', 'coverHigh', 'walk', 'run', 'aim', 'fire', 'melee', 'bash', 'throw', 'point', 'hit', 'downed', 'surrender', 'cuffed', 'death', 'panic', 'cower']
+const SPEC_CLIPS = ['idle', 'cover', 'coverHigh', 'peekLeft', 'peekRight', 'walk', 'run', 'aim', 'fire', 'melee', 'bash', 'throw', 'point', 'hit', 'downed', 'surrender', 'cuffed', 'death', 'panic', 'cower']
 
 describe('contract: clip names and fallbacks', () => {
   it('knows exactly the canonical clips, each with a documented source', () => {
@@ -16,7 +16,7 @@ describe('contract: clip names and fallbacks', () => {
   })
 
   it('loops exactly the looping clips of the contract table', () => {
-    expect([...LOOPING].sort()).toEqual(['cover', 'coverHigh', 'cower', 'cuffed', 'downed', 'idle', 'panic', 'run', 'surrender', 'walk'].sort())
+    expect([...LOOPING].sort()).toEqual(['cover', 'coverHigh', 'peekLeft', 'peekRight', 'cower', 'cuffed', 'downed', 'idle', 'panic', 'run', 'surrender', 'walk'].sort())
   })
 
   // spec: "A missing clip falls back to idle (and run -> walk, cover -> idle, panic -> run, cower -> idle), never to a T-pose."
@@ -82,6 +82,9 @@ describe('mapping: engine events and state to clips', () => {
     ['standing with cover on any side', trooper, { cover: true, moving: null }, 'cover'],
     ['behind low cover: kneel', trooper, { cover: 'low', moving: null }, 'cover'],
     ['beside high cover: standing aim', trooper, { cover: 'high', moving: null }, 'coverHigh'],
+    ['beside high cover, peeking left (LOS-3)', trooper, { cover: 'peekLeft', moving: null }, 'peekLeft'],
+    ['beside high cover, peeking right (LOS-3)', trooper, { cover: 'peekRight', moving: null }, 'peekRight'],
+    ['hunkered while peeking: kneel', { ...trooper, hunkered: true }, { cover: 'peekLeft', moving: null }, 'cover'],
     ['hunkered beside high cover: kneel', { ...trooper, hunkered: true }, { cover: 'high', moving: null }, 'cover'],
     ['unarmed beside high cover', { ...trooper, armed: false }, { cover: 'high', moving: null }, 'idle'],
     ['hunkered in the open', { ...trooper, hunkered: true }, { cover: false, moving: null }, 'cover'],
@@ -140,7 +143,7 @@ describe('mapping: engine events and state to clips', () => {
   })
 
   it('every clip of the contract has a source in the table above or the helpers (nothing is orphaned)', () => {
-    const reachable = new Set<string>(['idle', 'cover', 'coverHigh', 'walk', 'run', 'panic', 'cower', 'downed', 'surrender', 'cuffed', 'death'])
+    const reachable = new Set<string>(['idle', 'cover', 'coverHigh', 'peekLeft', 'peekRight', 'walk', 'run', 'panic', 'cower', 'downed', 'surrender', 'cuffed', 'death'])
     for (const e of [{ via: 'attack' }, { via: 'shieldBash' }, { via: 'maul', breakdown: { melee: true } }]) reachable.add(attackClip(e))
     reachable.add('aim') // played before every ranged fire
     for (const a of ['relay', 'frag']) reachable.add(abilityClip(a)!)
@@ -165,15 +168,32 @@ describe('mapping: engine events and state to clips', () => {
     const foe = { id: 'e1', side: 'syndicate', status: 'active', x: 5, y: 0, group: null }
     const asked: { x: number; y: number }[] = []
     const cov = (lv: 'none' | 'half' | 'full') => (from: { x: number; y: number }) => { asked.push(from); return lv }
-    expect(stanceFor(me, [me, foe], new Set(), cov('full'))).toEqual({ cover: 'high', aim: { x: 5, y: 0 } })
+    expect(stanceFor(me, [me, foe], new Set(), cov('full'))).toEqual({ cover: 'high', aim: { x: 5, y: 0 }, peek: null })
     expect(asked.pop()).toEqual({ x: 5, y: 0 }) // cover is asked against the target
-    expect(stanceFor(me, [me, foe], new Set(), cov('half'))).toEqual({ cover: 'low', aim: { x: 5, y: 0 } })
-    expect(stanceFor(me, [me, foe], new Set(), cov('none'))).toEqual({ cover: null, aim: null })
+    expect(stanceFor(me, [me, foe], new Set(), cov('half'))).toEqual({ cover: 'low', aim: { x: 5, y: 0 }, peek: null })
+    expect(stanceFor(me, [me, foe], new Set(), cov('none'))).toEqual({ cover: null, aim: null, peek: null })
     // no target: cover against an attacker straight ahead; the figure keeps its facing (no aim point)
-    expect(stanceFor(me, [me], new Set(), cov('half'))).toEqual({ cover: 'low', aim: null })
+    expect(stanceFor(me, [me], new Set(), cov('half'))).toEqual({ cover: 'low', aim: null, peek: null })
     expect(asked.pop()).toEqual({ x: 5, y: 0 })
-    expect(stanceFor({ ...me, side: 'civilians' }, [me, foe], new Set(), cov('full'))).toEqual({ cover: null, aim: null })
-    expect(stanceFor({ ...me, status: 'surrendered' }, [me, foe], new Set(), cov('full'))).toEqual({ cover: null, aim: null })
+    expect(stanceFor({ ...me, side: 'civilians' }, [me, foe], new Set(), cov('full'))).toEqual({ cover: null, aim: null, peek: null })
+    expect(stanceFor({ ...me, status: 'surrendered' }, [me, foe], new Set(), cov('full'))).toEqual({ cover: null, aim: null, peek: null })
+  })
+
+  it('LOS-3 stance: beside full cover with a step-out tile toward the target, the figure leans out to that side', () => {
+    const me = { id: 's1', side: 'squad', status: 'active', x: 5, y: 5, facing: { x: 0, y: 1 } }
+    const north = { id: 'e1', side: 'syndicate', status: 'active', x: 5, y: 0, group: null }
+    const full = (): 'full' => 'full'
+    // facing north (y falls), west (x - 1) is the figure's left and east its right
+    expect(stanceFor(me, [me, north], new Set(), full, () => ({ x: 4, y: 5 }))).toEqual({ cover: 'peekLeft', aim: { x: 5, y: 0 }, peek: { x: 4, y: 5 } })
+    expect(stanceFor(me, [me, north], new Set(), full, () => ({ x: 6, y: 5 }))).toEqual({ cover: 'peekRight', aim: { x: 5, y: 0 }, peek: { x: 6, y: 5 } })
+    // facing east, north is the left
+    const east = { ...north, x: 10, y: 5 }
+    expect(stanceFor(me, [me, east], new Set(), full, () => ({ x: 5, y: 4 })).cover).toBe('peekLeft')
+    // no step-out tile (the line is clear, or no line at all): the plain standing aim
+    expect(stanceFor(me, [me, north], new Set(), full, () => null)).toEqual({ cover: 'high', aim: { x: 5, y: 0 }, peek: null })
+    // half cover never peeks; no target never peeks
+    expect(stanceFor(me, [me, north], new Set(), () => 'half', () => ({ x: 4, y: 5 })).peek).toBeNull()
+    expect(stanceFor(me, [me], new Set(), full, () => ({ x: 4, y: 5 }))).toEqual({ cover: 'high', aim: null, peek: null })
   })
 
   it('aim target: the closest active hostile; unaware syndicate groups and civilians aim at nobody', () => {
