@@ -2,7 +2,7 @@
   "_doc": "A1 figure and item configuration. Item local frame (Blender, before the glTF export): x along the length with the FRONT end (muzzle, tip, striking head) at -X, centred in x and y, z from 0 (bottom) to the item height (up). Fractions fx run from the front end (0) to the rear end (1), fz from the bottom (0) to the top (1).",
   "items": {
     "rifle":       { "flip": "xz", "len": 1.25, "front": "thin",  "kind": "gun",  "grip_r": [0.70, 0.42], "grip_l": [0.36, 0.55], "muzzle": [0.0, 0.80] },
-    "shotgun":     { "flip": "x", "len": 1.14, "front": "thin",  "kind": "gun",  "grip_r": [0.76, 0.45], "grip_l": [0.58, 0.62], "muzzle": [0.0, 0.85] },
+    "shotgun":     { "flip": "xz", "len": 1.14, "front": "thin",  "kind": "gun",  "grip_r": [0.76, 0.45], "grip_l": [0.58, 0.62], "muzzle": [0.0, 0.85] },
     "long-rifle":  { "flip": "xz", "len": 1.55, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.40], "grip_l": [0.34, 0.50], "muzzle": [0.0, 0.60] },
     "smg":         { "flip": "xz", "len": 0.85, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.45], "grip_l": [0.36, 0.55], "muzzle": [0.0, 0.75] },
     "lmg":         { "flip": "xz", "len": 1.35, "front": "thin",  "kind": "gun",  "grip_r": [0.66, 0.40], "grip_l": [0.34, 0.50], "muzzle": [0.0, 0.70] },

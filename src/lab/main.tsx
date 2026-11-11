@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client'
 import { AnimationMixer, Group, LoopOnce, LoopRepeat, Object3D, type AnimationClip, type PerspectiveCamera } from 'three'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { fixIdlePose } from '../client/anim/posefix'
+import { fixSupportHand } from '../client/anim/support'
 
 // Rule 24: no text selection, callouts or context menus on a long press, except in editable fields.
 const editable = (t: EventTarget | null): boolean => t instanceof HTMLElement && /^(input|textarea|select)$/i.test(t.tagName) || (t instanceof HTMLElement && t.isContentEditable)
@@ -59,7 +60,7 @@ function Figure({ man, kind, clip, speed, playing, items, spin, scale, x, treadm
   const meta = man.figures[kind]!
   const gltf = useGLTF(BASE + meta.file)
   // the same load-time idle correction the game applies (src/client/anim/posefix.ts); ?posefix=0 shows the raw bake
-  useMemo(() => { if (params.get('posefix') !== '0') fixIdlePose(kind, gltf.scene, gltf.animations) }, [kind, gltf])
+  useMemo(() => { if (params.get('posefix') !== '0') { fixIdlePose(kind, gltf.scene, gltf.animations); fixSupportHand(gltf.scene, gltf.animations, meta.attachments) } }, [kind, gltf, meta])
   const { invalidate } = useThree()
   const root = useMemo(() => cloneSkinned(gltf.scene) as Group, [gltf.scene])
   const mixer = useMemo(() => new AnimationMixer(root), [root])
@@ -129,8 +130,11 @@ function Cam({ view, scale, span }: { view: string; scale: number; span: number 
     const h = 1.8 * scale
     const d = span > 1 ? span * 1.05 : (num('dist') ?? 5.4)
     const pos = view === 'front' ? [0, h * 0.55, d] : view === 'side' ? [d, h * 0.55, 0] : view === 'high' ? [2.2, 4.6, 3.6] : [d * 0.6, h * 0.8 + 0.5, d * 0.8]
-    cam.position.set(pos[0]!, pos[1]!, pos[2]!)
-    cam.lookAt(0, h * 0.5, 0)
+    // ?cam=x,y,z&look=x,y,z place the camera freely (close-ups of a hand or an item)
+    const vec = (k: string): number[] | null => { const v = params.get(k)?.split(',').map(Number); return v && v.length === 3 && v.every((n) => !Number.isNaN(n)) ? v : null }
+    const at = vec('cam') ?? pos, look = vec('look') ?? [0, h * 0.5, 0]
+    cam.position.set(at[0]!, at[1]!, at[2]!)
+    cam.lookAt(look[0]!, look[1]!, look[2]!)
     cam.fov = 32
     cam.updateProjectionMatrix()
   }, [camera, view, scale, span])
