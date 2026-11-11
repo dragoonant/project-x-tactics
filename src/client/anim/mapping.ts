@@ -13,8 +13,12 @@ export interface StateLike {
 }
 export type MoveMode = 'walk' | 'run' | 'panic' | null
 
+type TileAt = (x: number, y: number) => { k: string; o?: string; open?: boolean } | undefined
+export type CoverLevel = 'high' | 'low'
+interface Pt { x: number; y: number }
+
 /** True when any of the four sides of a tile has cover (wall, closed door, cover object, rubble): the same sources the engine's COV rules use. */
-export function hasCoverNear(tileAt: (x: number, y: number) => { k: string; o?: string; open?: boolean } | undefined, x: number, y: number): boolean {
+export function hasCoverNear(tileAt: TileAt, x: number, y: number): boolean {
   for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
     const t = tileAt(x + dx, y + dy)
     if (!t) continue
@@ -24,8 +28,30 @@ export function hasCoverNear(tileAt: (x: number, y: number) => { k: string; o?: 
   return false
 }
 
-/** The state-driven clip: death / downed / surrender / cuffed by status, panic and cower for civilians, cover when the tile (or Hunker) gives cover. */
-export function baseClip(u: StateLike, o: { cover: boolean; moving: MoveMode }): ClipName {
+export interface AimUnit { id: string; side: string; status: string; x: number; y: number; armed?: boolean; group?: string | null }
+/**
+ * Who a figure in cover aims at: the closest active hostile it can see (squad against syndicate). A syndicate figure whose group is
+ * still unaware aims at nobody, so it keeps facing its sight cone (STL-1). Ties go to the lower id, so the pick is stable.
+ */
+export function aimTarget(u: AimUnit, units: readonly AimUnit[], awareGroups: ReadonlySet<string>): Pt | null {
+  if (u.status !== 'active' || u.armed === false) return null
+  const foe = u.side === 'squad' ? 'syndicate' : u.side === 'syndicate' ? 'squad' : null
+  if (!foe) return null
+  if (u.side === 'syndicate' && u.group && !awareGroups.has(u.group)) return null
+  let best: AimUnit | null = null, bd = Infinity
+  for (const o of units) {
+    if (o.side !== foe || o.status !== 'active') continue
+    const d = (o.x - u.x) ** 2 + (o.y - u.y) ** 2
+    if (d < bd || (d === bd && best && o.id < best.id)) { best = o; bd = d }
+  }
+  return best ? { x: best.x, y: best.y } : null
+}
+
+/**
+ * The state-driven clip: death / downed / surrender / cuffed by status, panic and cower for civilians; behind low cover (or hunkered)
+ * the kneel (`cover`), next to high cover the standing aim (`coverHigh`). `cover: true` means low.
+ */
+export function baseClip(u: StateLike, o: { cover: boolean | CoverLevel | null; moving: MoveMode }): ClipName {
   switch (u.status) {
     case 'dead': return 'death'
     case 'downed': case 'stabilized': return 'downed'
@@ -35,7 +61,10 @@ export function baseClip(u: StateLike, o: { cover: boolean; moving: MoveMode }):
   }
   if (o.moving) return o.moving
   if (u.side === 'civilians') return u.panicked || u.fleeing ? 'cower' : 'idle'
-  if ((o.cover || u.hunkered) && u.armed !== false) return 'cover'
+  if (u.armed === false) return 'idle'
+  if (u.hunkered) return 'cover'
+  if (o.cover === 'high') return 'coverHigh'
+  if (o.cover) return 'cover'
   return 'idle'
 }
 
@@ -78,7 +107,8 @@ export const STATUS_EVENTS: ReadonlySet<string> = new Set(['surrender', 'cuffed'
 /** Every clip of the contract with the situation that plays it, for the docs and the exhaustive test. */
 export const CLIP_SOURCES: Record<ClipName, string> = {
   idle: 'state: standing',
-  cover: 'state: standing on a tile with cover (or hunkered)',
+  cover: 'state: kneeling behind low cover (or hunkered)',
+  coverHigh: 'state: standing aim beside high cover',
   walk: 'event: move (first action), civilianMove',
   run: 'event: move using the second action, flee',
   aim: 'event: attack (ranged), before fire',
@@ -94,4 +124,22 @@ export const CLIP_SOURCES: Record<ClipName, string> = {
   death: 'state: dead (holds last frame)',
   panic: 'event: civilianFlee, civilian moving while panicked',
   cower: 'state: civilian panicked / fleeing and standing',
+}
+
+/** How a figure stands when nothing else is happening: the cover it poses against and the point it aims at. */
+export interface Stance { cover: CoverLevel | null; aim: Pt | null }
+export const NO_STANCE: Stance = { cover: null, aim: null }
+
+/**
+ * Owner: aim around high cover at the closest enemy, take a knee behind low cover. The cover is the engine's cover against the aim
+ * target (query.coverFrom: COV rules, Riot Shield included), or, with no target, against an attacker straight ahead. Full cover
+ * stands (coverHigh), half cover kneels (cover). A figure with no cover that way (open ground, or cover only behind it) keeps its
+ * normal stance and facing.
+ */
+export function stanceFor(u: AimUnit & { facing: Pt }, units: readonly AimUnit[], awareGroups: ReadonlySet<string>, coverFrom: (from: Pt) => 'none' | 'half' | 'full' | null): Stance {
+  if (u.status !== 'active' || u.side === 'civilians') return NO_STANCE
+  const target = aimTarget(u, units, awareGroups)
+  const level = coverFrom(target ?? { x: u.x + u.facing.x * 5, y: u.y + u.facing.y * 5 })
+  const cover: CoverLevel | null = level === 'full' ? 'high' : level === 'half' ? 'low' : null
+  return { cover, aim: cover ? target : null }
 }

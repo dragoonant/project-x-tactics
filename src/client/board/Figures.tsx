@@ -12,6 +12,8 @@ import { useStore } from '../game/store'
 import { rigFor } from '../anim/assets'
 import { cueActive } from '../anim/cues'
 import { AnimFrame, RigModel } from '../anim/Rig'
+import { NO_STANCE, stanceFor, type Stance } from '../anim/mapping'
+import { query } from '../../engine'
 import { tx, tz } from './layout'
 
 const noRay = (): null => null
@@ -109,8 +111,10 @@ function Marker({ color, y = 1.55, shape = 'diamond' }: { color: string; y?: num
   )
 }
 
-function FigureImpl({ unit, w, h, selected, hovered, lite }: { unit: Unit; w: number; h: number; selected: boolean; hovered: boolean; lite: boolean }): React.JSX.Element {
+function FigureImpl({ unit, w, h, selected, hovered, lite, stance = NO_STANCE }: { unit: Unit; w: number; h: number; selected: boolean; hovered: boolean; lite: boolean; stance?: Stance }): React.JSX.Element {
   const ref = useRef<Group>(null)
+  const stanceRef = useRef(stance)
+  stanceRef.current = stance
   const inner = useRef<Group>(null)
   const yaw = useRef(Math.atan2(unit.facing.x, unit.facing.y))
   const m = modelFor(unit.kind, unit.weapon)
@@ -123,6 +127,8 @@ function FigureImpl({ unit, w, h, selected, hovered, lite }: { unit: Unit; w: nu
     if (!g) return
     let px = unit.x, py = unit.y
     let want = Math.atan2(unit.facing.x, unit.facing.y)
+    const aim = stanceRef.current.aim
+    if (aim && (aim.x !== unit.x || aim.y !== unit.y)) want = Math.atan2(aim.x - unit.x, aim.y - unit.y)
     let hop = 0
     const cue = cueActive(unit.id)
     if (cue?.face) want = Math.atan2(cue.face.x - unit.x, cue.face.y - unit.y)
@@ -152,7 +158,7 @@ function FigureImpl({ unit, w, h, selected, hovered, lite }: { unit: Unit; w: nu
     <group ref={ref} position={[tx(unit.x, w), 0, tz(unit.y, h)]}>
       <group ref={inner} rotation={[0, yaw.current, 0]}>
         <group rotation={lying ? [-Math.PI / 2 + 0.1, 0, 0] : [0, 0, 0]} position={lying ? [0, 0.16, 0.18] : [0, 0, 0]} scale={kneel ? [1, 0.74, 1] : [1, 1, 1]}>
-          {rig ? <RigModel unit={unit} rig={rig} lite={lite} /> : m ? <Model kind={unit.kind} variant={unit.weapon} /> : <StandIn u={unit} />}
+          {rig ? <RigModel unit={unit} rig={rig} lite={lite} cover={stance.cover} /> : m ? <Model kind={unit.kind} variant={unit.weapon} /> : <StandIn u={unit} />}
         </group>
       </group>
       {selected && (
@@ -174,15 +180,29 @@ function FigureImpl({ unit, w, h, selected, hovered, lite }: { unit: Unit; w: nu
     </group>
   )
 }
-export const Figure = memo(FigureImpl, (a, b) => a.unit === b.unit && a.selected === b.selected && a.hovered === b.hovered && a.w === b.w && a.h === b.h && a.lite === b.lite)
+const sameStance = (a: Stance | undefined, b: Stance | undefined): boolean =>
+  a === b || (!!a && !!b && a.cover === b.cover && a.aim?.x === b.aim?.x && a.aim?.y === b.aim?.y)
+export const Figure = memo(FigureImpl, (a, b) => a.unit === b.unit && a.selected === b.selected && a.hovered === b.hovered && a.w === b.w && a.h === b.h && a.lite === b.lite && sameStance(a.stance, b.stance))
 
-export function Figures({ units, w, h, selected, hovered }: { units: Unit[]; w: number; h: number; selected: string | null; hovered: string | null }): React.JSX.Element {
+/** Every figure's stance (mapping.stanceFor): targets from the units on the board, cover from the engine's rules on the full state. */
+export function stances(units: readonly Unit[], state: State, groups: readonly { id: string; aware: boolean }[]): Map<string, Stance> {
+  const aware = new Set(groups.filter((g) => g.aware).map((g) => g.id))
+  const out = new Map<string, Stance>()
+  for (const u of units) {
+    const st = stanceFor(u, units, aware, (from) => query.coverFrom(state, u.id, from)?.level ?? null)
+    if (st.cover) out.set(u.id, st)
+  }
+  return out
+}
+
+export function Figures({ units, w, h, selected, hovered, state, groups }: { units: Unit[]; w: number; h: number; selected: string | null; hovered: string | null; state: State; groups: readonly { id: string; aware: boolean }[] }): React.JSX.Element {
   const lite = useStore((s) => s.settings.lite) // Low quality tier: far and off-screen figures stop animating
+  const st = useMemo(() => stances(units, state, groups), [units, state, groups])
   return (
     <group>
       <AnimFrame />
       {units.filter((u) => u.status !== 'escaped' && u.status !== 'safe').map((u) => (
-        <Figure key={u.id} unit={u} w={w} h={h} selected={u.id === selected} hovered={u.id === hovered} lite={lite} />
+        <Figure key={u.id} unit={u} w={w} h={h} selected={u.id === selected} hovered={u.id === hovered} lite={lite} stance={st.get(u.id)} />
       ))}
     </group>
   )

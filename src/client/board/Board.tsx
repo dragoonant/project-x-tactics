@@ -100,7 +100,7 @@ function Scene({ state, fog, fogOn }: { state: State; fog: State; fogOn: boolean
       <CameraRig w={w} h={h} />
       <Lights state={state} lamps={lamps} refs={lights} />
       <Suspense fallback={null}><TerrainGate state={state} fogOn={fogOn} lamps={lamps} lights={lights} /></Suspense>
-      <Figures units={units} w={w} h={h} selected={selected} hovered={hoverId} />
+      <Figures units={units} w={w} h={h} selected={selected} hovered={hoverId} state={state} groups={fog.groups} />
       <Ghosts state={state} fog={fog} />
       {fogOn && <StealthLayer state={state} fog={fog} />}
       {fogOn && <TileMarks state={state} />}

@@ -2,11 +2,11 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { CLIPS, EMPTY_HAND_CLIPS, FALLBACK, LOOPING, parseAnimManifest, poseFallback, resolveClip, visibleAttachments, type ClipName } from '../../src/client/anim/contract'
-import { CLIP_SOURCES, abilityClip, aimsFirst, attackClip, baseClip, damageClip, hasCoverNear, moveMode } from '../../src/client/anim/mapping'
+import { CLIP_SOURCES, abilityClip, aimTarget, aimsFirst, attackClip, baseClip, damageClip, hasCoverNear, moveMode, stanceFor } from '../../src/client/anim/mapping'
 import { cueActive, playCue, startCue, cues } from '../../src/client/anim/cues'
 
 // The canonical clip list of docs/spec/30-figures-anim.md section 2, written out so a spec change breaks this test on purpose.
-const SPEC_CLIPS = ['idle', 'cover', 'walk', 'run', 'aim', 'fire', 'melee', 'bash', 'throw', 'point', 'hit', 'downed', 'surrender', 'cuffed', 'death', 'panic', 'cower']
+const SPEC_CLIPS = ['idle', 'cover', 'coverHigh', 'walk', 'run', 'aim', 'fire', 'melee', 'bash', 'throw', 'point', 'hit', 'downed', 'surrender', 'cuffed', 'death', 'panic', 'cower']
 
 describe('contract: clip names and fallbacks', () => {
   it('knows exactly the canonical clips, each with a documented source', () => {
@@ -16,7 +16,7 @@ describe('contract: clip names and fallbacks', () => {
   })
 
   it('loops exactly the looping clips of the contract table', () => {
-    expect([...LOOPING].sort()).toEqual(['cover', 'cower', 'cuffed', 'downed', 'idle', 'panic', 'run', 'surrender', 'walk'].sort())
+    expect([...LOOPING].sort()).toEqual(['cover', 'coverHigh', 'cower', 'cuffed', 'downed', 'idle', 'panic', 'run', 'surrender', 'walk'].sort())
   })
 
   // spec: "A missing clip falls back to idle (and run -> walk, cover -> idle, panic -> run, cower -> idle), never to a T-pose."
@@ -77,9 +77,13 @@ describe('contract: item swaps (spec 30 section 3)', () => {
 
 describe('mapping: engine events and state to clips', () => {
   const trooper = { side: 'squad', status: 'active', armed: true, hunkered: false }
-  const BASE: [string, Parameters<typeof baseClip>[0], { cover: boolean; moving: 'walk' | 'run' | 'panic' | null }, ClipName][] = [
+  const BASE: [string, Parameters<typeof baseClip>[0], Parameters<typeof baseClip>[1], ClipName][] = [
     ['standing in the open', trooper, { cover: false, moving: null }, 'idle'],
     ['standing with cover on any side', trooper, { cover: true, moving: null }, 'cover'],
+    ['behind low cover: kneel', trooper, { cover: 'low', moving: null }, 'cover'],
+    ['beside high cover: standing aim', trooper, { cover: 'high', moving: null }, 'coverHigh'],
+    ['hunkered beside high cover: kneel', { ...trooper, hunkered: true }, { cover: 'high', moving: null }, 'cover'],
+    ['unarmed beside high cover', { ...trooper, armed: false }, { cover: 'high', moving: null }, 'idle'],
     ['hunkered in the open', { ...trooper, hunkered: true }, { cover: false, moving: null }, 'cover'],
     ['moving (walk)', trooper, { cover: true, moving: 'walk' }, 'walk'],
     ['moving (run)', trooper, { cover: false, moving: 'run' }, 'run'],
@@ -136,7 +140,7 @@ describe('mapping: engine events and state to clips', () => {
   })
 
   it('every clip of the contract has a source in the table above or the helpers (nothing is orphaned)', () => {
-    const reachable = new Set<string>(['idle', 'cover', 'walk', 'run', 'panic', 'cower', 'downed', 'surrender', 'cuffed', 'death'])
+    const reachable = new Set<string>(['idle', 'cover', 'coverHigh', 'walk', 'run', 'panic', 'cower', 'downed', 'surrender', 'cuffed', 'death'])
     for (const e of [{ via: 'attack' }, { via: 'shieldBash' }, { via: 'maul', breakdown: { melee: true } }]) reachable.add(attackClip(e))
     reachable.add('aim') // played before every ranged fire
     for (const a of ['relay', 'frag']) reachable.add(abilityClip(a)!)
@@ -154,6 +158,33 @@ describe('mapping: engine events and state to clips', () => {
     expect(hasCoverNear(grid({ '5,6': { k: 'floor', o: 'rubble' } }), 5, 5)).toBe(true)
     expect(hasCoverNear(grid({ '5,6': { k: 'floor', o: 'lamp' } }), 5, 5)).toBe(false)
     expect(hasCoverNear(grid({ '6,6': { k: 'wall' } }), 5, 5)).toBe(false) // diagonals do not count
+  })
+
+  it('stance: full cover against the target stands and aims, half cover kneels, none keeps the normal stance', () => {
+    const me = { id: 's1', side: 'squad', status: 'active', x: 5, y: 5, facing: { x: 0, y: -1 } }
+    const foe = { id: 'e1', side: 'syndicate', status: 'active', x: 5, y: 0, group: null }
+    const asked: { x: number; y: number }[] = []
+    const cov = (lv: 'none' | 'half' | 'full') => (from: { x: number; y: number }) => { asked.push(from); return lv }
+    expect(stanceFor(me, [me, foe], new Set(), cov('full'))).toEqual({ cover: 'high', aim: { x: 5, y: 0 } })
+    expect(asked.pop()).toEqual({ x: 5, y: 0 }) // cover is asked against the target
+    expect(stanceFor(me, [me, foe], new Set(), cov('half'))).toEqual({ cover: 'low', aim: { x: 5, y: 0 } })
+    expect(stanceFor(me, [me, foe], new Set(), cov('none'))).toEqual({ cover: null, aim: null })
+    // no target: cover against an attacker straight ahead; the figure keeps its facing (no aim point)
+    expect(stanceFor(me, [me], new Set(), cov('half'))).toEqual({ cover: 'low', aim: null })
+    expect(asked.pop()).toEqual({ x: 5, y: 0 })
+    expect(stanceFor({ ...me, side: 'civilians' }, [me, foe], new Set(), cov('full'))).toEqual({ cover: null, aim: null })
+    expect(stanceFor({ ...me, status: 'surrendered' }, [me, foe], new Set(), cov('full'))).toEqual({ cover: null, aim: null })
+  })
+
+  it('aim target: the closest active hostile; unaware syndicate groups and civilians aim at nobody', () => {
+    const u = (id: string, side: string, x: number, y: number, extra: Record<string, unknown> = {}) => ({ id, side, status: 'active', x, y, group: null, ...extra })
+    const units = [u('s1', 'squad', 0, 0), u('s2', 'squad', 9, 9), u('e1', 'syndicate', 3, 0, { group: 'patrol' }), u('e2', 'syndicate', 1, 1, { status: 'surrendered' }), u('e3', 'syndicate', 0, 5, { group: 'bar' }), u('c1', 'civilians', 1, 0)]
+    expect(aimTarget(units[0]!, units, new Set())).toEqual({ x: 3, y: 0 }) // e2 surrendered, c1 is no target
+    expect(aimTarget(units[2]!, units, new Set())).toBeNull() // the patrol is unaware: it keeps its sight cone
+    expect(aimTarget(units[2]!, units, new Set(['patrol']))).toEqual({ x: 0, y: 0 })
+    expect(aimTarget(units[5]!, units, new Set(['patrol']))).toBeNull()
+    expect(aimTarget({ ...units[0]!, armed: false }, units, new Set())).toBeNull()
+    expect(aimTarget(units[0]!, units.filter((x) => x.side !== 'syndicate'), new Set())).toBeNull()
   })
 })
 

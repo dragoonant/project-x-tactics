@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { AnimationClip, AnimationMixer, Bone, Group, Quaternion, QuaternionKeyframeTrack, Vector3, VectorKeyframeTrack, type Object3D } from 'three'
-import { COVER_FIX, COVER_KINDS, FIXED_CLIPS, POSE_FIX, fixCoverPose, fixIdlePose } from '../../src/client/anim/posefix'
+import { COVER_FIX, COVER_KINDS, FIXED_CLIPS, POSE_FIX, buildCoverClips, fixIdlePose } from '../../src/client/anim/posefix'
 
 // A small skeleton with the UAL bone names: upright in its bind pose, figure facing +Z, left = +X.
 function skeleton(): Group {
@@ -45,7 +45,7 @@ describe('idle pose correction (owner feedback: hunched, heads to the floor)', (
     const gripBefore = world(before, 'hand_l').distanceTo(world(before, 'hand_r'))
     const clip = hunched()
     const base = skeleton()
-    expect(fixIdlePose('recruit', base, [clip])).toEqual(['idle'])
+    expect(fixIdlePose('recruit', base, [clip])).toEqual(['coverHigh', 'cover', 'idle']) // the cover clips are built from the raw idle first
     const after = posed(skeleton(), clip, 0.5)
     // the grip on a two-handed gun is unchanged
     expect(world(after, 'hand_l').distanceTo(world(after, 'hand_r'))).toBeCloseTo(gripBefore, 5)
@@ -62,16 +62,16 @@ describe('idle pose correction (owner feedback: hunched, heads to the floor)', (
     expect(base.getObjectByName('spine_01')!.quaternion.angleTo(new Quaternion())).toBeLessThan(1e-9)
   })
 
-  it('changes only idle, walk and run, only once, and only for gun figures', () => {
+  it('lowers only idle, walk and run, builds the cover clips, only once, and only for gun figures', () => {
     const clips = ['idle', 'walk', 'run', 'aim', 'cover'].map((n) => hunched(n))
-    expect(fixIdlePose('gunman', skeleton(), clips).sort()).toEqual(['cover', 'idle', 'run', 'walk'])
+    expect(fixIdlePose('gunman', skeleton(), clips).sort()).toEqual(['cover', 'coverHigh', 'idle', 'run', 'walk'])
     expect(fixIdlePose('gunman', skeleton(), clips)).toEqual([])
     expect([...FIXED_CLIPS].sort()).toEqual(['idle', 'run', 'walk'])
     for (const k of ['thug-club', 'civilian-a', 'civilian-b', 'civilian-c']) expect(POSE_FIX[k]).toBeUndefined()
     expect(fixIdlePose('civilian-a', skeleton(), [hunched(), hunched('cover')])).toEqual([])
-    // the club thug keeps its idle but gets the cover crouch fix; civilians have no cover clip
+    // the club thug keeps its idle but gets the cover clips; civilians have no cover clip
     expect(COVER_KINDS.has('thug-club')).toBe(true)
-    expect(fixIdlePose('thug-club', skeleton(), ['idle', 'cover'].map((n) => hunched(n)))).toEqual(['cover'])
+    expect(fixIdlePose('thug-club', skeleton(), ['idle', 'cover'].map((n) => hunched(n)))).toEqual(['coverHigh', 'cover'])
     for (const k of ['civilian-a', 'civilian-b', 'civilian-c']) expect(COVER_KINDS.has(k)).toBe(false)
   })
 
@@ -86,35 +86,41 @@ describe('idle pose correction (owner feedback: hunched, heads to the floor)', (
     expect(drop(after, 'r') - drop(after, 'l')).toBeGreaterThan(0.5)
   })
 
-  it('cover becomes an upright low crouch: chest near vertical, face level, gun aimed as before, lower foot on the floor', () => {
-    // the bad bake: a deep squat, pelvis and spine pitched forward, head to the floor, gun levelled by the arms
-    const tr = (bone: string, deg: number): QuaternionKeyframeTrack => new QuaternionKeyframeTrack(`${bone}.quaternion`, [0, 1], [...q(X, deg), ...q(X, deg)])
-    const squat = (): AnimationClip => new AnimationClip('cover', 1, [
-      tr('pelvis', 35), tr('spine_01', 15), tr('spine_02', 12), tr('spine_03', 10), tr('neck_01', 15), tr('Head', 25),
-      tr('thigh_l', -110), tr('thigh_r', -110), tr('calf_l', 120), tr('calf_r', 120), tr('foot_l', -10), tr('foot_r', -10),
-      tr('upperarm_l', -80), tr('upperarm_r', -80),
-      new VectorKeyframeTrack('pelvis.position', [0, 1], [0, 0.55, 0, 0, 0.55, 0]),
-    ])
-    const idle = new AnimationClip('idle', 1, [new VectorKeyframeTrack('pelvis.position', [0, 1], [0, 1, 0, 0, 1, 0]), ...['pelvis', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r', 'foot_l', 'foot_r'].map((b) => tr(b, 0))])
-    const before = posed(skeleton(), squat(), 0.5)
-    const footY = (r: Object3D): number => Math.min(...['ball_l', 'ball_r', 'foot_l', 'foot_r'].map((n) => world(r, n).y))
+  it('cover clips from the raw idle: a standing aim and a kneel, chest near upright, face level, gun aimed as in the idle', () => {
+    const raw = posed(skeleton(), hunched(), 0.5)
     const gun = (r: Object3D): number => { const v = world(r, 'hand_r').sub(world(r, 'upperarm_r')); return Math.atan2(v.y, Math.hypot(v.x, v.z)) }
-    const clip = squat()
-    expect(fixCoverPose(skeleton(), [idle, clip])).toEqual(['cover'])
-    expect(fixCoverPose(skeleton(), [idle, clip])).toEqual([]) // once
-    const after = posed(skeleton(), clip, 0.5)
-    // chest: from bent far forward to the configured small lean
     const up = (r: Object3D): Vector3 => new Vector3(0, 1, 0).applyQuaternion(r.getObjectByName('spine_03')!.getWorldQuaternion(new Quaternion()))
     const tilt = (r: Object3D): number => (Math.acos(Math.min(1, up(r).y)) * 180) / Math.PI
-    expect(tilt(before)).toBeGreaterThan(60)
-    expect(tilt(after)).toBeCloseTo(COVER_FIX.lean, 0)
-    // face: level with the horizon
-    const face = new Vector3(0, 0, 1).applyQuaternion(after.getObjectByName('Head')!.getWorldQuaternion(new Quaternion()))
-    expect(Math.abs(face.y)).toBeLessThan(1e-3)
-    // the gun points where it did, the hands keep their distance, the lower foot stays on the floor, and the crouch is shallower
-    expect(gun(after)).toBeCloseTo(gun(before), 2)
-    expect(world(after, 'hand_l').distanceTo(world(after, 'hand_r'))).toBeCloseTo(world(before, 'hand_l').distanceTo(world(before, 'hand_r')), 4)
-    expect(footY(after)).toBeCloseTo(footY(before), 4)
-    expect(world(after, 'pelvis').y).toBeGreaterThan(world(before, 'pelvis').y)
+    const faceY = (r: Object3D): number => new Vector3(0, 0, 1).applyQuaternion(r.getObjectByName('Head')!.getWorldQuaternion(new Quaternion())).y
+    const bind = skeleton()
+    const floor = Math.min(world(bind, 'ball_l').y, world(bind, 'ball_r').y)
+
+    const clips = [hunched('idle'), hunched('cover')]
+    expect(buildCoverClips(skeleton(), clips)).toEqual(['coverHigh', 'cover'])
+    expect(buildCoverClips(skeleton(), clips)).toEqual([]) // once
+    expect(clips.map((c) => c.name)).toEqual(['idle', 'cover', 'coverHigh'])
+    expect(tilt(raw)).toBeGreaterThan(25)
+
+    // standing aim: legs as in the idle, chest at the small lean, face level, gun where the idle aimed it
+    const high = posed(skeleton(), clips.find((c) => c.name === 'coverHigh')!, 0.5)
+    expect(tilt(high)).toBeCloseTo(COVER_FIX.standLean, 0)
+    expect(Math.abs(faceY(high))).toBeLessThan(1e-3)
+    expect(gun(high)).toBeCloseTo(gun(raw), 2)
+    expect(world(high, 'pelvis').y).toBeCloseTo(world(raw, 'pelvis').y, 5)
+
+    // kneel: right knee near the floor under the hip, left knee up with the foot flat in front, much lower pelvis
+    const low = posed(skeleton(), clips.find((c) => c.name === 'cover')!, 0.5)
+    expect(tilt(low)).toBeCloseTo(COVER_FIX.kneelLean, 0)
+    expect(Math.abs(faceY(low))).toBeLessThan(1e-3)
+    expect(gun(low)).toBeCloseTo(gun(raw), 2)
+    const ankle = world(bind, 'foot_r').y - floor
+    expect(world(low, 'calf_r').y).toBeCloseTo(floor + ankle * 0.6, 3)
+    expect(world(low, 'calf_l').y).toBeGreaterThan(world(low, 'calf_r').y + 0.2)
+    expect(world(low, 'foot_l').z).toBeGreaterThan(world(low, 'thigh_l').z + 0.2) // the left foot is in front
+    expect(world(low, 'foot_r').z).toBeLessThan(world(low, 'calf_r').z - 0.2) // the right shin lies back
+    expect(world(low, 'foot_l').y).toBeCloseTo(world(bind, 'foot_l').y, 2) // the front foot stands on the floor
+    expect(world(low, 'pelvis').y).toBeLessThan(world(raw, 'pelvis').y - 0.3)
+    const footQ = low.getObjectByName('foot_l')!.getWorldQuaternion(new Quaternion())
+    expect(footQ.angleTo(bind.getObjectByName('foot_l')!.getWorldQuaternion(new Quaternion()))).toBeLessThan(1e-3)
   })
 })

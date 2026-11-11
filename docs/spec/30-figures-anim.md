@@ -31,7 +31,8 @@ The seam between the asset pipeline (A1/A2, T1) and the client (A3). Both sides 
 | Clip | Loop | Who has it | Played when |
 |---|---|---|---|
 | `idle` | yes | everyone | standing |
-| `cover` | yes | troopers, armed syndicate | idle on a tile with cover on any side |
+| `cover` | yes | troopers, armed syndicate | kneeling aim behind low cover (half cover, rubble), or hunkered; built at load from the raw idle (`posefix.ts`) |
+| `coverHigh` | yes | troopers, armed syndicate | standing aim beside high cover (wall, closed door, full cover); built at load from the raw idle. In cover the figure turns to the closest active hostile it can see; an unaware syndicate group keeps its facing (sight cone). The cover on the side facing that target picks the clip |
 | `walk`, `run` | yes | everyone | moving (run when a move uses the second action / dash); played at `speed` along the path, phase from distance travelled |
 | `aim` | no, holds last frame | armed units | target lock / before a shot |
 | `fire` | no | armed units | each ranged attack, overwatch and reaction shot |
@@ -47,7 +48,7 @@ The seam between the asset pipeline (A1/A2, T1) and the client (A3). Both sides 
 | `panic` | yes | civilians | panicked civilians moving |
 | `cower` | yes | civilians | panicked civilians standing |
 
-A missing clip falls back to `idle` (and `run` → `walk`, `cover` → `idle`, `panic` → `run`, `cower` → `idle`), never to a T-pose.
+A missing clip falls back to `idle` (and `run` → `walk`, `cover` → `idle`, `coverHigh` → `cover`, `panic` → `run`, `cower` → `idle`), never to a T-pose.
 
 ## 3. Figures and their items (A1)
 

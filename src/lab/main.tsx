@@ -65,7 +65,8 @@ function Figure({ man, kind, clip, speed, playing, items, spin, scale, x, treadm
   const mixer = useMemo(() => new AnimationMixer(root), [root])
   const figure = useRef<Group>(null)
   const clock = useRef(num('t') ?? 0)
-  const clipName = meta.clips[clip] ? clip : (FALLBACK[clip] && meta.clips[FALLBACK[clip]!] ? FALLBACK[clip]! : 'idle')
+  const has = (c: string): boolean => !!meta.clips[c] || gltf.animations.some((a) => a.name === c) // coverHigh is built at load (posefix)
+  const clipName = has(clip) ? clip : (FALLBACK[clip] && has(FALLBACK[clip]!) ? FALLBACK[clip]! : 'idle')
   const clipObj = useMemo<AnimationClip | undefined>(() => gltf.animations.find((a) => a.name === clipName), [gltf.animations, clipName])
   const bones = useMemo(() => meta.attachments.map((a) => root.getObjectByName(a.bone) ?? null), [root, meta])
 
@@ -91,7 +92,7 @@ function Figure({ man, kind, clip, speed, playing, items, spin, scale, x, treadm
   }, [mixer, invalidate])
 
   useFrame((_, dt) => {
-    const dur = meta.clips[clipName]?.duration ?? 1
+    const dur = meta.clips[clipName]?.duration ?? clipObj?.duration ?? 1
     if (!labApi.frozen && playing) {
       clock.current += dt * speed
       labApi.time = clock.current

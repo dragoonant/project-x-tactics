@@ -11,7 +11,7 @@ import { useStore } from '../game/store'
 import type { AttachmentDef, ClipName } from './contract'
 import { HOLDS_LAST, LOOPING, poseFallback, resolveClip, visibleAttachments } from './contract'
 import { cueActive, animStats, holds, notePlayed, startCue } from './cues'
-import { baseClip, hasCoverNear, type MoveMode } from './mapping'
+import { baseClip, type CoverLevel, type MoveMode } from './mapping'
 import { cap, crossfade, idleStep, speedTimeScale } from './tuning'
 import type { RigAsset } from './assets'
 import { itemScene } from './assets'
@@ -82,9 +82,11 @@ export function AnimFrame(): null {
   return null
 }
 
-export function RigModel({ unit, rig, lite }: { unit: Unit; rig: RigAsset; lite: boolean }): React.JSX.Element {
+export function RigModel({ unit, rig, lite, cover = null }: { unit: Unit; rig: RigAsset; lite: boolean; cover?: CoverLevel | null }): React.JSX.Element {
   const unitRef = useRef(unit)
   unitRef.current = unit
+  const coverRef = useRef(cover) // which cover the figure poses against (Figures: coverStance toward its aim target)
+  coverRef.current = cover
   const liteRef = useRef(lite)
   liteRef.current = lite
   const pose = useRef<Group>(null)
@@ -155,9 +157,7 @@ export function RigModel({ unit, rig, lite }: { unit: Unit; rig: RigAsset; lite:
     const mo = motion.get(u.id)
     const mode: MoveMode = mo ? (mo.mode ?? 'walk') : null
     const hold = holds.get(u.id)
-    const map = store.state?.map
-    const cover = map ? hasCoverNear((x, y) => (x >= 0 && y >= 0 && x < map.w && y < map.h ? map.tiles[y * map.w + x] : undefined), u.x, u.y) : false
-    const base = baseClip(hold ? { ...u, status: hold.status } : u, { cover, moving: mode })
+    const base = baseClip(hold ? { ...u, status: hold.status } : u, { cover: coverRef.current, moving: mode })
     const want: ClipName = cue ? cue.clip : base
     const resolved = resolveClip(want, (c) => rig.clips.has(c))
     S.want = want
