@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { AdditiveBlending, AnimationMixer, Frustum, Group, LoopOnce, LoopRepeat, Matrix4, Mesh, MeshBasicMaterial, Object3D, SphereGeometry, Vector3, type AnimationAction, type Camera } from 'three'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import type { Unit } from '../../engine'
-import { motion, wake } from '../game/presentation'
+import { FLASH_MS, motion, muzzleFlashes, muzzles, timeRate, wake } from '../game/presentation'
 import { useStore } from '../game/store'
 import type { AttachmentDef, ClipName } from './contract'
 import { HOLDS_LAST, LOOPING, poseFallback, resolveClip, visibleAttachments } from './contract'
@@ -41,10 +41,13 @@ function scheduleIdleFrame(): void {
   idleTimer = setTimeout(() => { idleTimer = null; wake(10) }, idleStep() * 1000)
 }
 
-const flashGeo = new SphereGeometry(0.07, 8, 6)
-const flashMat = new MeshBasicMaterial({ color: '#ffe9a0', toneMapped: false, transparent: true, blending: AdditiveBlending, depthWrite: false })
+const flashGeo = new SphereGeometry(0.055, 10, 8)
+const flashMat = new MeshBasicMaterial({ color: '#ffb850', toneMapped: false, transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false })
 
 interface Att { def: AttachmentDef; holder: Object3D; bone: Object3D; flash: Mesh | null }
+
+/** Attachments that are guns (the others with a muzzle point, maul, shield, handset, never flash). */
+const GUNS = new Set(['pistol', 'revolver', 'rifle', 'smg', 'lmg', 'shotgun', 'long-rifle'])
 
 function hashId(id: string): number {
   let h = 2166136261
@@ -117,6 +120,22 @@ export function RigModel({ unit, rig, lite }: { unit: Unit; rig: RigAsset; lite:
     st.current.atts = []
     return () => { for (const a of made) a.bone.remove(a.holder); atts.current = [] }
   }, [root, rig])
+
+  // the gun muzzle in world coordinates, for the shot effects (the director asks for it when the shot leaves the barrel)
+  useEffect(() => {
+    const id = unit.id
+    const v = new Vector3()
+    const get = (): [number, number, number] | null => {
+      const guns = atts.current.filter((a) => a.flash && GUNS.has(a.def.id))
+      const at = guns.find((a) => a.holder.visible) ?? guns[0]
+      if (!at?.flash) return null
+      at.flash.updateWorldMatrix(true, false)
+      at.flash.getWorldPosition(v)
+      return [v.x, v.y, v.z]
+    }
+    muzzles.set(id, get)
+    return () => { if (muzzles.get(id) === get) muzzles.delete(id) }
+  }, [unit.id])
 
   useEffect(() => {
     root.traverse((o) => { o.raycast = noRay })
@@ -191,16 +210,24 @@ export function RigModel({ unit, rig, lite }: { unit: Unit; rig: RigAsset; lite:
     else if (fb === 'kneel') { g.rotation.set(0, 0, 0); g.position.set(0, 0, 0); g.scale.set(1, 0.74, 1) }
     else { g.rotation.set(0, 0, 0); g.position.set(0, 0, 0); g.scale.set(1, 1, 1) }
 
-    // ---- muzzle flash during the first instants of a fire cue
+    // ---- muzzle flash: once per shot the director booked (a burst flashes per round); else the first instants of a fire cue
+    const booked = muzzleFlashes.get(u.id)
+    const last = booked?.times[booked.times.length - 1]
+    const sched = booked && last !== undefined && now < last + 400 ? booked : null
+    const rate = timeRate(now)
     for (const at of atts.current) {
       if (!at.flash) continue
-      const on = cue?.clip === 'fire' && at.holder.visible && now - cue.t0 > cue.dur * 0.05 && now - cue.t0 < cue.dur * 0.05 + 90
+      const gun = GUNS.has(at.def.id) && at.holder.visible
+      const on = sched
+        ? gun && sched.times.some((t) => now >= t && now < t + FLASH_MS / rate)
+        : gun && cue?.clip === 'fire' && now - cue.t0 > cue.dur * 0.05 && now - cue.t0 < cue.dur * 0.05 + 90
       at.flash.visible = on
-      if (on) at.flash.scale.setScalar(0.8 + ((now - cue!.t0) % 40) / 40)
+      if (on) at.flash.scale.setScalar((sched ? Math.min(1.3, 0.6 + 0.4 * sched.size) : 1) * (0.8 + (now % 40) / 100)) // a shotgun flashes bigger, a suppressed rifle barely
     }
+    if (sched) wake(60)
 
     // ---- advance the mixer: visible figures only; idling figures at a low rate (Low tier: not at all when far away)
-    S.acc += dt
+    S.acc += dt * rate // bullet time slows every figure while rounds are in the air
     g.getWorldPosition(tmp)
     const moving = !!cue || !!mo || !LOOPING.has(resolved ?? 'idle') || mode !== null
     const standing = !moving && (resolved === 'idle' || resolved === 'cover' || resolved === 'cower')

@@ -11,7 +11,7 @@ import type { CampaignAction } from '../campaign'
 import { cdispatch, newCampaign } from './campaign/controller'
 import { districtCenter } from './campaign/layout'
 import { cityApi } from './campaign/City'
-import { cineLog } from './game/presentation'
+import { cineLog, fxList, timeRate } from './game/presentation'
 
 export function installHook(): void {
   const api = {
@@ -23,6 +23,10 @@ export function installHook(): void {
     cinematic: () => boardApi.controller?.cinematicState ?? 'off',
     cameraPos: () => { const c = boardApi.controller; return c ? { x: c.camera.position.x, y: c.camera.position.y, z: c.camera.position.z } : null },
     cineLog: () => [...cineLog],
+    /** The shot volleys on screen now: rounds, tracers and how many land on the target. */
+    volleys: () => fxList.filter((f) => f.kind === 'volley' && f.volley).map((f) => ({ rounds: f.volley!.rounds.length, shots: f.volley!.shots.length, tracers: f.volley!.rounds.filter((r) => r.tracer).length, hits: f.volley!.rounds.filter((r) => r.hit).length })),
+    /** The board's time rate (below 1 in bullet time). */
+    timeRate: () => timeRate(),
     tileToScreen: (x: number, y: number) => boardApi.tileToScreen(x, y),
     state: () => useStore.getState().state,
     fog: () => useStore.getState().fog,

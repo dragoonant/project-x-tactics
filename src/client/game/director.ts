@@ -12,14 +12,19 @@ import { STATUS_EVENTS, abilityClip, aimsFirst, attackClip, damageClip, moveMode
 import { AIM_MS, REACTION_MAX_MS } from '../anim/tuning'
 import type { Speed } from './persist'
 import { CINE_HOLD_MS, CINE_IN_MS, CINE_OUT_MS, KILL_HOLD_MS, KILL_MAX_MS, killPose, shotPose } from './cinematic'
-import { addFx, camApi, focus, logCine, motion, wake } from './presentation'
+import { SLOW, planVolley, type V3 } from './ballistics'
+import { addFx, camApi, focus, logCine, motion, muzzleFlashes, muzzles, slowTime, wake } from './presentation'
 
 export const SPEED_FACTOR: Record<Speed, number> = { normal: 1, fast: 0.4, instant: 0 }
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
-/** `cine`: the action camera (over the shoulder for shots, a close-up when a shot kills). */
-export interface PresentOpts { speed: Speed; follow: boolean; cine?: boolean; alive: () => boolean }
+/** `cine`: the action camera (over the shoulder for shots, a close-up when a shot kills). `slowMo`: bullet time while rounds fly. */
+export interface PresentOpts { speed: Speed; follow: boolean; cine?: boolean; slowMo?: boolean; alive: () => boolean }
+
+/** Height a shot aims at on a standing figure (its chest; figures are 1.0 tall), and the height of a street lamp's head. */
+const CHEST_Y = 0.58
+const LAMP_Y = 2.0
 
 function visibleIds(s: State): Set<string> {
   const v = view(s, 'squad')
@@ -123,10 +128,41 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
   let cine: { shooter: string; target: string; kill: boolean } | null = null
   const release = (): void => { if (cine) { cine = null; focus.cine = null; camApi.release(CINE_OUT_MS * k) } }
 
+  /**
+   * One ranged shot: plan the rounds from the muzzle (read now, from the aim pose), play the fire clip for the whole burst, then
+   * (a moment into the clip) the rounds leave: muzzle flashes per shot, bullet time, the volley effect. Returns the volley and when
+   * it started, or null when the shooter is not on screen.
+   */
+  const shoot = async (shooter: unknown, at: Pt, face: Pt, aim: V3, weapon: unknown, outcome: string, seed: string): Promise<{ v: ReturnType<typeof planVolley>; t0: number } | null> => {
+    const wa = camApi.world(at)
+    const muzzle = (typeof shooter === 'string' ? muzzles.get(shooter)?.() : null) ?? [wa.x, 0.8, wa.z]
+    const v = planVolley(weapon, muzzle, aim, outcome, seed, walled, { slow: !!opts.slowMo, k })
+    const fireMs = h.clipMs(shooter, 'fire')
+    let delay = 0
+    if (fireMs !== null) {
+      delay = fireMs * 0.12 // the shot leaves the muzzle a moment into the clip
+      h.cue(shooter, 'fire', Math.max(fireMs, delay + v.end + fireMs * 0.5), face)
+      await sleep(delay)
+      if (!opts.alive()) return null
+    }
+    const t0 = performance.now()
+    if (typeof shooter === 'string') muzzleFlashes.set(shooter, { times: v.shots.map((s) => t0 + s), size: v.flash })
+    if (opts.slowMo) slowTime(t0, t0 + v.end + SLOW.hold * k, SLOW.scale, SLOW.ease * k)
+    addFx({ kind: 'volley', volley: { ...v, worldFlash: !h.rigged(shooter) }, t0, dur: v.end + 800 * v.time + 100 })
+    return { v, t0 }
+  }
+  /** Until when the rounds of the last shot are still in the air (the next beat waits for them, except the shot's own damage). */
+  let inFlight: { until: number; target: unknown } | null = null
+
   for (let i = 0; i < events.length; i++) {
     const e = events[i]!
     if (!opts.alive()) return
     let wait = 0
+    if (inFlight && !(e.kind === 'damage' && e.target === inFlight.target)) {
+      const r = inFlight.until - performance.now()
+      inFlight = null
+      if (r > 0) { await sleep(r); if (!opts.alive()) return }
+    }
     if (cine) {
       // the shot's own follow-up (damage, the victim's fall) keeps the action camera; anything else hands the camera back
       const own = (e.kind === 'damage' && e.target === cine.target) || (cine.kill && e.kind === 'death' && e.unit === cine.target)
@@ -185,23 +221,34 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
           }
           const fireMs = h.clipMs(e.attacker, clip)
           const anim = fireMs !== null // the attacker has the clip: wait for it; otherwise the old fixed beat
-          let delay = 0
           if (anim && aimsFirst(clip) && h.clipMs(e.attacker, 'aim') !== null) {
             const aim = AIM_MS * k
             h.cue(e.attacker, 'aim', aim, t)
             await sleep(aim)
             if (!opts.alive()) return
           }
-          if (anim) {
-            h.cue(e.attacker, clip, fireMs, t)
-            delay = fireMs * (clip === 'fire' ? 0.12 : 0.45) // the shot leaves the muzzle / the blow lands a moment into the clip
-            if (delay > 0) await sleep(delay)
-          }
-          addFx({ kind: 'tracer', from: a, to: t, tone: e.outcome === 'miss' ? 'miss' : 'hit', dur: 380 * k })
-          if (!h.rigged(e.attacker)) addFx({ kind: 'flash', at: a, dur: 180 * k })
           const label = e.outcome === 'hit' ? 'HIT' : e.outcome === 'graze' ? 'GRAZE' : 'MISS'
-          addFx({ kind: 'text', at: t, text: label, tone: e.outcome === 'miss' ? 'miss' : 'hit', dur: 900 * k, t0: performance.now() + 220 * k })
-          wait = anim ? Math.max(0, fireMs - delay) : 620 * k
+          const tone = e.outcome === 'miss' ? 'miss' : 'hit'
+          if (clip === 'fire') {
+            // ranged: real rounds per weapon (bursts, pellets, tracers); the beat goes on when the first round lands (or the last misses)
+            const wt = camApi.world(t)
+            const shot = await shoot(e.attacker, a, t, [wt.x, CHEST_Y, wt.z], e.weapon, String(e.outcome), `${String(e.attacker)}>${String(e.target)}:${String(e.roll)}:${i}`)
+            if (!shot) return
+            const land = shot.v.firstHit ?? shot.v.end
+            addFx({ kind: 'text', at: t, text: label, tone, dur: 900 * k, t0: shot.t0 + land })
+            inFlight = { until: shot.t0 + shot.v.end, target: e.target }
+            wait = land
+          } else {
+            let delay = 0
+            if (anim) {
+              h.cue(e.attacker, clip, fireMs, t)
+              delay = fireMs * 0.45 // the blow lands a moment into the clip
+              if (delay > 0) await sleep(delay)
+            }
+            if (e.outcome !== 'miss') addFx({ kind: 'burst', at: t, tone: 'spark', r: 0.22, dur: 200 * k })
+            addFx({ kind: 'text', at: t, text: label, tone, dur: 900 * k, t0: performance.now() + 120 * k })
+            wait = anim ? Math.max(0, fireMs - delay) : 620 * k
+          }
         }
         break
       }
@@ -244,6 +291,17 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
         }
         break
       }
+      case 'lampShot': {
+        // a shot at a street lamp: one volley at the lamp head (it always breaks, see lampDestroyed)
+        const a = tileOf(e.attacker), at = e.at as Pt | undefined
+        if (a && at && seen(e.attacker)) {
+          const wl = camApi.world(at)
+          const shot = await shoot(e.attacker, a, at, [wl.x, LAMP_Y, wl.z], e.weapon, 'hit', `${String(e.attacker)}>lamp:${at.x},${at.y}:${i}`)
+          if (!shot) return
+          wait = shot.v.end
+        }
+        break
+      }
       case 'lampDestroyed': {
         const at = e as unknown as Pt
         if (typeof at.x === 'number') addFx({ kind: 'burst', at: { x: at.x, y: at.y }, tone: 'spark', r: 0.8, dur: 400 * k })
@@ -254,6 +312,7 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
     }
     if (wait > 0) await sleep(wait)
   }
+  if (inFlight) { const r = inFlight.until - performance.now(); if (r > 0) await sleep(r) }
   if (cine) { await sleep(CINE_HOLD_MS * k); release() }
   if (parallelEnd > 0) await sleep(Math.max(0, parallelEnd - (performance.now() - now0)))
   wake(200)

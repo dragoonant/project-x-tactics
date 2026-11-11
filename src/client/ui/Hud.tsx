@@ -249,6 +249,7 @@ function SettingsPanel(): React.JSX.Element {
         <label>Lite (no scanlines or glitch)<input type="checkbox" checked={s.lite} onChange={(e) => updateSettings({ lite: e.target.checked })} /></label>
         <label>Rain (never on Low: phones and Lite)<input type="checkbox" checked={s.rain} onChange={(e) => updateSettings({ rain: e.target.checked })} data-testid="rain-toggle" /></label>
         <label>Action camera (shots over the shoulder, kill close-ups)<input type="checkbox" checked={s.actionCam} onChange={(e) => updateSettings({ actionCam: e.target.checked })} data-testid="actioncam-toggle" /></label>
+        <label>Slow-motion shots (follow the rounds to the target)<input type="checkbox" checked={s.slowMo} onChange={(e) => updateSettings({ slowMo: e.target.checked })} data-testid="slowmo-toggle" /></label>
         <label>Mute<input type="checkbox" checked={s.mute} onChange={(e) => updateSettings({ mute: e.target.checked })} /></label>
         <label>Volume<input type="range" min={0} max={1} step={0.05} value={s.volume} onChange={(e) => updateSettings({ volume: Number(e.target.value) })} /></label>
         {audio === 'no' && <div className="warn" data-testid="audio-missing">audio not found</div>}

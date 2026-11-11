@@ -8,8 +8,9 @@ export const MOUSE3_KEY = 'px-mouse-3btn'
 
 export type Speed = 'normal' | 'fast' | 'instant'
 /** `actionCam`: shots play over the shooter's shoulder and a killing shot cuts to the victim (Normal and Fast speeds). */
-export interface Settings { speed: Speed; lite: boolean; mute: boolean; volume: number; rain: boolean; actionCam: boolean }
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', lite: false, mute: false, volume: 0.6, rain: true, actionCam: true }
+/** `slowMo`: bullet time while a shot's rounds are in the air, so they can be followed from the muzzle to the target. */
+export interface Settings { speed: Speed; lite: boolean; mute: boolean; volume: number; rain: boolean; actionCam: boolean; slowMo: boolean }
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', lite: false, mute: false, volume: 0.6, rain: true, actionCam: true, slowMo: true }
 
 export function storage(): Storage | null {
   try { return typeof localStorage === 'undefined' ? null : localStorage } catch { return null }
@@ -26,6 +27,7 @@ export function loadSettings(): Settings {
       mute: !!j.mute,
       rain: j.rain !== false,
       actionCam: j.actionCam !== false,
+      slowMo: j.slowMo !== false,
       volume: typeof j.volume === 'number' && j.volume >= 0 && j.volume <= 1 ? j.volume : DEFAULT_SETTINGS.volume,
     }
   } catch { return { ...DEFAULT_SETTINGS } }

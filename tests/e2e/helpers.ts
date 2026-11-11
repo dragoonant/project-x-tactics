@@ -5,6 +5,8 @@ export interface Px {
   cinematic(): 'off' | 'on' | 'returning'
   cameraPos(): { x: number; y: number; z: number } | null
   cineLog(): string[]
+  volleys(): { rounds: number; shots: number; tracers: number; hits: number }[]
+  timeRate(): number
   tileToScreen(x: number, y: number): { x: number; y: number } | null
   state(): any
   fog(): any

@@ -138,7 +138,7 @@ async function commit(next: State, events: GameEvent[], before: State, follow: b
   persist(next)
   audio.onEvents(events)
   audio.syncMusic(next)
-  await present(events, before, next, { speed: prev.settings.speed, follow, cine: prev.settings.actionCam, alive: () => g === gen })
+  await present(events, before, next, { speed: prev.settings.speed, follow, cine: prev.settings.actionCam, slowMo: prev.settings.slowMo, alive: () => g === gen })
 }
 
 export async function dispatch(a: Action): Promise<boolean> {
