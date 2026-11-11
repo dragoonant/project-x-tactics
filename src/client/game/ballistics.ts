@@ -34,25 +34,26 @@ export interface WeaponFx {
 
 const BULLET = '#ffe6b0'
 export const WEAPON_FX: Record<string, WeaponFx> = {
-  pistol: { rounds: 1, gap: 0, pellets: 1, cone: 0, speed: 0.06, len: 0.32, width: 0.03, color: BULLET, tracerEvery: 0, flash: 0.8, smoke: 0.25, trail: false, jitter: 0.08 },
-  revolver: { rounds: 1, gap: 0, pellets: 1, cone: 0, speed: 0.06, len: 0.4, width: 0.036, color: BULLET, tracerEvery: 0, flash: 1.3, smoke: 0.5, trail: false, jitter: 0.08 },
-  rifle: { rounds: 3, gap: 95, pellets: 1, cone: 0, speed: 0.08, len: 0.45, width: 0.03, color: BULLET, tracerEvery: 3, flash: 1, smoke: 0.3, trail: false, jitter: 0.14 },
-  smg: { rounds: 5, gap: 60, pellets: 1, cone: 0, speed: 0.065, len: 0.3, width: 0.026, color: BULLET, tracerEvery: 0, flash: 0.75, smoke: 0.2, trail: false, jitter: 0.2 },
-  lmg: { rounds: 6, gap: 75, pellets: 1, cone: 0, speed: 0.08, len: 0.5, width: 0.034, color: BULLET, tracerEvery: 2, flash: 1.25, smoke: 0.55, trail: false, jitter: 0.24 },
-  shotgun: { rounds: 1, gap: 0, pellets: 9, cone: 0.075, speed: 0.055, len: 0.16, width: 0.022, color: '#ffd28a', tracerEvery: 0, flash: 1.9, smoke: 0.9, trail: false, jitter: 0 },
-  longRifle: { rounds: 1, gap: 0, pellets: 1, cone: 0, speed: 0.12, len: 0.6, width: 0.02, color: '#dfe9ff', tracerEvery: 0, flash: 0.3, smoke: 0, trail: true, jitter: 0.04 },
+  pistol: { rounds: 1, gap: 0, pellets: 1, cone: 0, speed: 0.06, len: 0.32, width: 0.045, color: BULLET, tracerEvery: 0, flash: 0.8, smoke: 0.25, trail: false, jitter: 0.08 },
+  revolver: { rounds: 1, gap: 0, pellets: 1, cone: 0, speed: 0.06, len: 0.4, width: 0.054, color: BULLET, tracerEvery: 0, flash: 1.3, smoke: 0.5, trail: false, jitter: 0.08 },
+  rifle: { rounds: 3, gap: 95, pellets: 1, cone: 0, speed: 0.08, len: 0.45, width: 0.045, color: BULLET, tracerEvery: 3, flash: 1, smoke: 0.3, trail: false, jitter: 0.14 },
+  smg: { rounds: 5, gap: 60, pellets: 1, cone: 0, speed: 0.065, len: 0.3, width: 0.04, color: BULLET, tracerEvery: 0, flash: 0.75, smoke: 0.2, trail: false, jitter: 0.2 },
+  lmg: { rounds: 6, gap: 75, pellets: 1, cone: 0, speed: 0.08, len: 0.5, width: 0.05, color: BULLET, tracerEvery: 2, flash: 1.25, smoke: 0.55, trail: false, jitter: 0.24 },
+  shotgun: { rounds: 1, gap: 0, pellets: 9, cone: 0.075, speed: 0.055, len: 0.16, width: 0.032, color: '#ffd28a', tracerEvery: 0, flash: 1.9, smoke: 0.9, trail: false, jitter: 0 },
+  longRifle: { rounds: 1, gap: 0, pellets: 1, cone: 0, speed: 0.12, len: 0.6, width: 0.03, color: '#dfe9ff', tracerEvery: 0, flash: 0.3, smoke: 0, trail: true, jitter: 0.04 },
 }
 /** An unknown ranged weapon draws as a pistol. */
 export const fxFor = (weapon: unknown): WeaponFx => WEAPON_FX[String(weapon)] ?? WEAPON_FX.pistol!
 
-export const TRACER = { color: '#ff7a2a', len: 2.2, width: 1.5 }
+/** A tracer is a long, hair-thin hot line (a fraction of a round's width), not a beam. */
+export const TRACER = { color: '#ff7a2a', len: 2.2, width: 0.3 }
 
 /**
  * Bullet time: while rounds are in the air the board runs at SLOW x speed. The rounds fly slower by the same factor and the burst gap
  * stretches, so a shot reads from the muzzle to the target. `ease` is the ramp in and out (ms). Without bullet time rounds fly at full
- * speed (and the board does not slow).
+ * speed (and the board does not slow). `hold`: ms the board stays slow after the last round lands, so the impact lingers.
  */
-export const SLOW = { scale: 0.3, ease: 140, hold: 120 }
+export const SLOW = { scale: 0.12, ease: 220, hold: 700 }
 
 export interface Round {
   /** Shot index in the burst (pellets of one shot share it). */
