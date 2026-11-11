@@ -55,7 +55,7 @@ export interface CoverFix {
   /** 0..1: how much of the sideways lean the head takes back toward upright. */
   peekHead: number
 }
-export const COVER_FIX: CoverFix = { standLean: 6, kneelLean: 8, kneeTilt: 6, peekLean: 22, peekHead: 0.6 }
+export const COVER_FIX: CoverFix = { standLean: 6, kneelLean: 8, kneeTilt: 6, peekLean: 30, peekHead: 0.6 }
 /** Every figure with a cover clip (tools/anim/figures.json). */
 export const COVER_KINDS: ReadonlySet<string> = new Set([...Object.keys(POSE_FIX), 'thug-club'])
 
