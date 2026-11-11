@@ -72,6 +72,41 @@ test('rule 27: wheel zooms toward the cursor', async ({ page }) => {
   expect(after.x).toBeGreaterThan(before.x + 0.3)
 })
 
+test('rule 27: holding W pans away from the camera and D to the screen right; release stops', async ({ page }) => {
+  await zoomIn(page)
+  const a = await cam(page)
+  await page.keyboard.down('w')
+  await page.waitForTimeout(400)
+  await page.keyboard.up('w')
+  const b = await cam(page)
+  expect(moved(a, b)).toBeGreaterThan(0.5)
+  // W moves the look point away from the camera: against the camera's ground offset (sin az, cos az)
+  expect((b.x - a.x) * Math.sin(a.az) + (b.z - a.z) * Math.cos(a.az)).toBeLessThan(0)
+  expect(b.az).toBeCloseTo(a.az, 5)
+  await page.waitForTimeout(150)
+  const c = await cam(page)
+  expect(moved(b, c)).toBeLessThan(0.01)
+  await page.keyboard.down('d')
+  await page.waitForTimeout(400)
+  await page.keyboard.up('d')
+  const d = await cam(page)
+  expect((d.x - c.x) * Math.cos(c.az) - (d.z - c.z) * Math.sin(c.az)).toBeGreaterThan(0.5)
+})
+
+test('rule 27: a right click (no drag) cancels the armed order and leaves the camera alone', async ({ page }) => {
+  await page.getByTestId('abilities').locator('[data-ability=frag]').click()
+  await expect(page.getByTestId('abilities').locator('[data-ability=frag]')).toHaveClass(/armed/)
+  const a = await cam(page)
+  await page.mouse.click(centre.x, centre.y, { button: 'right' })
+  await expect(page.getByTestId('abilities').locator('[data-ability=frag]')).not.toHaveClass(/armed/)
+  const b = await cam(page)
+  expect(b.az).toBeCloseTo(a.az, 5)
+  // a right drag still rotates and does not count as a click
+  await page.getByTestId('abilities').locator('[data-ability=frag]').click()
+  await drag(page, 'right', 120, 0)
+  await expect(page.getByTestId('abilities').locator('[data-ability=frag]')).toHaveClass(/armed/)
+})
+
 test('rule 27: the rotate buttons turn the table', async ({ page }) => {
   const a = await cam(page)
   await page.getByTestId('rot-right').click()

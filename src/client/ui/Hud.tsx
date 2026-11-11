@@ -4,7 +4,7 @@ import { query } from '../../engine'
 import type { State, Unit } from '../../engine'
 import { WEAPONS } from '../../data'
 import { boardApi } from '../board/CameraRig'
-import { cancelArm, chooseAbility, endTurn, entriesFor, focusUnit, updateSettings } from '../game/controller'
+import { cancelArm, chooseAbility, endTurn, entriesFor, focusByNumber, focusUnit, updateSettings } from '../game/controller'
 import { ABILITY_TEXT, callSign } from '../game/names'
 import { useStore } from '../game/store'
 import { legalFor, passiveList, type AbilityEntry } from '../game/tap'
@@ -180,13 +180,25 @@ function Channels({ state }: { state: State }): React.JSX.Element {
   const sel = useStore((s) => s.selected)
   const busy = useStore((s) => s.busy)
   const troopers = state.units.filter((u) => u.side === 'squad')
+  useEffect(() => {
+    // F1-F6 select the trooper on that channel, like clicking its box (and never open browser help or reload)
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.ctrlKey || e.metaKey || e.altKey || typingIn(e)) return
+      const m = /^F([1-6])$/.exec(e.key)
+      if (!m) return
+      e.preventDefault()
+      if (!e.repeat) focusByNumber(Number(m[1]))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
   return (
     <div className="chans pa" data-testid="channels">
       {troopers.map((u, i) => {
         const chips = statusChips(u)
         return (
           <button key={u.id} className={`chan${sel === u.id ? ' sel' : ''}${u.status === 'dead' ? ' dead' : ''}`} onClick={() => focusUnit(u.id)} disabled={busy} data-unit={u.id}>
-            <span className="t"><b>{callSign(u)}</b><span>CH-{i + 1}</span></span>
+            <span className="t"><b>{callSign(u)}</b><span>CH-{i + 1}{i < 6 && <span className="hk" aria-hidden="true"> F{i + 1}</span>}</span></span>
             <span className="cls">{u.name}</span>
             <span className="vit"><span className={`bar ${hpClass(u)}`}><i style={{ width: `${(u.hp / Math.max(1, u.maxHp)) * 100}%` }} /></span><em>{u.hp}/{u.maxHp}</em></span>
             <span className="pips">{[0, 1].map((k) => <i key={k} className={u.actions > k ? 'on' : ''} />)}{chips[0] && <span className={`chip ${chips[0].kind}`} style={{ marginLeft: 6 }}>{chips[0].text}</span>}</span>
@@ -197,6 +209,11 @@ function Channels({ state }: { state: State }): React.JSX.Element {
   )
 }
 
+/** True while a key goes to a text field (hotkeys stay out of the way). */
+function typingIn(e: KeyboardEvent): boolean {
+  return e.target instanceof HTMLElement && (e.target.isContentEditable || /input|textarea|select/i.test(e.target.tagName))
+}
+
 function AbilityBar({ state, unit }: { state: State; unit: Unit }): React.JSX.Element {
   const armed = useStore((s) => s.armed)
   const busy = useStore((s) => s.busy)
@@ -205,12 +222,24 @@ function AbilityBar({ state, unit }: { state: State; unit: Unit }): React.JSX.El
   const passives = passiveList(unit)
   const click = (e: AbilityEntry): void => { setFocus(e.key); void chooseAbility(e) }
   const focusEntry = entries.find((e) => e.key === focus)
+  useEffect(() => {
+    // number keys pick the order with that number (1 is Fire when the trooper has a weapon; 0 is the tenth); Escape cancels an armed order
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || typingIn(e)) return
+      if (e.key === 'Escape') { cancelArm(); return }
+      const m = /^(?:Digit|Numpad)([0-9])$/.exec(e.code)
+      const entry = m ? entries[(Number(m[1]) + 9) % 10] : undefined
+      if (entry) { setFocus(entry.key); void chooseAbility(entry) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [entries])
   return (
     <>
       <div className="abilities pa" data-testid="abilities">
-        {entries.map((e) => (
+        {entries.map((e, i) => (
           <button key={e.key} data-ability={e.key} aria-disabled={!e.enabled || busy} className={armed && armed.ability === e.ability && armed.option === e.option ? 'armed' : ''} onClick={() => click(e)} onMouseEnter={() => setFocus(e.key)}>
-            {e.label}{e.loud && <span className="loud">LOUD</span>}
+            {i < 10 && <span className="hk" aria-hidden="true">{(i + 1) % 10}</span>}{e.label}{e.loud && <span className="loud">LOUD</span>}
           </button>
         ))}
         {entries.length === 0 && <span className="passive">{unit.status === 'active' ? (state.phase === 'squad' ? 'No orders available' : 'Waiting for the syndicate phase to end') : statusChips(unit)[0]?.text ?? 'Out of action'}</span>}

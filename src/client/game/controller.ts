@@ -221,6 +221,20 @@ export function focusUnit(id: string): void {
   if (u) camApi.focusTile({ x: u.x, y: u.y })
 }
 
+/** Number keys 1-6: the trooper on channel CH-n (squad order, as the unit boxes show it), or null when that slot is empty or dead. */
+export function trooperForKey(state: State, n: number): string | null {
+  const u = state.units.filter((x) => x.side === 'squad')[n - 1]
+  return u && u.status !== 'dead' ? u.id : null
+}
+
+/** Number key press: the same as clicking that trooper's unit box. */
+export function focusByNumber(n: number): void {
+  const st = get()
+  if (!st.state || st.screen !== 'play' || st.state.outcome) return
+  const id = trooperForKey(st.state, n)
+  if (id) focusUnit(id)
+}
+
 export async function onTileTap(tile: Pt, pointerType: string): Promise<void> {
   const st = get()
   if (!st.state || !st.fog || st.busy || st.screen !== 'play' || st.state.outcome) return
