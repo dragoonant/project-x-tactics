@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import type { PerspectiveCamera } from 'three'
 import type { Pt } from '../../engine'
+import { cancelArm } from '../game/controller'
 import { camApi, loop } from '../game/presentation'
 import { CameraController, fitBoard, insetsFor, POL_DEFAULT } from './camera'
 import { tx, tz, worldToTile } from './layout'
@@ -33,6 +34,7 @@ export function CameraRig({ w, h }: { w: number; h: number }): null {
 
   useEffect(() => {
     ctl.attach()
+    ctl.onRightClick = cancelArm
     boardApi.controller = ctl
     boardApi.w = w
     boardApi.h = h
@@ -44,15 +46,27 @@ export function CameraRig({ w, h }: { w: number; h: number }): null {
     camApi.release = (ms) => ctl.endCinematic(ms)
     camApi.world = (p) => ({ x: tx(p.x, w), z: tz(p.y, h) })
     camApi.tile = (x, z) => worldToTile(x, z, w, h)
+    const typing = (e: KeyboardEvent): boolean => e.target instanceof HTMLElement && (e.target.isContentEditable || /input|textarea|select/i.test(e.target.tagName))
     const onKey = (e: KeyboardEvent): void => {
-      if (e.target instanceof HTMLElement && /input|textarea|select/i.test(e.target.tagName)) return
+      if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) return
+      if (ctl.setPanKey(e.code, true, e.shiftKey)) { e.preventDefault(); invalidate(); return }
       if (e.key === 'q' || e.key === 'Q') ctl.rotateBy(-1)
       if (e.key === 'e' || e.key === 'E') ctl.rotateBy(1)
       if (e.key === 'Home') ctl.flyHome()
     }
+    const onKeyUp = (e: KeyboardEvent): void => { ctl.setPanKey(e.code, false, e.shiftKey) }
+    const onBlur = (): void => ctl.clearPanKeys() // a key released while the window is unfocused never sends keyup
     window.addEventListener('keydown', onKey)
-    return () => { window.removeEventListener('keydown', onKey); ctl.detach(); if (boardApi.controller === ctl) boardApi.controller = null }
-  }, [ctl, w, h])
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
+      ctl.detach()
+      if (boardApi.controller === ctl) boardApi.controller = null
+    }
+  }, [ctl, w, h, invalidate])
 
   useEffect(() => {
     const cam = camera as PerspectiveCamera

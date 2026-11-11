@@ -1,6 +1,7 @@
 // Camera controller (rule 27). Pointer events only, so one code path serves touch, pen and mouse.
-//   mouse: wheel zooms toward the cursor; right drag rotates and tilts; middle drag pans; left picks;
+//   mouse: wheel zooms toward the cursor; right drag rotates and tilts, right click cancels the armed order; middle drag pans; left picks;
 //          left drag pans until the first middle press is seen (remembered in localStorage `px-mouse-3btn`).
+//   keys:  hold WASD or the arrows to pan (relative to the screen, Shift for double speed); Q / E rotate; Home recentres.
 //   touch: one finger pans, two fingers twist and pinch.
 // A press that moves less than 8 px is a tap; a drag, a second finger or a camera gesture is never a tap.
 import { PerspectiveCamera, Raycaster, Vector2, Vector3 } from 'three'
@@ -14,6 +15,13 @@ export const POL_DEFAULT = 0.82
 export const DIST_MIN = 4.5
 /** Action camera glide (ms) when the caller gives none. */
 export const CINE_MS = 450
+/** Keyboard pan speed: camera distances per second (so the screen speed stays the same at any zoom). Shift doubles it. */
+export const PAN_SPEED = 0.7
+/** Held pan keys by KeyboardEvent.code (layout independent): [forward, right]. */
+export const PAN_KEYS: Record<string, [number, number]> = {
+  KeyW: [1, 0], KeyS: [-1, 0], KeyA: [0, -1], KeyD: [0, 1],
+  ArrowUp: [1, 0], ArrowDown: [-1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1],
+}
 
 export const gesture = { dragged: false }
 export const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v))
@@ -83,6 +91,10 @@ export class CameraController {
   private ray = new Raycaster()
   private ndc = new Vector2()
   private cleanup: (() => void) | null = null
+  /** Called on a right click that did not drag (set by CameraRig: cancel the armed order). */
+  onRightClick: (() => void) | null = null
+  private panKeys = new Set<string>()
+  private panFast = false
 
   constructor(readonly camera: PerspectiveCamera, readonly dom: HTMLElement) {
     try { this.mouse3 = localStorage.getItem(MOUSE3_KEY) === '1' } catch { this.mouse3 = false }
@@ -201,10 +213,34 @@ export class CameraController {
     }
   }
 
+  /** Hold a pan key (WASD or arrows, by KeyboardEvent.code); returns true when the code is a pan key. */
+  setPanKey(code: string, down: boolean, fast = false): boolean {
+    if (!(code in PAN_KEYS)) return false
+    if (down) { this.panKeys.add(code); this.goal = null; wake(200) } else this.panKeys.delete(code)
+    this.panFast = fast
+    return true
+  }
+  clearPanKeys(): void { this.panKeys.clear() }
+
+  /** Screen-relative pan from the held keys: W moves away from the camera, D to the screen right. Speed scales with zoom. */
+  private keyPan(dt: number): void {
+    let f = 0, r = 0
+    for (const k of this.panKeys) { const d = PAN_KEYS[k]!; f += d[0]; r += d[1] }
+    if (f === 0 && r === 0) return
+    const len = Math.hypot(f, r)
+    const step = (this.view.dist * PAN_SPEED * (this.panFast ? 2 : 1) * dt) / len
+    const sa = Math.sin(this.view.az), ca = Math.cos(this.view.az)
+    this.view.x += (-sa * f + ca * r) * step
+    this.view.z += (-ca * f - sa * r) * step
+    this.view = this.clampView(this.view)
+  }
+
   /** Per frame; returns true while still moving (the render loop stays awake). */
   update(dt: number): boolean {
+    const keys = this.panKeys.size > 0 && this.interactive && !this.cineGoal
+    if (keys) { this.goal = null; this.keyPan(dt) }
     const g = this.goal
-    if (!g && !this.cine) return false
+    if (!g && !this.cine) { if (keys) this.apply(); return keys }
     if (g) {
       const v = this.view
       const k = 1 - Math.exp(-dt * 7)
@@ -228,7 +264,7 @@ export class CameraController {
       if (t >= 1 && !this.cineGoal) this.cine = null
     }
     this.apply()
-    return this.goal !== null || this.cine !== null
+    return this.goal !== null || this.cine !== null || keys
   }
 
   // ---------------------------------------------------------------- input
@@ -329,6 +365,9 @@ export class CameraController {
     if (!p) return
     this.pointers.delete(e.pointerId)
     try { this.dom.releasePointerCapture(e.pointerId) } catch { /* not captured */ }
+    // a right click (press and release without moving, no other pointer) is not a rotate: it cancels the armed order
+    if (e.type === 'pointerup' && p.type === 'mouse' && p.button === 2 && this.pointers.size === 0 && this.down
+      && Math.hypot(e.clientX - this.down.x, e.clientY - this.down.y) < TAP_SLOP) this.onRightClick?.()
     this.pinchPrev = null
     if (this.pointers.size === 1) this.startPan([...this.pointers.values()][0]!)
     else if (this.pointers.size === 0) { this.panGround = null; this.down = null }

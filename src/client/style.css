@@ -150,6 +150,8 @@ body.lite .rec-dot { animation: none; }
 .abilities button { flex: 0 0 auto; padding: 8px 11px; white-space: nowrap; }
 .abilities button.armed { border-color: var(--amber); background: rgba(70, 48, 0, 0.9); color: #fff; }
 .abilities button .loud { color: var(--sodium); margin-left: 6px; font-size: 10px; }
+.abilities button .hk { display: inline-block; min-width: 14px; margin-right: 6px; padding: 0 3px; border: 1px solid currentColor; border-radius: 3px; font-size: 10px; line-height: 13px; text-align: center; opacity: 0.6; }
+@media (hover: none) { .abilities button .hk, .chan .hk { display: none; } }
 .abilities .passive { flex: 0 0 auto; color: var(--dim); font-size: 11px; padding: 9px 6px; border: 1px dashed #2a3330; white-space: nowrap; }
 .ctrls { display: flex; gap: 6px; align-items: flex-end; flex: 0 0 auto; }
 .ctrls .endturn { padding: 11px 18px; font-size: 14px; }
@@ -249,3 +251,4 @@ body.lite .rec-dot { animation: none; }
    when the page sits in a frame that reports no safe area. Portrait home bar zone is about 34px, landscape about 21px. */
 html.ios .bottom { bottom: max(calc(6px + env(safe-area-inset-bottom, 0px)), 34px); }
 @media (orientation: landscape) { html.ios .bottom { bottom: max(calc(4px + env(safe-area-inset-bottom, 0px)), 24px); left: max(calc(6px + env(safe-area-inset-left, 0px)), 18px); right: max(calc(6px + env(safe-area-inset-right, 0px)), 18px); } }
+.chan .hk { opacity: 0.55; font-size: 10px; }
