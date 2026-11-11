@@ -90,6 +90,22 @@ export function coverFrom(s: State, unitId: string, from: Pt): CoverInfo | null 
   const u = unitById(s, unitId)
   return u ? coverAgainst(s, u, from.x, from.y) : null
 }
+export interface CoverLine { target: string; at: Pt; level: 'none' | 'half' | 'full'; sees: boolean }
+/**
+ * COV-1..3 and FOG-1 for the move preview: for every active opponent in `s`, the cover it would have against the unit if the unit
+ * stood at `at`, and whether the unit would see it from there. Pass the fog view so hidden enemies stay hidden.
+ */
+export function coverLines(s: State, unitId: string, at: Pt): CoverLine[] {
+  const u = unitById(s, unitId)
+  if (!u) return []
+  const moved = { ...u, x: at.x, y: at.y }
+  const out: CoverLine[] = []
+  for (const t of s.units) {
+    if (t.side === u.side || t.side === 'civilians' || t.status !== 'active') continue
+    out.push({ target: t.id, at: { x: t.x, y: t.y }, level: coverAgainst(s, t, at.x, at.y).level, sees: sees(s, moved, t) })
+  }
+  return out
+}
 /**
  * LOS-3: the step-out tile a unit looks from toward a tile, when the line from its own tile is blocked and a line from a step-out
  * tile is clear (the closest such tile to `at`; ties keep LOS-3's order). Null when it sees from its own tile, or not at all.
@@ -185,7 +201,7 @@ export function unawareSight(s: State, side: 'squad' = 'squad'): { unit: string;
 export function summary(s: State): Summary { return summarize(s) }
 
 export const query = {
-  hitChance, preview, previewSpec, reachable, coverFrom, coverPerSide, peekFrom, noiseInfo, summary, stealthOutlook, unawareSight,
+  hitChance, preview, previewSpec, reachable, coverFrom, coverLines, coverPerSide, peekFrom, noiseInfo, summary, stealthOutlook, unawareSight,
   isLit: (s: State, x: number, y: number): boolean => isLit(s, x, y),
   /** FOG-1 for one observer/target pair. */
   canSee: (s: State, observerId: string, targetId: string): boolean => {

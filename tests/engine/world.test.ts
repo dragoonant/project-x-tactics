@@ -280,6 +280,28 @@ describe('COV cover', () => {
     expect(flanked(s, 'e1', 2, 3).level).toBe('half')
   })
 
+  it('COV-2 move preview: query.coverLines gives the cover of each active enemy against a tile the trooper could move to, and whether it would be seen from there', () => {
+    const s = build(ARENA, {
+      squad: [{ cls: 'recruit', x: 2, y: 3 }],
+      enemies: [{ type: 'gunman', x: 6, y: 3 }, { type: 'gunman', x: 8, y: 1 }, { type: 'gunman', x: 9, y: 5 }],
+      tuning: LIT,
+    })
+    addObj(s, 5, 3, 'fullCover') // e1: full against the west
+    addObj(s, 8, 2, 'halfCover') // e2: half against the south
+    U(s, 'e3').status = 'surrendered' // not a threat: no line
+    const from = (at: { x: number; y: number }) => Object.fromEntries(query.coverLines(s, 's1', at).map((l) => [l.target, l]))
+    let l = from({ x: 2, y: 3 })
+    expect(Object.keys(l).sort()).toEqual(['e1', 'e2'])
+    expect(l.e1).toMatchObject({ level: 'full', at: { x: 6, y: 3 } })
+    expect(l.e2).toMatchObject({ level: 'half', sees: true })
+    l = from({ x: 6, y: 5 }) // south of e1: flanked; still south of e2's half cover
+    expect(l.e1).toMatchObject({ level: 'none', sees: true })
+    expect(l.e2!.level).toBe('half')
+    l = from({ x: 9, y: 1 }) // east of e2: flanked
+    expect(l.e2!.level).toBe('none')
+    expect(U(s, 's1')).toMatchObject({ x: 2, y: 3 }) // a preview never moves the unit
+  })
+
   it('COV-3 flanked means no cover piece applies; the hit chance shows full value against cover and none when flanked', () => {
     const s = build(ARENA, { squad: [{ cls: 'recruit', x: 2, y: 3 }], enemies: [{ type: 'gunman', x: 6, y: 3 }], tuning: LIT })
     addObj(s, 5, 3, 'fullCover')

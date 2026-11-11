@@ -1,5 +1,5 @@
 // Board overlays: move range (blue 1 action, yellow 2), armed-ability targets, hover frame, cover shields on the hovered tile's
-// edges, target brackets and hit readout, line of fire, noise radius ring, path preview. All numbers come from query.*.
+// edges, cover lines from a move tile to each known enemy (red full, yellow half, green none), target brackets and hit readout, line of fire, noise radius ring, path preview. All numbers come from query.*.
 // Nothing here has a pointer handler (rule 25).
 import { Html } from '@react-three/drei'
 import { useLayoutEffect, useMemo, useRef } from 'react'
@@ -118,16 +118,19 @@ function CoverShields({ x, y, w, h, sides }: { x: number; y: number; w: number; 
   )
 }
 
-function Line3({ a, b, w, h, color }: { a: Pt; b: Pt; w: number; h: number; color: string }): React.JSX.Element {
+function Line3({ a, b, w, h, color, opacity = 0.9, thick = 0.03 }: { a: Pt; b: Pt; w: number; h: number; color: string; opacity?: number; thick?: number }): React.JSX.Element {
   const ax = tx(a.x, w), az = tz(a.y, h), bx = tx(b.x, w), bz = tz(b.y, h)
   const len = Math.hypot(bx - ax, bz - az)
-  const m = useMemo(() => mat(color, 0.9), [color])
+  const m = useMemo(() => mat(color, opacity), [color, opacity])
   return (
     <mesh position={[(ax + bx) / 2, 0.75, (az + bz) / 2]} rotation={[0, Math.atan2(-(bz - az), bx - ax), 0]} material={m} raycast={noRay} renderOrder={5}>
-      <boxGeometry args={[len, 0.03, 0.03]} />
+      <boxGeometry args={[len, thick, thick]} />
     </mesh>
   )
 }
+
+/** Move preview: the cover each known enemy would have against the trooper standing on the hovered tile (query.coverLines). */
+export const COVER_LINE_COLORS = { full: '#ff3b30', half: '#ffd23a', none: '#3dff8a' } as const
 
 function Ring({ x, y, r, w, h, color }: { x: number; y: number; r: number; w: number; h: number; color: string }): React.JSX.Element {
   const m = useMemo(() => mat(color, 0.7), [color])
@@ -166,6 +169,7 @@ export function HoverOverlay({ state }: { state: State }): React.JSX.Element | n
     const canAct = !!selU && selU.side === 'squad' && selU.status === 'active' && state.phase === 'squad' && !busy && !state.outcome
     let sides = null as null | ReturnType<typeof query.coverPerSide>
     let path: Pt[] | null = null
+    let lines: ReturnType<typeof query.coverLines> = []
     if (hu && hu.side !== 'civilians') sides = query.coverPerSide(state, hu.id)
     else if (!hu && canAct) {
       const r = reachFor(state, selU!.id)
@@ -175,6 +179,8 @@ export function HoverOverlay({ state }: { state: State }): React.JSX.Element | n
       if (p1 || p2) {
         sides = query.coverPerSide(withUnitAt(state, selU!.id, hover.x, hover.y), selU!.id)
         path = p1 ?? (p2 ? [{ x: p2.via.x, y: p2.via.y }, { x: p2.x, y: p2.y }] : null)
+        // the fog view, so the lines never point at an enemy the squad cannot see
+        if (!armed) lines = query.coverLines(fog, selU!.id, hover)
       }
     }
     let prev: ReturnType<typeof query.preview> = null
@@ -190,7 +196,7 @@ export function HoverOverlay({ state }: { state: State }): React.JSX.Element | n
     if (canAct && armed && !prev) {
       noise = query.noiseInfo(state, selU!.id, armed.ability === 'attack' ? undefined : armed.ability)
     }
-    return { selU: canAct ? selU! : null, sides, path, prev, noise, takedown }
+    return { selU: canAct ? selU! : null, sides, path, lines, prev, noise, takedown }
   }, [hover, fog, sel, state, armed, busy, hu])
   if (!hover || !data) return null
   const enemy = hu && hu.side === 'syndicate' ? hu : null
@@ -200,6 +206,9 @@ export function HoverOverlay({ state }: { state: State }): React.JSX.Element | n
       <Frame x={hover.x} y={hover.y} w={w} h={h} color={enemy ? '#ff5a3a' : '#ffffff'} />
       {data.sides && <CoverShields x={hover.x} y={hover.y} w={w} h={h} sides={data.sides} />}
       {data.path && <PathLine path={data.path} w={w} h={h} />}
+      {data.lines.map((l) => (
+        <Line3 key={l.target} a={hover} b={l.at} w={w} h={h} color={COVER_LINE_COLORS[l.level]} opacity={l.sees ? 1 : 0.4} thick={l.sees ? 0.08 : 0.04} />
+      ))}
       {enemy && data.selU && data.prev && (
         <>
           <Brackets x={enemy.x} y={enemy.y} w={w} h={h} color={fireColor} />

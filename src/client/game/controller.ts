@@ -226,7 +226,7 @@ export async function onTileTap(tile: Pt, pointerType: string): Promise<void> {
   if (!st.state || !st.fog || st.busy || st.screen !== 'play' || st.state.outcome) return
   const legal = legalFor(st.state)
   const res = resolveTap(st.state, st.fog.units, legal, st.selected, st.armed, tile)
-  const touch = pointerType === 'touch'
+  const touch = pointerType !== 'mouse' // touch and pen have no hover: the first tap previews, a second tap on the same tile confirms
   const sameHover = !!st.hover && st.hover.x === tile.x && st.hover.y === tile.y
   if (res.kind === 'actions') {
     if (touch && !sameHover) { set({ hover: tile, hint: `Tap the tile again to confirm (${res.why})` }); return }
