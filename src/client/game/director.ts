@@ -236,7 +236,8 @@ async function playEvents(events: GameEvent[], before: State, after: State, opts
             if (!shot) return
             const land = shot.v.firstHit ?? shot.v.end
             addFx({ kind: 'text', at: t, text: label, tone, dur: 900 * k, t0: shot.t0 + land })
-            inFlight = { until: shot.t0 + shot.v.end, target: e.target }
+            // with bullet time the next beat also waits out the slow hold and the ease back, so the action camera stays on it
+            inFlight = { until: shot.t0 + shot.v.end + (opts.slowMo ? (SLOW.hold + SLOW.ease) * k : 0), target: e.target }
             wait = land
           } else {
             let delay = 0
