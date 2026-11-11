@@ -50,9 +50,9 @@ export const TRACER = { color: '#ff7a2a', len: 2.2, width: 1.5 }
 /**
  * Bullet time: while rounds are in the air the board runs at SLOW x speed. The rounds fly slower by the same factor and the burst gap
  * stretches, so a shot reads from the muzzle to the target. `ease` is the ramp in and out (ms). Without bullet time rounds fly at full
- * speed (and the board does not slow).
+ * speed (and the board does not slow). `hold`: ms the board stays slow after the last round lands, so the impact lingers.
  */
-export const SLOW = { scale: 0.3, ease: 140, hold: 120 }
+export const SLOW = { scale: 0.12, ease: 220, hold: 700 }
 
 export interface Round {
   /** Shot index in the burst (pellets of one shot share it). */
